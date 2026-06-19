@@ -12,12 +12,14 @@
 - Implemented block ingest progress payloads and Tauri event emission.
 - Added a minimal repository ingest UI with progress and summary display.
 - Added Phase 1 specs and implementation record.
+- Added `@tauri-apps/cli` so `npm run tauri dev` works from a fresh install.
 
 ### Verification
 
 - `cargo test`: passed, 10 Phase 1 integration tests.
 - `npm test`: passed, 1 RepositoryPage test.
 - `npm run build`: passed, TypeScript and Vite production build.
+- `npm run tauri dev`: passed, Vite started and Tauri launched the macOS app process.
 
 ### Decisions
 
