@@ -14,6 +14,8 @@
 - Added Phase 1 specs and implementation record.
 - Added `@tauri-apps/cli` so `npm run tauri dev` works from a fresh install.
 - Added README, README.ko, CONTRIBUTING, AGENTS, and non-commercial license documentation.
+- Cleaned ignored local/generated artifacts from the working tree.
+- Added Phase 1 summary and Phase 2 snapshot planning documents.
 
 ### Verification
 
@@ -32,4 +34,5 @@
 
 ### Next Work
 
+- Implement `docs/plans/phase-2-snapshot-engine.md`.
 - Phase 2 should build snapshot metadata on top of `BlockIngestSummary` and `FileIngestResult`.
