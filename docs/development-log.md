@@ -13,6 +13,7 @@
 - Added a minimal repository ingest UI with progress and summary display.
 - Added Phase 1 specs and implementation record.
 - Added `@tauri-apps/cli` so `npm run tauri dev` works from a fresh install.
+- Added README, README.ko, CONTRIBUTING, AGENTS, and non-commercial license documentation.
 
 ### Verification
 
@@ -27,6 +28,7 @@
 - MVP block identity is SHA-256 hex.
 - MVP metadata paths require UTF-8 and `/` separators.
 - Snapshot JSON remains Phase 2 work.
+- Chrona is currently licensed for non-commercial use under PolyForm Noncommercial License 1.0.0.
 
 ### Next Work
 
