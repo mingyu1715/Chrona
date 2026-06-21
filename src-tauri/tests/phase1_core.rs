@@ -227,7 +227,9 @@ fn ingest_fails_when_repository_is_inside_source() {
     write_file(&source_path.join("a.txt"), b"data");
 
     let service = BlockIngestService::new();
-    let error = service.ingest(&repo_path, &source_path, |_| {}).unwrap_err();
+    let error = service
+        .ingest(&repo_path, &source_path, |_| {})
+        .unwrap_err();
 
     assert!(error.to_string().contains("RepositoryInsideSource"));
 }
