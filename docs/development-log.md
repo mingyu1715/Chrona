@@ -36,3 +36,31 @@
 
 - Implement `docs/plans/phase-2-snapshot-engine.md`.
 - Phase 2 should build snapshot metadata on top of `BlockIngestSummary` and `FileIngestResult`.
+
+## 2026-06-22
+
+### Completed
+
+- Implemented Phase 2 snapshot metadata persistence on top of the Phase 1 block engine.
+- Added `snapshots/` repository layout support and `indexes/snapshot-index.json`.
+- Added snapshot JSON model, newest-first snapshot index behavior, and `.tmp` then rename writes for snapshot metadata.
+- Added `create_snapshot`, `list_snapshots`, and `get_snapshot` Tauri commands.
+- Added minimal snapshot UI for create/list/detail workflows.
+- Updated README status and implementation records for Phase 2.
+
+### Verification
+
+- `cargo test`: passed, 11 Phase 1 tests and 3 Phase 2 snapshot tests.
+- `npm test`: passed, 2 UI tests.
+- `npm run build`: passed, TypeScript and Vite production build.
+
+### Decisions
+
+- Snapshot files are JSON metadata only; block data remains owned by the block engine.
+- Snapshot IDs allow only ASCII alphanumeric, `_`, and `-` to prevent path traversal.
+- Empty snapshot names are normalized to `Untitled Snapshot`.
+- Snapshot comparison, restore, delete, garbage collection, and integrity verification remain outside Phase 2.
+
+### Next Work
+
+- Plan Phase 3 around snapshot comparison and visualizing changed/reused blocks.

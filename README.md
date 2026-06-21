@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona is in Phase 1.
+Chrona has completed Phase 2.
 
 Implemented:
 
@@ -21,10 +21,11 @@ Implemented:
 - `/`-normalized metadata relative paths
 - Block ingest progress events
 - Minimal repository ingest UI
+- Snapshot creation and listing
+- Snapshot detail lookup
 
 Not implemented yet:
 
-- Snapshot creation and listing
 - Snapshot comparison
 - Restore
 - Integrity verification UI
