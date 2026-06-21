@@ -23,6 +23,7 @@ export interface BlockReference {
 export interface FileIngestResult {
   relativePath: string;
   sizeBytes: number;
+  modifiedAt: string;
   blocks: BlockReference[];
 }
 

@@ -71,6 +71,7 @@ impl BlockIngestService {
             let mut file_result = FileIngestResult {
                 relative_path: file.relative_path.clone(),
                 size_bytes: file.size_bytes,
+                modified_at: file.modified_at.clone(),
                 blocks: Vec::new(),
             };
 

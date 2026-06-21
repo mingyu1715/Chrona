@@ -231,3 +231,18 @@ fn ingest_fails_when_repository_is_inside_source() {
 
     assert!(error.to_string().contains("RepositoryInsideSource"));
 }
+#[test]
+fn ingest_results_include_file_modified_time() {
+    let temp = TempDir::new().unwrap();
+    let repo_path = temp.path().join("chrona-repo");
+    let source_path = temp.path().join("source");
+    RepositoryManager::create(&repo_path).unwrap();
+    write_file(&source_path.join("a.txt"), b"data");
+
+    let summary = BlockIngestService::new()
+        .ingest(&repo_path, &source_path, |_| {})
+        .unwrap();
+
+    assert_eq!(summary.files.len(), 1);
+    assert!(summary.files[0].modified_at.contains('T'));
+}
