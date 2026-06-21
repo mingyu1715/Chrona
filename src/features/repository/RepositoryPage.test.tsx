@@ -27,6 +27,9 @@ function createApiMock() {
       newlyStoredBytes: 9,
       files: [],
     })),
+    createSnapshot: vi.fn(),
+    listSnapshots: vi.fn(async () => []),
+    getSnapshot: vi.fn(),
     onBlockIngestProgress: vi.fn(async (handler) => {
       progressHandler = handler;
       return () => undefined;

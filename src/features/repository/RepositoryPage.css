@@ -164,3 +164,64 @@ progress {
   background: #fff5f5;
   color: #9d1c1c;
 }
+
+
+.snapshot-layout {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.8fr) minmax(260px, 1.2fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.snapshot-list {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.snapshot-list-item {
+  display: flex;
+  min-height: 48px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  border-color: #c9d4e2;
+  background: #f9fbfd;
+  color: #17202a;
+}
+
+.snapshot-list-item small,
+.snapshot-file-list small {
+  color: #65758b;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.snapshot-detail h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.snapshot-file-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.snapshot-file-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e0e7ef;
+  border-radius: 6px;
+  padding: 10px;
+  background: #f9fbfd;
+}
+
+@media (max-width: 760px) {
+  .snapshot-layout {
+    grid-template-columns: 1fr;
+  }
+}

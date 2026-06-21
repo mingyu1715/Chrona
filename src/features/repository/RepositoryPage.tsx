@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
+import { SnapshotPanel } from '../snapshots/SnapshotPanel';
 import type {
   BlockIngestProgress,
   BlockIngestSummary,
@@ -152,6 +153,13 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
       </section>
 
       {error && <p className="error" role="alert">{error}</p>}
+
+      <SnapshotPanel
+        api={api}
+        repositoryPath={repositoryPath}
+        sourcePath={sourcePath}
+        repositoryOpen={Boolean(manifest)}
+      />
 
       {summary && (
         <section className="panel" aria-labelledby="result-heading">
