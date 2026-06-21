@@ -38,6 +38,9 @@ function apiMock(): ChronaApi {
         newStoredBytes: 5,
       },
     ]),
+    selectRepositoryPath: vi.fn(async () => null),
+    selectSourceFilePath: vi.fn(async () => null),
+    selectSourceFolderPath: vi.fn(async () => null),
     getSnapshot: vi.fn(async () => ({
       schemaVersion: 1,
       id: '20260619T103000Z_8f31c2',

@@ -23,13 +23,13 @@ Implemented:
 - Minimal repository ingest UI
 - Snapshot creation and listing
 - Snapshot detail lookup
+- Native macOS file/folder picker
 
 Not implemented yet:
 
 - Snapshot comparison
 - Restore
 - Integrity verification UI
-- Native file/folder picker
 - Packaged `.app` release
 
 ## Tech Stack

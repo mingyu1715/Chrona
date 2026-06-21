@@ -15,6 +15,7 @@ Persist point-in-time snapshot metadata on top of the Phase 1 block engine so Ch
 - `SnapshotService` coordinates repository validation, block ingest, snapshot file write, and index update.
 - Tauri commands expose `create_snapshot`, `list_snapshots`, and `get_snapshot`.
 - Minimal UI creates snapshots, refreshes the snapshot list, and displays snapshot details and files.
+- Native picker buttons fill repository/source paths while preserving direct path entry.
 
 ## Snapshot JSON Format
 
@@ -36,6 +37,9 @@ Each file entry preserves the normalized relative path, original size, modificat
 ## Validation Coverage
 
 - Snapshot creation writes both snapshot file and index.
+- Snapshot listing returns newest-first index items.
+- Snapshot detail lookup returns stored file metadata and missing IDs return `SnapshotNotFound`.
+- Opening an older repository recreates missing snapshot layout files.
 - Snapshot store rejects traversal-style IDs such as `../escape`.
 - Repeated snapshots of unchanged content reuse existing blocks.
 - Existing Phase 1 block engine tests still pass after adding `modifiedAt`.
@@ -47,4 +51,3 @@ Each file entry preserves the normalized relative path, original size, modificat
 - Restore is not implemented.
 - Snapshot delete and block garbage collection are not implemented.
 - Integrity verification UI is not implemented.
-- Native file/folder picker integration is not implemented.

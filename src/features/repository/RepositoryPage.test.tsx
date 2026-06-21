@@ -1,10 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { RepositoryPage } from './RepositoryPage';
 import type { ChronaApi } from '../../shared/api/chronaApi';
 import type { BlockIngestProgress, RepositoryManifest } from '../../shared/types/chrona';
+
+afterEach(() => cleanup());
 
 function createApiMock() {
   const manifest: RepositoryManifest = {
@@ -30,6 +32,9 @@ function createApiMock() {
     createSnapshot: vi.fn(),
     listSnapshots: vi.fn(async () => []),
     getSnapshot: vi.fn(),
+    selectRepositoryPath: vi.fn(async () => '/picked/chrona-repo'),
+    selectSourceFilePath: vi.fn(async () => '/picked/source.txt'),
+    selectSourceFolderPath: vi.fn(async () => '/picked/source-folder'),
     onBlockIngestProgress: vi.fn(async (handler) => {
       progressHandler = handler;
       return () => undefined;
@@ -70,4 +75,23 @@ describe('RepositoryPage', () => {
     expect(screen.getByText('1 new / 1 reused')).toBeInTheDocument();
     expect(screen.getByText('50.00%')).toBeInTheDocument();
   });
+
+  test('fills paths from native picker actions', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.click(screen.getByRole('button', { name: /choose repository folder/i }));
+    expect(screen.getByLabelText(/repository path/i)).toHaveValue('/picked/chrona-repo');
+
+    await user.click(screen.getByRole('button', { name: /create repository/i }));
+    await waitFor(() => expect(api.createRepository).toHaveBeenCalledWith('/picked/chrona-repo'));
+
+    await user.click(screen.getByRole('button', { name: /choose source folder/i }));
+    expect(screen.getByLabelText(/source path/i)).toHaveValue('/picked/source-folder');
+
+    await user.click(screen.getByRole('button', { name: /choose source file/i }));
+    expect(screen.getByLabelText(/source path/i)).toHaveValue('/picked/source.txt');
+  });
+
 });

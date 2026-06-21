@@ -46,6 +46,15 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     return `${((summary.reusedBlockCount / summary.totalBlockReferences) * 100).toFixed(2)}%`;
   }, [summary]);
 
+  async function selectPath(select: () => Promise<string | null>, apply: (path: string) => void) {
+    await runAction(async () => {
+      const selected = await select();
+      if (selected) {
+        apply(selected);
+      }
+    });
+  }
+
   async function runAction(action: () => Promise<void>) {
     setBusy(true);
     setError(null);
@@ -62,7 +71,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     <main className="repository-page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Chrona Phase 1</p>
+          <p className="eyebrow">Chrona Phase 2</p>
           <h1>Block Engine</h1>
         </div>
         <span className={manifest ? 'status status-open' : 'status'}>
@@ -81,6 +90,13 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
           />
         </label>
         <div className="actions">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => selectPath(api.selectRepositoryPath, setRepositoryPath)}
+          >
+            Choose Repository Folder
+          </button>
           <button
             type="button"
             disabled={busy || repositoryPath.trim().length === 0}
@@ -129,6 +145,20 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
           />
         </label>
         <div className="actions">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => selectPath(api.selectSourceFilePath, setSourcePath)}
+          >
+            Choose Source File
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => selectPath(api.selectSourceFolderPath, setSourcePath)}
+          >
+            Choose Source Folder
+          </button>
           <button
             type="button"
             disabled={busy || !manifest || sourcePath.trim().length === 0}

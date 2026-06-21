@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { open } from '@tauri-apps/plugin-dialog';
 
 import type {
   BlockIngestProgress,
@@ -16,6 +17,9 @@ export interface ChronaApi {
   createSnapshot(repositoryPath: string, sourcePath: string, name: string): Promise<Snapshot>;
   listSnapshots(repositoryPath: string): Promise<SnapshotIndexItem[]>;
   getSnapshot(repositoryPath: string, snapshotId: string): Promise<Snapshot>;
+  selectRepositoryPath(): Promise<string | null>;
+  selectSourceFilePath(): Promise<string | null>;
+  selectSourceFolderPath(): Promise<string | null>;
   onBlockIngestProgress(
     handler: (event: BlockIngestProgress) => void,
   ): Promise<() => void>;
@@ -40,9 +44,37 @@ export const chronaApi: ChronaApi = {
   getSnapshot(repositoryPath, snapshotId) {
     return invoke<Snapshot>('get_snapshot', { repositoryPath, snapshotId });
   },
+  selectRepositoryPath() {
+    return openSinglePath({
+      directory: true,
+      multiple: false,
+      title: 'Choose Chrona Repository Folder',
+    });
+  },
+  selectSourceFilePath() {
+    return openSinglePath({
+      multiple: false,
+      title: 'Choose Source File',
+    });
+  },
+  selectSourceFolderPath() {
+    return openSinglePath({
+      directory: true,
+      multiple: false,
+      title: 'Choose Source Folder',
+    });
+  },
   onBlockIngestProgress(handler) {
     return listen<BlockIngestProgress>('block-ingest-progress', (event) => {
       handler(event.payload);
     });
   },
 };
+
+async function openSinglePath(options: Parameters<typeof open>[0]): Promise<string | null> {
+  const selected = await open(options);
+  if (Array.isArray(selected)) {
+    return selected[0] ?? null;
+  }
+  return selected;
+}

@@ -43,6 +43,7 @@ fn get_snapshot(repository_path: String, snapshot_id: String) -> Result<Snapshot
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             create_repository,
             open_repository,
