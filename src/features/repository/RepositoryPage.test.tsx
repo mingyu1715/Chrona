@@ -104,10 +104,14 @@ describe('RepositoryPage', () => {
     expect(screen.getByText(/chrona desktop/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /chrona workspace/i })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: /workspace overview/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /switch to dark mode/i })).toBeInTheDocument();
     const sectionNav = screen.getByRole('navigation', { name: /workspace sections/i });
     expect(within(sectionNav).getByRole('button', { name: /repository/i })).toBeInTheDocument();
     expect(within(sectionNav).getByRole('button', { name: /sources/i })).toBeInTheDocument();
     expect(screen.queryByText(/step 1/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /switch to dark mode/i }));
+    expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /review/i }));
 

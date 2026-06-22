@@ -11,7 +11,9 @@ import {
   FolderOpen,
   HardDrive,
   Layers3,
+  Moon,
   Play,
+  Sun,
 } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
@@ -30,6 +32,7 @@ interface RepositoryPageProps {
 type ChapterId = 'repository' | 'source' | 'snapshots' | 'review';
 type PanelKey = 'repository' | 'source' | 'store' | 'snapshots' | 'review';
 type Tone = 'ready' | 'waiting' | 'done';
+type ThemeMode = 'light' | 'dark';
 
 const chapters: Array<{
   id: ChapterId;
@@ -76,6 +79,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   const [summary, setSummary] = useState<BlockIngestSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>('light');
   const [activeChapter, setActiveChapter] = useState<ChapterId>('repository');
   const [openPanels, setOpenPanels] = useState<Record<PanelKey, boolean>>({
     repository: true,
@@ -138,6 +142,10 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     setActiveChapter(chapter);
   }
 
+  function toggleTheme() {
+    setTheme((current) => current === 'light' ? 'dark' : 'light');
+  }
+
   function chapterTone(chapter: ChapterId): Tone {
     if (chapter === 'repository') {
       return manifest ? 'done' : 'ready';
@@ -175,7 +183,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     : 0;
 
   return (
-    <main className="repository-page chapter-shell">
+    <main className="repository-page chapter-shell" data-theme={theme}>
       <header className="app-toolbar">
         <div className="app-title-group">
           <div>
@@ -184,6 +192,14 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
           </div>
         </div>
         <div className="toolbar-state" aria-label="Workspace status">
+          <button
+            type="button"
+            className="icon-button theme-toggle"
+            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            onClick={toggleTheme}
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
           <span className={manifest ? 'status status-open' : 'status'}>
             {manifest ? <CheckCircle2 size={16} /> : <Database size={16} />}
             {statusLabel}
