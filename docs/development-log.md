@@ -70,6 +70,7 @@
 ### Next Work
 
 - Plan Phase 3 around snapshot comparison and visualizing changed/reused blocks.
+
 ## 2026-06-23
 
 ### Started
@@ -88,3 +89,19 @@
 - Phase 3 comparison is content-oriented: size and ordered block hash sequence determine modified/unchanged.
 - `modifiedAt` remains visible metadata but does not alone mark a file as modified.
 - Block-reference changes use multiset counts so duplicate block references are handled correctly.
+
+### Completed
+
+- Completed Phase 3 snapshot comparison across Rust core, Tauri command, TypeScript API, and minimal UI.
+- Added `docs/implemented/snapshot-comparison.md`.
+- Updated README and README.ko status plus the core algorithm description for snapshot comparison.
+
+### Verification
+
+- `cargo test`: passed, 11 Phase 1 tests, 6 Phase 2 tests, and 3 Phase 3 diff tests.
+- `npm test`: passed, 3 UI test files and 5 UI tests.
+- `npm run build`: passed, TypeScript and Vite production build.
+
+### Next Work
+
+- Choose the next Phase between restore and deeper visualization.

@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed Phase 2.
+Chrona has completed Phase 3 snapshot comparison.
 
 Implemented:
 
@@ -23,11 +23,13 @@ Implemented:
 - Minimal repository ingest UI
 - Snapshot creation and listing
 - Snapshot detail lookup
+- Snapshot comparison command and UI
+- Added/deleted/modified/unchanged file classification
+- Block-reference multiset change counts
 - Native macOS file/folder picker
 
 Not implemented yet:
 
-- Snapshot comparison
 - Restore
 - Integrity verification UI
 - Packaged `.app` release
@@ -138,6 +140,36 @@ Snapshot
 
 This makes snapshot creation mostly metadata work after block ingest has identified which bytes are new and which bytes are reused.
 
+### 4. Snapshot comparison by path map and block multiset
+
+Snapshot comparison uses metadata only. Files are matched by normalized relative path, then content identity is checked through size and ordered block hash sequence.
+
+```text
+before = map(base.files by relative_path)
+after = map(target.files by relative_path)
+
+for path in sorted(union(before.keys, after.keys)):
+  if path not in before:
+    emit added
+  else if path not in after:
+    emit deleted
+  else if before[path].size == after[path].size
+       and hashes(before[path]) == hashes(after[path]):
+    emit unchanged
+  else:
+    emit modified
+```
+
+Block-reference changes are counted as a multiset difference, not a simple set difference.
+
+```text
+shared = sum(min(count_before[h], count_after[h]))
+added = sum(max(count_after[h] - count_before[h], 0))
+removed = sum(max(count_before[h] - count_after[h], 0))
+```
+
+This keeps repeated block references meaningful when a file contains the same block more than once.
+
 ### Complexity
 
 Let:
@@ -145,6 +177,7 @@ Let:
 - `N` = total input bytes
 - `B` = block size, currently `1 MiB`
 - `K` = number of block references
+- `P` = number of snapshot file paths being compared
 - `U` = total bytes of newly unique blocks
 
 Then:
@@ -153,6 +186,8 @@ Then:
 - Dedup lookup time: `O(K)` average with hash-set/path existence checks
 - Streaming memory for file bytes: `O(B)`
 - Metadata memory/output: `O(K)`
+- Snapshot comparison path matching: `O(P log P)` for stable sorted output
+- Snapshot comparison block multiset counting: `O(K)`
 - New physical storage growth: `O(U)`
 
 ### Current algorithmic trade-offs

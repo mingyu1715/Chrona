@@ -70,11 +70,11 @@ Modify:
 
 ## Task 5: Finish Phase 3 Documentation
 
-- [ ] Add `docs/implemented/snapshot-comparison.md` with implemented scope, algorithm, validation coverage, and known limits.
-- [ ] Update `docs/development-log.md` with Phase 3 completion notes and verification commands.
-- [ ] Update README status if the compare UI is functional.
-- [ ] Run `cargo test`, `npm test`, and `npm run build`.
-- [ ] Commit: `docs: record snapshot comparison implementation`.
+- [x] Add `docs/implemented/snapshot-comparison.md` with implemented scope, algorithm, validation coverage, and known limits.
+- [x] Update `docs/development-log.md` with Phase 3 completion notes and verification commands.
+- [x] Update README status if the compare UI is functional.
+- [x] Run `cargo test`, `npm test`, and `npm run build`.
+- [x] Commit: `docs: record snapshot comparison implementation`.
 
 ## Completion Criteria
 
