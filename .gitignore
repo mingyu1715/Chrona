@@ -3,3 +3,10 @@ node_modules/
 dist/
 src-tauri/target/
 *.log
+
+# Local Chrona repositories created while running the Tauri app
+src-tauri/manifest.json
+src-tauri/blocks/
+src-tauri/indexes/
+src-tauri/logs/
+src-tauri/snapshots/
