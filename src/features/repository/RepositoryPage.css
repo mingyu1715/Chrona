@@ -187,13 +187,13 @@ button:disabled {
 
 .chapter-tab {
   display: grid;
-  min-height: 84px;
-  grid-template-columns: 30px 28px minmax(0, 1fr);
+  min-height: 46px;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   border-color: transparent;
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: 7px;
+  padding: 7px 9px;
   background: transparent;
   color: var(--text);
   text-align: left;
@@ -211,38 +211,12 @@ button:disabled {
   border-color: #9ccfc1;
 }
 
-.chapter-index,
 .chapter-tab-icon {
   display: grid;
+  width: 30px;
+  height: 30px;
   place-items: center;
-  border-radius: 8px;
-}
-
-.chapter-index {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 850;
-}
-
-.chapter-index-ready {
-  border-color: #d1ad67;
-  background: var(--amber-soft);
-  color: var(--amber);
-}
-
-.chapter-index-done {
-  border-color: #89c7b6;
-  background: var(--primary-soft);
-  color: var(--primary-hover);
-}
-
-.chapter-tab-icon {
-  width: 28px;
-  height: 28px;
+  border-radius: 7px;
   background: var(--surface-muted);
   color: var(--text-muted);
 }
@@ -256,24 +230,37 @@ button:disabled {
   min-width: 0;
 }
 
-.chapter-tab-copy strong,
-.chapter-tab-copy small {
-  display: block;
-}
-
 .chapter-tab-copy strong {
+  display: block;
   overflow: hidden;
   font-size: 0.91rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.chapter-tab-copy small {
-  margin-top: 3px;
+.nav-status {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 8px;
+  background: var(--surface);
   color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 680;
-  line-height: 1.25;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.nav-status-ready {
+  border-color: #d1ad67;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.nav-status-done {
+  border-color: #89c7b6;
+  background: var(--primary-soft);
+  color: var(--primary-hover);
 }
 
 .chapter-stage {
@@ -849,12 +836,8 @@ progress {
   }
 
   .chapter-tab {
-    min-height: 110px;
-    grid-template-columns: 28px minmax(0, 1fr);
-  }
-
-  .chapter-tab-icon {
-    display: none;
+    min-height: 48px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
   }
 }
 
@@ -889,12 +872,8 @@ progress {
   }
 
   .chapter-tab {
-    min-height: 74px;
-    grid-template-columns: 30px 28px minmax(0, 1fr);
-  }
-
-  .chapter-tab-icon {
-    display: grid;
+    min-height: 48px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
   }
 
   .chapter-stage {

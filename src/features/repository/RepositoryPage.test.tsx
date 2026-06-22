@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
@@ -95,16 +95,17 @@ describe('RepositoryPage', () => {
   });
 
 
-  test('renders the chapter workflow shell and empty result state', async () => {
+  test('renders unnumbered workspace sections and empty result state', async () => {
     const { api } = createApiMock();
     const user = userEvent.setup();
 
     render(<RepositoryPage api={api} />);
 
     expect(screen.getByRole('heading', { name: /chrona workspace/i })).toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: /chapters/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /repository setup/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /source ingest/i })).toBeInTheDocument();
+    const sectionNav = screen.getByRole('navigation', { name: /workspace sections/i });
+    expect(within(sectionNav).getByRole('button', { name: /repository/i })).toBeInTheDocument();
+    expect(within(sectionNav).getByRole('button', { name: /sources/i })).toBeInTheDocument();
+    expect(screen.queryByText(/step 1/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /review/i }));
 

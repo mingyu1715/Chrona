@@ -48,7 +48,7 @@
 - Added minimal snapshot UI for create/list/detail workflows.
 - Added Phase 2 hardening tests for snapshot ordering, detail lookup, missing snapshots, and opening older repositories.
 - Added Tauri native file/folder picker support for repository and source path inputs.
-- Reworked the UI into a chapter-based desktop workflow with left chapter navigation, drop-down work panels, compact path/status strips, sticky progress footer, and embedded snapshot/result panels.
+- Reworked the UI into a Docker Desktop-inspired desktop workflow with unnumbered left section navigation, drop-down work panels, compact path/status strips, sticky progress footer, and embedded snapshot/result panels.
 - Updated README status and implementation records for Phase 2.
 
 ### Verification

@@ -40,15 +40,15 @@ const chapters: Array<{
 }> = [
   {
     id: 'repository',
-    label: 'Repository setup',
+    label: 'Repository',
     shortLabel: 'Repository',
     description: 'Create or open the Chrona storage location.',
     icon: HardDrive,
   },
   {
     id: 'source',
-    label: 'Source ingest',
-    shortLabel: 'Source',
+    label: 'Sources',
+    shortLabel: 'Sources',
     description: 'Pick data and store reusable blocks.',
     icon: Activity,
   },
@@ -151,6 +151,16 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     return summary ? 'done' : 'waiting';
   }
 
+  function toneLabel(tone: Tone): string {
+    if (tone === 'done') {
+      return 'Ready';
+    }
+    if (tone === 'ready') {
+      return 'Available';
+    }
+    return 'Waiting';
+  }
+
   const activeChapterMeta = chapters.find((chapter) => chapter.id === activeChapter) ?? chapters[0];
   const statusLabel = manifest ? 'Repository open' : 'Repository closed';
   const sourceLabel = sourcePath.trim().length > 0 ? sourcePath : 'No source selected';
@@ -182,9 +192,9 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
 
       <div className="chapter-layout">
         <aside className="chapter-sidebar">
-          <div className="sidebar-label">Workflow</div>
-          <nav className="chapter-nav" aria-label="Chapters">
-            {chapters.map((chapter, index) => {
+          <div className="sidebar-label">Workspace</div>
+          <nav className="chapter-nav" aria-label="Workspace sections">
+            {chapters.map((chapter) => {
               const Icon = chapter.icon;
               const tone = chapterTone(chapter.id);
               return (
@@ -194,12 +204,11 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                   className={`chapter-tab ${activeChapter === chapter.id ? 'chapter-tab-active' : ''}`}
                   onClick={() => openChapter(chapter.id)}
                 >
-                  <span className={`chapter-index chapter-index-${tone}`}>{index + 1}</span>
-                  <span className="chapter-tab-icon" aria-hidden="true"><Icon size={16} /></span>
+                  <span className="chapter-tab-icon" aria-hidden="true"><Icon size={17} /></span>
                   <span className="chapter-tab-copy">
                     <strong>{chapter.label}</strong>
-                    <small>{chapter.description}</small>
                   </span>
+                  <span className={`nav-status nav-status-${tone}`}>{toneLabel(tone)}</span>
                 </button>
               );
             })}
@@ -209,7 +218,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
         <section className="chapter-stage" aria-labelledby="active-chapter-heading">
           <div className="chapter-stage-header">
             <div>
-              <p className="eyebrow">Current chapter</p>
+              <p className="eyebrow">Workspace section</p>
               <h2 id="active-chapter-heading">{activeChapterMeta.shortLabel}</h2>
               <p>{activeChapterMeta.description}</p>
             </div>
@@ -235,7 +244,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
             {activeChapter === 'repository' && (
               <DropPanel
                 title="Repository path and manifest"
-                kicker="Step 1"
+                kicker="Repository"
                 status={manifest ? 'Open' : 'Required'}
                 icon={HardDrive}
                 open={openPanels.repository}
@@ -301,7 +310,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     </dl>
                     <div className="panel-footer-actions">
                       <button type="button" onClick={() => setActiveChapter('source')}>
-                        Continue to Source
+                        Open Sources
                         <ChevronRight size={16} />
                       </button>
                     </div>
@@ -314,7 +323,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
               <>
                 <DropPanel
                   title="Select a source"
-                  kicker="Step 2"
+                  kicker="Source"
                   status={sourcePath ? 'Selected' : 'Required'}
                   icon={FolderOpen}
                   open={openPanels.source}
@@ -352,7 +361,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
 
                 <DropPanel
                   title="Analyze and store blocks"
-                  kicker="Step 3"
+                  kicker="Storage"
                   status={summary ? 'Stored' : manifest ? 'Ready' : 'Waiting'}
                   icon={Activity}
                   open={openPanels.store}
@@ -384,7 +393,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
             {activeChapter === 'snapshots' && (
               <DropPanel
                 title="Snapshot capture"
-                kicker="Step 4"
+                kicker="Snapshots"
                 status={manifest && sourcePath ? 'Ready' : 'Waiting'}
                 icon={Clock3}
                 open={openPanels.snapshots}
@@ -403,7 +412,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
             {activeChapter === 'review' && (
               <DropPanel
                 title="Block ingest result"
-                kicker="Step 5"
+                kicker="Review"
                 status={summary ? 'Complete' : 'Empty'}
                 icon={Layers3}
                 open={openPanels.review}
