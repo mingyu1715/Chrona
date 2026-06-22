@@ -400,14 +400,14 @@ e2e/
 1. 저장소 포맷과 block engine
 2. snapshot 생성
 3. snapshot 조회와 기본 통계
-4. restore
-5. snapshot diff
+4. snapshot diff
+5. restore
 6. dashboard와 핵심 시각화
 7. integrity verification
 8. 문서와 GitHub 운영 정리
 9. 패키징과 릴리스 준비
 
-복원보다 시각화를 먼저 만들면 데모는 좋아지지만 핵심 신뢰성이 약해진다. 따라서 Phase 3까지는 core correctness를 우선한다.
+Phase 3은 snapshot diff를 먼저 구현한다. 복원은 사용자의 파일 시스템에 새 파일을 쓰는 기능이므로, 비교 알고리즘과 snapshot metadata 신뢰성을 먼저 확보한 뒤 별도 Phase에서 다룬다.
 
 ## 13. Phase별 개발 계획
 
@@ -450,18 +450,18 @@ e2e/
 - 완료 기준: 앱에서 스냅샷 생성 후 재시작해도 목록과 상세 조회 가능
 - 다음 조건: snapshot 두 개 이상을 비교하고 복원할 수 있음
 
-### Phase 3. 복원과 비교
+### Phase 3. 스냅샷 비교
 
 - 기간: 1주
-- 목표: snapshot을 실제 파일로 복원하고 두 snapshot 차이를 계산
-- 구현 기능: restore, restore report, diff added/modified/deleted, conflict-safe target restore
-- 필요한 모듈: `RestoreService`, `DiffService`
-- 구현 방식: MVP에서는 기존 폴더 덮어쓰기를 기본 제공하지 않고 새 target folder 복원을 기본으로 함
-- 데이터 흐름: snapshot file records -> block reads -> reconstructed files -> restore report
-- 화면 구성: compare 화면, restore dialog, restore result
-- 테스트 방법: snapshot 생성 후 복원 파일 byte equality 검증, diff fixture 검증
-- 완료 기준: 변경된 파일, 삭제된 파일, 추가된 파일이 UI에 정확히 표시되고 복원이 성공
-- 다음 조건: 사용자가 변화와 저장량을 이해할 수 있는 시각화 추가 가능
+- 목표: 두 snapshot의 파일/블록 참조 차이를 계산하고 UI에서 확인
+- 구현 기능: diff added/modified/deleted/unchanged, block-reference added/removed/shared counts, compare command, minimal compare UI
+- 필요한 모듈: `DiffService`, `SnapshotComparison` models, `compare_snapshots` command
+- 구현 방식: snapshot JSON 두 개를 읽고 normalized relative path 기준으로 매칭한 뒤, block hash sequence와 size로 content change를 판정
+- 데이터 흐름: snapshot A + snapshot B -> path map -> file diff rows -> block multiset counts -> comparison summary
+- 화면 구성: snapshot 선택 2개, compare 실행, summary, file diff list
+- 테스트 방법: added/deleted/modified/unchanged fixture, duplicate block reference multiset count, command integration, UI render test
+- 완료 기준: 변경된 파일, 삭제된 파일, 추가된 파일, 동일 파일이 UI에 정확히 표시되고 block reference 변화량이 계산됨
+- 다음 조건: 비교 결과를 바탕으로 restore 또는 visualization 중 다음 Phase를 선택 가능
 
 ### Phase 4. 시각화와 UX
 

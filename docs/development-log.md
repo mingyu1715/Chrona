@@ -70,3 +70,17 @@
 ### Next Work
 
 - Plan Phase 3 around snapshot comparison and visualizing changed/reused blocks.
+## 2026-06-23
+
+### Started
+
+- Cleaned local Tauri-run repository artifacts from the working tree.
+- Added ignore rules for local Chrona repositories accidentally created under `src-tauri/`.
+- Scoped Phase 3 to snapshot comparison first; restore is deferred to a later Phase.
+- Added `docs/specs/0004-snapshot-comparison.md` and `docs/plans/phase-3-snapshot-comparison.md`.
+
+### Decisions
+
+- Phase 3 comparison is content-oriented: size and ordered block hash sequence determine modified/unchanged.
+- `modifiedAt` remains visible metadata but does not alone mark a file as modified.
+- Block-reference changes use multiset counts so duplicate block references are handled correctly.
