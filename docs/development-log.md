@@ -78,6 +78,7 @@
 - Added ignore rules for local Chrona repositories accidentally created under `src-tauri/`.
 - Scoped Phase 3 to snapshot comparison first; restore is deferred to a later Phase.
 - Added `docs/specs/0004-snapshot-comparison.md` and `docs/plans/phase-3-snapshot-comparison.md`.
+- Started Phase 3 implementation with pure `DiffService::compare` models and tests.
 
 ### Decisions
 

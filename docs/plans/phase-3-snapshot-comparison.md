@@ -35,12 +35,12 @@ Modify:
 
 ## Task 1: Add Pure Diff Model and Algorithm
 
-- [ ] Write `src-tauri/tests/phase3_diff.rs` with tests for added, deleted, modified, unchanged, and duplicate block-reference multiset counts.
-- [ ] Create `src-tauri/src/models/diff.rs` with `SnapshotComparison`, `SnapshotComparisonSummary`, `SnapshotFileDiff`, `SnapshotFileDigest`, `SnapshotBlockDiffSummary`, and `SnapshotChangeType`.
-- [ ] Create `src-tauri/src/core/diff_service.rs` with `DiffService::compare(&Snapshot, &Snapshot) -> SnapshotComparison`.
-- [ ] Export new modules from `models/mod.rs` and `core/mod.rs`.
-- [ ] Run `cd src-tauri && cargo test phase3_diff`.
-- [ ] Commit: `feat: add snapshot diff algorithm`.
+- [x] Write `src-tauri/tests/phase3_diff.rs` with tests for added, deleted, modified, unchanged, and duplicate block-reference multiset counts.
+- [x] Create `src-tauri/src/models/diff.rs` with `SnapshotComparison`, `SnapshotComparisonSummary`, `SnapshotFileDiff`, `SnapshotFileDigest`, `SnapshotBlockDiffSummary`, and `SnapshotChangeType`.
+- [x] Create `src-tauri/src/core/diff_service.rs` with `DiffService::compare(&Snapshot, &Snapshot) -> SnapshotComparison`.
+- [x] Export new modules from `models/mod.rs` and `core/mod.rs`.
+- [x] Run `cd src-tauri && cargo test phase3_diff`.
+- [x] Commit: `feat: add snapshot diff algorithm`.
 
 ## Task 2: Add Snapshot Comparison Command
 
