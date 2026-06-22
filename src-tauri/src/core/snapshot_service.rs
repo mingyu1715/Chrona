@@ -4,9 +4,11 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use crate::core::block_ingest_service::BlockIngestService;
+use crate::core::diff_service::DiffService;
 use crate::core::errors::{ChronaError, ChronaResult};
 use crate::core::repository::RepositoryManager;
 use crate::core::snapshot_store::SnapshotStore;
+use crate::models::diff::SnapshotComparison;
 use crate::models::progress::BlockIngestProgress;
 use crate::models::snapshot::{Snapshot, SnapshotFile, SnapshotIndexItem, SnapshotSummary};
 
@@ -88,6 +90,19 @@ impl SnapshotService {
     ) -> ChronaResult<Snapshot> {
         RepositoryManager::open(repository_path)?;
         SnapshotStore::new(repository_path.to_path_buf()).get_snapshot(snapshot_id)
+    }
+
+    pub fn compare_snapshots(
+        &self,
+        repository_path: &Path,
+        base_snapshot_id: &str,
+        target_snapshot_id: &str,
+    ) -> ChronaResult<SnapshotComparison> {
+        RepositoryManager::open(repository_path)?;
+        let store = SnapshotStore::new(repository_path.to_path_buf());
+        let base = store.get_snapshot(base_snapshot_id)?;
+        let target = store.get_snapshot(target_snapshot_id)?;
+        Ok(DiffService::compare(&base, &target))
     }
 }
 

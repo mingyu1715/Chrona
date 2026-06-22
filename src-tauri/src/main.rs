@@ -1,3 +1,4 @@
+use chrona::models::diff::SnapshotComparison;
 use chrona::models::ingest::BlockIngestSummary;
 use chrona::models::repository::RepositoryManifest;
 use chrona::models::snapshot::{Snapshot, SnapshotIndexItem};
@@ -41,6 +42,19 @@ fn get_snapshot(repository_path: String, snapshot_id: String) -> Result<Snapshot
     chrona::commands::snapshot_commands::get_snapshot(repository_path, snapshot_id)
 }
 
+#[tauri::command]
+fn compare_snapshots(
+    repository_path: String,
+    base_snapshot_id: String,
+    target_snapshot_id: String,
+) -> Result<SnapshotComparison, String> {
+    chrona::commands::snapshot_commands::compare_snapshots(
+        repository_path,
+        base_snapshot_id,
+        target_snapshot_id,
+    )
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -50,7 +64,8 @@ fn main() {
             ingest_blocks,
             create_snapshot,
             list_snapshots,
-            get_snapshot
+            get_snapshot,
+            compare_snapshots
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Chrona application");

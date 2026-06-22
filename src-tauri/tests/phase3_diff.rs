@@ -1,9 +1,22 @@
 use std::collections::HashMap;
+use std::fs;
+use std::io::Write;
+use std::path::Path;
 
 use chrona::core::diff_service::DiffService;
+use chrona::core::repository::RepositoryManager;
+use chrona::core::snapshot_service::SnapshotService;
 use chrona::models::block::BlockReference;
 use chrona::models::diff::SnapshotChangeType;
 use chrona::models::snapshot::{Snapshot, SnapshotFile, SnapshotSummary};
+
+fn write_file(path: &Path, bytes: &[u8]) {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).unwrap();
+    }
+    let mut file = fs::File::create(path).unwrap();
+    file.write_all(bytes).unwrap();
+}
 
 fn block(index: u64, hash: &str) -> BlockReference {
     BlockReference {
@@ -125,4 +138,41 @@ fn phase3_diff_counts_duplicate_block_references_as_multisets() {
     assert_eq!(comparison.summary.shared_block_references, 2);
     assert_eq!(comparison.summary.added_block_references, 2);
     assert_eq!(comparison.summary.removed_block_references, 1);
+}
+
+#[test]
+fn phase3_service_compares_two_persisted_snapshots() {
+    let temp = tempfile::TempDir::new().unwrap();
+    let repo_path = temp.path().join("chrona-repo");
+    let source_path = temp.path().join("source");
+    RepositoryManager::create(&repo_path).unwrap();
+
+    write_file(&source_path.join("same.txt"), b"same");
+    write_file(&source_path.join("deleted.txt"), b"deleted");
+    write_file(&source_path.join("modified.txt"), b"before");
+
+    let service = SnapshotService::new();
+    let base = service
+        .create_snapshot(&repo_path, &source_path, "Base", |_| {})
+        .unwrap();
+
+    fs::remove_file(source_path.join("deleted.txt")).unwrap();
+    write_file(&source_path.join("modified.txt"), b"after");
+    write_file(&source_path.join("added.txt"), b"added");
+
+    let target = service
+        .create_snapshot(&repo_path, &source_path, "Target", |_| {})
+        .unwrap();
+
+    let comparison = service
+        .compare_snapshots(&repo_path, &base.id, &target.id)
+        .unwrap();
+
+    assert_eq!(comparison.base_snapshot_id, base.id);
+    assert_eq!(comparison.target_snapshot_id, target.id);
+    assert_eq!(comparison.summary.added_file_count, 1);
+    assert_eq!(comparison.summary.deleted_file_count, 1);
+    assert_eq!(comparison.summary.modified_file_count, 1);
+    assert_eq!(comparison.summary.unchanged_file_count, 1);
+    assert_eq!(comparison.files.len(), 4);
 }

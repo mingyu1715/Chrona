@@ -44,12 +44,12 @@ Modify:
 
 ## Task 2: Add Snapshot Comparison Command
 
-- [ ] Add `SnapshotService::compare_snapshots(repository_path, base_snapshot_id, target_snapshot_id)`.
-- [ ] Add `compare_snapshots` command wrapper in `snapshot_commands.rs`.
-- [ ] Register `compare_snapshots` in `main.rs`.
-- [ ] Extend Rust integration tests to create two real snapshots and compare them through `SnapshotService`.
-- [ ] Run `cd src-tauri && cargo test phase3_diff phase2_snapshot`.
-- [ ] Commit: `feat: expose snapshot comparison command`.
+- [x] Add `SnapshotService::compare_snapshots(repository_path, base_snapshot_id, target_snapshot_id)`.
+- [x] Add `compare_snapshots` command wrapper in `snapshot_commands.rs`.
+- [x] Register `compare_snapshots` in `main.rs`.
+- [x] Extend Rust integration tests to create two real snapshots and compare them through `SnapshotService`.
+- [x] Run `cd src-tauri && cargo test phase3_diff phase2_snapshot`.
+- [x] Commit: `feat: expose snapshot comparison command`.
 
 ## Task 3: Add TypeScript API Types
 
