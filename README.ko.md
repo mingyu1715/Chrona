@@ -234,8 +234,9 @@ npm run build
 
 - `docs/project-plan.md`: 전체 프로젝트 계획
 - `docs/specs/`: 설계 결정과 포맷
-- `docs/plans/`: Phase별 실행 계획
+- `docs/plans/`: 현재 진행 또는 다음 구현 계획
 - `docs/implemented/`: 완료된 기능 구현 기록
+- `docs/archive/`: 완료되었거나 폐기된 작업 문서
 - `docs/development-log.md`: 날짜별 개발 로그
 
 ## 라이선스

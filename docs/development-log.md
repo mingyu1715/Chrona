@@ -34,7 +34,7 @@
 
 ### Next Work
 
-- Implement `docs/plans/phase-2-snapshot-engine.md`.
+- Implement the Phase 2 snapshot engine plan, now archived at `docs/archive/plans/phase-2-snapshot-engine.md`.
 - Phase 2 should build snapshot metadata on top of `BlockIngestSummary` and `FileIngestResult`.
 
 ## 2026-06-22
@@ -78,7 +78,7 @@
 - Cleaned local Tauri-run repository artifacts from the working tree.
 - Added ignore rules for local Chrona repositories accidentally created under `src-tauri/`.
 - Scoped Phase 3 to snapshot comparison first; restore is deferred to a later Phase.
-- Added `docs/specs/0004-snapshot-comparison.md` and `docs/plans/phase-3-snapshot-comparison.md`.
+- Added `docs/specs/0004-snapshot-comparison.md` and `docs/archive/plans/phase-3-snapshot-comparison.md`.
 - Started Phase 3 implementation with pure `DiffService::compare` models and tests.
 - Added `compare_snapshots` service and Tauri command registration for persisted snapshots.
 - Added TypeScript comparison result types and `chronaApi.compareSnapshots` wrapper.
@@ -95,6 +95,7 @@
 - Completed Phase 3 snapshot comparison across Rust core, Tauri command, TypeScript API, and minimal UI.
 - Added `docs/implemented/snapshot-comparison.md`.
 - Updated README and README.ko status plus the core algorithm description for snapshot comparison.
+- Archived completed Phase 1, Phase 2, and Phase 3 execution plans under `docs/archive/plans/`.
 
 ### Verification
 

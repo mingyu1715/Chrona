@@ -566,22 +566,25 @@ CONTRIBUTING.md
 AGENTS.md
 LICENSE
 docs/
-  README.md
-  development-roadmap.md
-  development-guide.md
   development-log.md
+  project-plan.md
   implemented/
     block-engine.md
     snapshot-engine.md
-    restore-engine.md
-    visualization.md
+    snapshot-comparison.md
   specs/
-    0001-storage-format.md
-    0002-snapshot-format.md
+    0001-repository-format.md
+    0002-block-engine.md
+    0003-snapshot-format.md
+    0004-snapshot-comparison.md
   plans/
-    phase-1-block-engine.md
-    phase-2-snapshot-engine.md
+    README.md
   archive/
+    README.md
+    plans/
+      phase-1-block-engine.md
+      phase-2-snapshot-engine.md
+      phase-3-snapshot-comparison.md
 ```
 
 ### 역할
@@ -590,13 +593,11 @@ docs/
 - `README.ko.md`: 한국어 소개
 - `CONTRIBUTING.md`: 외부 기여 방법
 - `AGENTS.md`: AI coding agent 작업 규칙
-- `docs/development-roadmap.md`: phase와 milestone
-- `docs/development-guide.md`: 작업 전 확인, 테스트, Git 규칙
 - `docs/development-log.md`: 날짜별 작업 기록
 - `docs/implemented/`: 큰 기능 완료 후 구현 기록
 - `docs/specs/`: 설계 결정과 데이터 포맷
-- `docs/plans/`: 실제 작업 체크리스트
-- `docs/archive/`: 완료되었거나 폐기된 오래된 계획
+- `docs/plans/`: 현재 진행 또는 다음 작업 체크리스트
+- `docs/archive/`: 완료되었거나 폐기된 오래된 작업 문서
 
 ## 17. Development Guide 규칙
 
@@ -696,11 +697,11 @@ source file -> chunk -> hash -> block store
 권장 흐름:
 
 ```text
-docs/specs/0001-storage-format.md
-docs/plans/phase-1-block-engine.md
+docs/specs/0002-block-engine.md
+docs/plans/phase-N-current-work.md
 implementation
 docs/implemented/block-engine.md
-docs/archive/plans/phase-1-block-engine.md
+docs/archive/plans/phase-N-current-work.md
 ```
 
 ## 21. AGENTS.md 초안 규칙

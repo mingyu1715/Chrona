@@ -234,8 +234,9 @@ npm run build
 
 - `docs/project-plan.md`: overall project plan
 - `docs/specs/`: design decisions and formats
-- `docs/plans/`: phase implementation plans
+- `docs/plans/`: active or next-up implementation plans
 - `docs/implemented/`: completed feature records
+- `docs/archive/`: completed or retired working plans
 - `docs/development-log.md`: chronological development log
 
 ## License
