@@ -85,3 +85,51 @@ export interface SnapshotIndexItem {
   totalOriginalBytes: number;
   newStoredBytes: number;
 }
+
+export type SnapshotChangeType = 'added' | 'deleted' | 'modified' | 'unchanged';
+
+export interface SnapshotFileDigest {
+  sizeBytes: number;
+  modifiedAt: string;
+  blockHashes: string[];
+}
+
+export interface SnapshotBlockDiffSummary {
+  beforeBlockReferences: number;
+  afterBlockReferences: number;
+  addedBlockReferences: number;
+  removedBlockReferences: number;
+  sharedBlockReferences: number;
+}
+
+export interface SnapshotFileDiff {
+  relativePath: string;
+  changeType: SnapshotChangeType;
+  before: SnapshotFileDigest | null;
+  after: SnapshotFileDigest | null;
+  blocks: SnapshotBlockDiffSummary;
+}
+
+export interface SnapshotComparisonSummary {
+  addedFileCount: number;
+  deletedFileCount: number;
+  modifiedFileCount: number;
+  unchangedFileCount: number;
+  totalBeforeBytes: number;
+  totalAfterBytes: number;
+  addedBytes: number;
+  deletedBytes: number;
+  modifiedBeforeBytes: number;
+  modifiedAfterBytes: number;
+  addedBlockReferences: number;
+  removedBlockReferences: number;
+  sharedBlockReferences: number;
+}
+
+export interface SnapshotComparison {
+  schemaVersion: number;
+  baseSnapshotId: string;
+  targetSnapshotId: string;
+  summary: SnapshotComparisonSummary;
+  files: SnapshotFileDiff[];
+}

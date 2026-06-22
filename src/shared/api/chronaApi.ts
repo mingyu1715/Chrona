@@ -7,6 +7,7 @@ import type {
   BlockIngestSummary,
   RepositoryManifest,
   Snapshot,
+  SnapshotComparison,
   SnapshotIndexItem,
 } from '../types/chrona';
 
@@ -17,6 +18,7 @@ export interface ChronaApi {
   createSnapshot(repositoryPath: string, sourcePath: string, name: string): Promise<Snapshot>;
   listSnapshots(repositoryPath: string): Promise<SnapshotIndexItem[]>;
   getSnapshot(repositoryPath: string, snapshotId: string): Promise<Snapshot>;
+  compareSnapshots(repositoryPath: string, baseSnapshotId: string, targetSnapshotId: string): Promise<SnapshotComparison>;
   selectRepositoryPath(): Promise<string | null>;
   selectSourceFilePath(): Promise<string | null>;
   selectSourceFolderPath(): Promise<string | null>;
@@ -43,6 +45,13 @@ export const chronaApi: ChronaApi = {
   },
   getSnapshot(repositoryPath, snapshotId) {
     return invoke<Snapshot>('get_snapshot', { repositoryPath, snapshotId });
+  },
+  compareSnapshots(repositoryPath, baseSnapshotId, targetSnapshotId) {
+    return invoke<SnapshotComparison>('compare_snapshots', {
+      repositoryPath,
+      baseSnapshotId,
+      targetSnapshotId,
+    });
   },
   selectRepositoryPath() {
     return openSinglePath({

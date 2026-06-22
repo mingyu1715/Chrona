@@ -53,11 +53,11 @@ Modify:
 
 ## Task 3: Add TypeScript API Types
 
-- [ ] Add comparison interfaces to `src/shared/types/chrona.ts` mirroring Rust camelCase serialization.
-- [ ] Add `compareSnapshots(repositoryPath, baseSnapshotId, targetSnapshotId)` to `ChronaApi`.
-- [ ] Update UI API mocks in existing tests to include `compareSnapshots`.
-- [ ] Run `npm test`.
-- [ ] Commit: `feat: add snapshot comparison api types`.
+- [x] Add comparison interfaces to `src/shared/types/chrona.ts` mirroring Rust camelCase serialization.
+- [x] Add `compareSnapshots(repositoryPath, baseSnapshotId, targetSnapshotId)` to `ChronaApi`.
+- [x] Update UI API mocks in existing tests to include `compareSnapshots`.
+- [x] Run `npm test`.
+- [x] Commit: `feat: add snapshot comparison api types`.
 
 ## Task 4: Add Minimal Comparison UI
 
