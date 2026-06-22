@@ -42,37 +42,125 @@ Not implemented yet:
 - Block hash: SHA-256
 - Block size: 1 MiB fixed chunks
 
-## Storage Algorithm
+## Core Algorithms
 
-Chrona currently uses a content-addressed fixed-block storage model.
+Chrona is built around a small set of storage algorithms rather than a custom compression format.
 
-### Block ingest
+### 1. Fixed-block content addressing
 
-1. Validate that the source path and repository path are not the same path and neither contains the other.
-2. Scan the selected file or folder and convert metadata paths to OS-independent `/`-separated relative paths.
-3. Stream each file in fixed `1 MiB` chunks. The final chunk may be smaller.
-4. Compute `SHA-256` over the exact chunk bytes.
-5. Store each block by hash at `blocks/{hash[0..2]}/{hash[2..4]}/{hash}.blk`.
-6. If a block already exists, reuse it instead of writing duplicate bytes.
-7. If a block is new, write `{hash}.blk.tmp-{operationId}` first, then rename it to the final `.blk` path.
-8. Emit progress events with current file and processed byte counts while ingest runs.
+Each file is treated as an ordered byte stream and split into fixed-size blocks.
 
-### Snapshot creation
+```text
+B = 1 MiB
+H(x) = SHA-256(x)
 
-A snapshot is metadata over the block engine, not a second copy of file bytes.
+for each file f in source_set:
+  offset = 0
+  block_index = 0
 
-- Snapshot creation runs block ingest for the selected source.
-- File entries store normalized relative paths, file sizes, modified times, and ordered block references.
-- Snapshot JSON is written to `snapshots/{snapshotId}.json` using `.tmp` then rename.
-- `indexes/snapshot-index.json` stores newest-first snapshot summaries for fast listing.
-- Snapshot IDs are restricted to ASCII letters, digits, `_`, and `-` to prevent path traversal.
+  while chunk = read_at_most_B_bytes(f):
+    hash = H(chunk)
 
-### Current trade-offs
+    emit BlockReference(
+      index = block_index,
+      offset = offset,
+      size = len(chunk),
+      hash = hash
+    )
 
-- Fixed-size chunking is simple and deterministic, but does not detect shifted content as efficiently as content-defined chunking.
-- Blocks are not compressed or encrypted yet.
-- Delete, garbage collection, restore, and integrity verification are future phases.
-- MVP path metadata requires UTF-8-compatible paths.
+    offset += len(chunk)
+    block_index += 1
+```
+
+Properties:
+
+- Equal bytes always produce the same block hash.
+- The same file content always produces the same ordered block-reference sequence.
+- The last block may be smaller than `B`.
+- A zero-byte file produces an empty block-reference sequence.
+
+### 2. Hash-based block deduplication
+
+Chrona uses the block hash as the identity key.
+
+```text
+repository_blocks = set(existing_block_hashes)
+new_blocks = 0
+reused_blocks = 0
+
+for each chunk in file_stream:
+  hash = SHA-256(chunk)
+
+  if hash in repository_blocks:
+    reused_blocks += 1
+    reuse existing block
+  else:
+    write chunk as block(hash)
+    repository_blocks.add(hash)
+    new_blocks += 1
+```
+
+Properties:
+
+- Ingest is idempotent for unchanged input: running the same source twice stores no new blocks on the second run.
+- Two different files with identical chunk bytes point to the same physical block.
+- Storage grows by the number of new unique block bytes, not by total input bytes.
+
+### 3. Snapshot as a persistent reference graph
+
+A snapshot does not copy file bytes again. It records a stable graph from files to block hashes.
+
+```text
+Snapshot = {
+  id,
+  created_at,
+  source_root,
+  files: [
+    {
+      relative_path,
+      size_bytes,
+      modified_at,
+      blocks: [BlockReference]
+    }
+  ],
+  summary
+}
+```
+
+Conceptually:
+
+```text
+Snapshot
+  -> FileEntry(relative_path)
+    -> BlockReference(hash)
+      -> PhysicalBlock(bytes)
+```
+
+This makes snapshot creation mostly metadata work after block ingest has identified which bytes are new and which bytes are reused.
+
+### Complexity
+
+Let:
+
+- `N` = total input bytes
+- `B` = block size, currently `1 MiB`
+- `K` = number of block references
+- `U` = total bytes of newly unique blocks
+
+Then:
+
+- Chunking and hashing time: `O(N)`
+- Dedup lookup time: `O(K)` average with hash-set/path existence checks
+- Streaming memory for file bytes: `O(B)`
+- Metadata memory/output: `O(K)`
+- New physical storage growth: `O(U)`
+
+### Current algorithmic trade-offs
+
+- Fixed-size chunking is deterministic and simple, but less effective than content-defined chunking when bytes are inserted near the beginning of a large file.
+- Chrona currently performs deduplication, not compression.
+- Chrona currently stores a snapshot reference graph, not a Merkle tree.
+- Restore, integrity verification, block garbage collection, compression, encryption, and content-defined chunking are future algorithm candidates.
 
 ## Development
 
