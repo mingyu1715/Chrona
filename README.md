@@ -42,6 +42,38 @@ Not implemented yet:
 - Block hash: SHA-256
 - Block size: 1 MiB fixed chunks
 
+## Storage Algorithm
+
+Chrona currently uses a content-addressed fixed-block storage model.
+
+### Block ingest
+
+1. Validate that the source path and repository path are not the same path and neither contains the other.
+2. Scan the selected file or folder and convert metadata paths to OS-independent `/`-separated relative paths.
+3. Stream each file in fixed `1 MiB` chunks. The final chunk may be smaller.
+4. Compute `SHA-256` over the exact chunk bytes.
+5. Store each block by hash at `blocks/{hash[0..2]}/{hash[2..4]}/{hash}.blk`.
+6. If a block already exists, reuse it instead of writing duplicate bytes.
+7. If a block is new, write `{hash}.blk.tmp-{operationId}` first, then rename it to the final `.blk` path.
+8. Emit progress events with current file and processed byte counts while ingest runs.
+
+### Snapshot creation
+
+A snapshot is metadata over the block engine, not a second copy of file bytes.
+
+- Snapshot creation runs block ingest for the selected source.
+- File entries store normalized relative paths, file sizes, modified times, and ordered block references.
+- Snapshot JSON is written to `snapshots/{snapshotId}.json` using `.tmp` then rename.
+- `indexes/snapshot-index.json` stores newest-first snapshot summaries for fast listing.
+- Snapshot IDs are restricted to ASCII letters, digits, `_`, and `-` to prevent path traversal.
+
+### Current trade-offs
+
+- Fixed-size chunking is simple and deterministic, but does not detect shifted content as efficiently as content-defined chunking.
+- Blocks are not compressed or encrypted yet.
+- Delete, garbage collection, restore, and integrity verification are future phases.
+- MVP path metadata requires UTF-8-compatible paths.
+
 ## Development
 
 Install dependencies:
