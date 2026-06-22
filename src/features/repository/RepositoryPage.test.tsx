@@ -94,4 +94,15 @@ describe('RepositoryPage', () => {
     expect(screen.getByLabelText(/source path/i)).toHaveValue('/picked/source.txt');
   });
 
+
+  test('renders the storage workbench shell and empty result state', () => {
+    const { api } = createApiMock();
+
+    render(<RepositoryPage api={api} />);
+
+    expect(screen.getByRole('heading', { name: /storage workbench/i })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /workflow/i })).toBeInTheDocument();
+    expect(screen.getByText(/no block run yet/i)).toBeInTheDocument();
+  });
+
 });

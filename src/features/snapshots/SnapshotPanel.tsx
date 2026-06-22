@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Clock3, Files, RefreshCcw, Save, ScrollText } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
 import type { Snapshot, SnapshotIndexItem } from '../../shared/types/chrona';
@@ -72,7 +73,14 @@ export function SnapshotPanel({
 
   return (
     <section className="panel snapshot-panel" aria-labelledby="snapshot-heading">
-      <h2 id="snapshot-heading">Snapshots</h2>
+      <div className="section-heading">
+        <span className="section-icon section-icon-blue"><Clock3 size={18} /></span>
+        <div>
+          <h2 id="snapshot-heading">Snapshots</h2>
+          <p>Capture point-in-time metadata for the selected source.</p>
+        </div>
+      </div>
+
       <label className="field">
         <span>Snapshot name</span>
         <input
@@ -97,13 +105,16 @@ export function SnapshotPanel({
             })
           }
         >
+          <Save size={16} />
           Create Snapshot
         </button>
         <button
           type="button"
+          className="button-secondary"
           disabled={!repositoryOpen || repositoryPath.trim().length === 0 || busy}
           onClick={() => runAction(async () => refreshSnapshots())}
         >
+          <RefreshCcw size={16} />
           Refresh Snapshots
         </button>
       </div>
@@ -114,7 +125,7 @@ export function SnapshotPanel({
         </p>
       )}
 
-      {snapshots.length > 0 && (
+      {snapshots.length > 0 ? (
         <div className="snapshot-layout">
           <div className="snapshot-list" aria-label="Snapshot list">
             {snapshots.map((snapshot) => (
@@ -129,40 +140,61 @@ export function SnapshotPanel({
                 }
               >
                 <span>{snapshot.name}</span>
-                <small>{snapshot.fileCount} files</small>
+                <small>{snapshot.fileCount} files · {formatBytes(snapshot.totalOriginalBytes)}</small>
               </button>
             ))}
           </div>
 
           {selectedSnapshot && (
             <div className="snapshot-detail">
-              <h3>{selectedSnapshot.name}</h3>
-              <dl className="result-grid">
+              <div className="snapshot-detail-header">
+                <ScrollText size={18} />
+                <h3>{selectedSnapshot.name}</h3>
+              </div>
+              <dl className="result-grid compact-grid">
                 <div>
                   <dt>Files</dt>
                   <dd>{selectedSnapshot.summary.fileCount}</dd>
                 </div>
                 <div>
                   <dt>Original bytes</dt>
-                  <dd>{selectedSnapshot.summary.totalOriginalBytes.toLocaleString()}</dd>
+                  <dd>{formatBytes(selectedSnapshot.summary.totalOriginalBytes)}</dd>
                 </div>
                 <div>
                   <dt>New stored bytes</dt>
-                  <dd>{selectedSnapshot.summary.newStoredBytes.toLocaleString()}</dd>
+                  <dd>{formatBytes(selectedSnapshot.summary.newStoredBytes)}</dd>
                 </div>
               </dl>
               <ul className="snapshot-file-list">
                 {selectedSnapshot.files.map((file) => (
                   <li key={file.relativePath}>
                     <span>{file.relativePath}</span>
-                    <small>{file.sizeBytes.toLocaleString()} bytes</small>
+                    <small>{formatBytes(file.sizeBytes)}</small>
                   </li>
                 ))}
               </ul>
             </div>
           )}
         </div>
+      ) : (
+        <div className="empty-state empty-state-compact">
+          <span><Files size={20} /></span>
+          <div>
+            <strong>No snapshots yet</strong>
+            <p>Create one after opening a repository and selecting a source.</p>
+          </div>
+        </div>
       )}
     </section>
   );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes.toLocaleString()} bytes`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KiB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
 }
