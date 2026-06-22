@@ -81,6 +81,7 @@
 - Started Phase 3 implementation with pure `DiffService::compare` models and tests.
 - Added `compare_snapshots` service and Tauri command registration for persisted snapshots.
 - Added TypeScript comparison result types and `chronaApi.compareSnapshots` wrapper.
+- Added minimal snapshot comparison UI with base/target selectors, summary metrics, and file diff rows.
 
 ### Decisions
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Clock3, Files, RefreshCcw, Save, ScrollText } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
+import { SnapshotComparePanel } from './SnapshotComparePanel';
 import type { Snapshot, SnapshotIndexItem } from '../../shared/types/chrona';
 
 interface SnapshotPanelProps {
@@ -135,7 +136,8 @@ export function SnapshotPanel({
       )}
 
       {snapshots.length > 0 ? (
-        <div className="snapshot-layout">
+        <>
+          <div className="snapshot-layout">
           <div className="snapshot-list" aria-label="Snapshot list">
             {snapshots.map((snapshot) => (
               <button
@@ -184,7 +186,15 @@ export function SnapshotPanel({
               </ul>
             </div>
           )}
-        </div>
+          </div>
+
+          <SnapshotComparePanel
+          api={api}
+          repositoryPath={repositoryPath}
+          snapshots={snapshots}
+          disabled={!repositoryOpen || busy}
+          />
+        </>
       ) : (
         <div className="empty-state empty-state-compact">
           <span><Files size={20} /></span>

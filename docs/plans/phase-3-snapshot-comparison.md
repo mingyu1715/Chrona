@@ -61,12 +61,12 @@ Modify:
 
 ## Task 4: Add Minimal Comparison UI
 
-- [ ] Create `SnapshotComparePanel.tsx` with base/target selectors, compare action, summary metrics, and file diff list.
-- [ ] Mount it from `SnapshotPanel.tsx` after snapshots are loaded.
-- [ ] Add disabled states when fewer than two snapshots exist or compare is running.
-- [ ] Write Vitest coverage for selecting snapshots and rendering returned diff counts.
-- [ ] Run `npm test -- Snapshot` and `npm run build`.
-- [ ] Commit: `feat: add snapshot comparison UI`.
+- [x] Create `SnapshotComparePanel.tsx` with base/target selectors, compare action, summary metrics, and file diff list.
+- [x] Mount it from `SnapshotPanel.tsx` after snapshots are loaded.
+- [x] Add disabled states when fewer than two snapshots exist or compare is running.
+- [x] Write Vitest coverage for selecting snapshots and rendering returned diff counts.
+- [x] Run `npm test -- Snapshot` and `npm run build`.
+- [x] Commit: `feat: add snapshot comparison UI`.
 
 ## Task 5: Finish Phase 3 Documentation
 
