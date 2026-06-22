@@ -101,7 +101,9 @@ describe('RepositoryPage', () => {
 
     render(<RepositoryPage api={api} />);
 
+    expect(screen.getByText(/chrona desktop/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /chrona workspace/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /workspace overview/i })).toBeInTheDocument();
     const sectionNav = screen.getByRole('navigation', { name: /workspace sections/i });
     expect(within(sectionNav).getByRole('button', { name: /repository/i })).toBeInTheDocument();
     expect(within(sectionNav).getByRole('button', { name: /sources/i })).toBeInTheDocument();

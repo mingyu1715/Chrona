@@ -165,6 +165,11 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   const statusLabel = manifest ? 'Repository open' : 'Repository closed';
   const sourceLabel = sourcePath.trim().length > 0 ? sourcePath : 'No source selected';
   const repositoryLabel = repositoryPath.trim().length > 0 ? repositoryPath : 'No repository selected';
+  const repositoryState = manifest ? 'Open' : 'Closed';
+  const sourceState = sourcePath.trim().length > 0 ? 'Selected' : 'Not selected';
+  const blockReferenceState = summary ? summary.totalBlockReferences.toLocaleString() : '0';
+  const storedByteState = summary ? formatBytes(summary.newlyStoredBytes) : '0 bytes';
+  const sidebarStatus = manifest ? 'Repository ready' : 'Repository closed';
   const progressPercent = progress && progress.totalBytes > 0
     ? Math.min(100, Math.round((progress.totalBytesProcessed / progress.totalBytes) * 100))
     : 0;
@@ -173,9 +178,6 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     <main className="repository-page chapter-shell">
       <header className="app-toolbar">
         <div className="app-title-group">
-          <span className="brand-mark" aria-hidden="true">
-            <Database size={18} />
-          </span>
           <div>
             <p className="eyebrow">Chrona Phase 2</p>
             <h1>Chrona Workspace</h1>
@@ -192,7 +194,17 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
 
       <div className="chapter-layout">
         <aside className="chapter-sidebar">
-          <div className="sidebar-label">Workspace</div>
+          <div className="sidebar-product">
+            <span className="brand-mark sidebar-brand-mark" aria-hidden="true">
+              <Database size={18} />
+            </span>
+            <div>
+              <strong>Chrona Desktop</strong>
+              <span>Local storage engine</span>
+            </div>
+          </div>
+
+          <div className="sidebar-label">Storage</div>
           <nav className="chapter-nav" aria-label="Workspace sections">
             {chapters.map((chapter) => {
               const Icon = chapter.icon;
@@ -213,6 +225,14 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
               );
             })}
           </nav>
+
+          <div className="sidebar-footer" aria-label="Storage engine status">
+            <span className={manifest ? 'engine-dot engine-dot-active' : 'engine-dot'} aria-hidden="true" />
+            <div>
+              <strong>{sidebarStatus}</strong>
+              <span>{progress ? progress.phase : 'Idle'}</span>
+            </div>
+          </div>
         </aside>
 
         <section className="chapter-stage" aria-labelledby="active-chapter-heading">
@@ -223,9 +243,28 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
               <p>{activeChapterMeta.description}</p>
             </div>
             <span className={`chapter-state chapter-state-${chapterTone(activeChapter)}`}>
-              {chapterTone(activeChapter)}
+              {toneLabel(chapterTone(activeChapter))}
             </span>
           </div>
+
+          <section className="resource-overview" aria-label="Workspace overview">
+            <div>
+              <span>Repository</span>
+              <strong>{repositoryState}</strong>
+            </div>
+            <div>
+              <span>Source</span>
+              <strong>{sourceState}</strong>
+            </div>
+            <div>
+              <span>Block refs</span>
+              <strong>{blockReferenceState}</strong>
+            </div>
+            <div>
+              <span>Stored</span>
+              <strong>{storedByteState}</strong>
+            </div>
+          </section>
 
           <section className="path-dock" aria-label="Current paths">
             <div>

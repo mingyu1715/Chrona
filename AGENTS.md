@@ -58,8 +58,8 @@ Chrona is licensed for non-commercial use under PolyForm Noncommercial License 1
 
 Chrona UI should read as a focused desktop workflow app, not a marketing SaaS page or broad analytics dashboard. Keep the interface quiet, dense, and task-oriented.
 
-- Preferred palette: warm gray base, white surfaces, deep teal primary actions, muted blue snapshot accents, restrained amber/error states.
-- Preferred layout: Docker Desktop-inspired section navigation, one active work stage, compact path/status strips, and drop-down panels for repository, ingest, snapshots, and review.
+- Preferred palette: light gray base, white surfaces, Docker-like blue primary actions, green ready states, and restrained amber/error states.
+- Preferred layout: Docker Desktop-inspired section navigation, sidebar product/status area, one active work stage, compact resource/path strips, and drop-down panels for repository, ingest, snapshots, and review.
 - Prefer lucide-react icons for visible commands and panel anchors.
 - Preserve direct path entry even when native picker buttons are available.
 - Avoid decorative gradient orbs, oversized hero treatment, nested cards, and future-feature UI that is not implemented.
