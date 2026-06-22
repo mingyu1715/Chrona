@@ -95,13 +95,20 @@ describe('RepositoryPage', () => {
   });
 
 
-  test('renders the storage workbench shell and empty result state', () => {
+  test('renders the chapter workflow shell and empty result state', async () => {
     const { api } = createApiMock();
+    const user = userEvent.setup();
 
     render(<RepositoryPage api={api} />);
 
-    expect(screen.getByRole('heading', { name: /storage workbench/i })).toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: /workflow/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /chrona workspace/i })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /chapters/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /repository setup/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /source ingest/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /review/i }));
+
+    expect(screen.getByRole('heading', { name: /review/i })).toBeInTheDocument();
     expect(screen.getByText(/no block run yet/i)).toBeInTheDocument();
   });
 

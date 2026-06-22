@@ -9,6 +9,7 @@ interface SnapshotPanelProps {
   repositoryPath: string;
   sourcePath: string;
   repositoryOpen: boolean;
+  embedded?: boolean;
 }
 
 export function SnapshotPanel({
@@ -16,6 +17,7 @@ export function SnapshotPanel({
   repositoryPath,
   sourcePath,
   repositoryOpen,
+  embedded = false,
 }: SnapshotPanelProps) {
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshots, setSnapshots] = useState<SnapshotIndexItem[]>([]);
@@ -72,14 +74,21 @@ export function SnapshotPanel({
     !busy;
 
   return (
-    <section className="panel snapshot-panel" aria-labelledby="snapshot-heading">
-      <div className="section-heading">
-        <span className="section-icon section-icon-blue"><Clock3 size={18} /></span>
-        <div>
-          <h2 id="snapshot-heading">Snapshots</h2>
-          <p>Capture point-in-time metadata for the selected source.</p>
+    <section
+      className={embedded ? 'snapshot-panel snapshot-panel-embedded' : 'panel snapshot-panel'}
+      aria-labelledby="snapshot-heading"
+    >
+      {embedded ? (
+        <h2 id="snapshot-heading" className="sr-only">Snapshots</h2>
+      ) : (
+        <div className="section-heading">
+          <span className="section-icon section-icon-blue"><Clock3 size={18} /></span>
+          <div>
+            <h2 id="snapshot-heading">Snapshots</h2>
+            <p>Capture point-in-time metadata for the selected source.</p>
+          </div>
         </div>
-      </div>
+      )}
 
       <label className="field">
         <span>Snapshot name</span>
