@@ -140,5 +140,6 @@
 ### Contribution Policy Update
 
 - Added `CLA.md` with a lightweight Chrona Contributor License Agreement.
-- Updated `CONTRIBUTING.md` to require CLA acknowledgment in pull requests.
+- Updated `CONTRIBUTING.md` so contribution submission itself is treated as CLA agreement by default.
 - Set `mingyu1715` as the maintainer/copyright holder for contribution rights.
+- Removed the default requirement for a separate CLA comment or checkbox.

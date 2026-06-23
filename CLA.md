@@ -50,14 +50,10 @@ Your Contribution is provided as-is, without warranties or conditions of any kin
 
 You are not required to provide support, maintenance, updates, or indemnity for your Contribution.
 
-## 8. How to Acknowledge
+## 8. Agreement by Submission
 
-A pull request may be accepted only after the contributor acknowledges this CLA.
+No separate signature, checkbox, or pull request comment is required by default.
 
-For now, acknowledgment can be made by including this line in the pull request description or a comment:
+By submitting a Contribution to the Project, including through a pull request, patch, issue, discussion, or other repository channel, you acknowledge and agree that the Contribution is submitted under this CLA.
 
-```text
-I agree to the Chrona CLA.
-```
-
-The Maintainer may later replace this manual acknowledgment with a CLA bot or another signed process.
+The Maintainer may request a separate written acknowledgment, CLA bot confirmation, or signed agreement for larger contributions, organization-owned contributions, or any contribution where rights are unclear.
