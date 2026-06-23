@@ -1,8 +1,11 @@
 pub mod block_ingest_service;
 pub mod block_store;
 pub mod chunker;
+pub mod diff_service;
 pub mod errors;
 pub mod hasher;
 pub mod path_safety;
 pub mod repository;
 pub mod scanner;
+pub mod snapshot_service;
+pub mod snapshot_store;

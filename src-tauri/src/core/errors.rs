@@ -24,6 +24,10 @@ pub enum ChronaError {
     Scan(String),
     #[error("Hash: {0}")]
     Hash(String),
+    #[error("InvalidSnapshotId: {0}")]
+    InvalidSnapshotId(String),
+    #[error("SnapshotNotFound: {0}")]
+    SnapshotNotFound(String),
 }
 
 impl From<std::io::Error> for ChronaError {

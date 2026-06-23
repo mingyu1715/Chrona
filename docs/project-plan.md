@@ -400,14 +400,14 @@ e2e/
 1. 저장소 포맷과 block engine
 2. snapshot 생성
 3. snapshot 조회와 기본 통계
-4. restore
-5. snapshot diff
+4. snapshot diff
+5. restore
 6. dashboard와 핵심 시각화
 7. integrity verification
 8. 문서와 GitHub 운영 정리
 9. 패키징과 릴리스 준비
 
-복원보다 시각화를 먼저 만들면 데모는 좋아지지만 핵심 신뢰성이 약해진다. 따라서 Phase 3까지는 core correctness를 우선한다.
+Phase 3은 snapshot diff를 먼저 구현한다. 복원은 사용자의 파일 시스템에 새 파일을 쓰는 기능이므로, 비교 알고리즘과 snapshot metadata 신뢰성을 먼저 확보한 뒤 별도 Phase에서 다룬다.
 
 ## 13. Phase별 개발 계획
 
@@ -450,18 +450,18 @@ e2e/
 - 완료 기준: 앱에서 스냅샷 생성 후 재시작해도 목록과 상세 조회 가능
 - 다음 조건: snapshot 두 개 이상을 비교하고 복원할 수 있음
 
-### Phase 3. 복원과 비교
+### Phase 3. 스냅샷 비교
 
 - 기간: 1주
-- 목표: snapshot을 실제 파일로 복원하고 두 snapshot 차이를 계산
-- 구현 기능: restore, restore report, diff added/modified/deleted, conflict-safe target restore
-- 필요한 모듈: `RestoreService`, `DiffService`
-- 구현 방식: MVP에서는 기존 폴더 덮어쓰기를 기본 제공하지 않고 새 target folder 복원을 기본으로 함
-- 데이터 흐름: snapshot file records -> block reads -> reconstructed files -> restore report
-- 화면 구성: compare 화면, restore dialog, restore result
-- 테스트 방법: snapshot 생성 후 복원 파일 byte equality 검증, diff fixture 검증
-- 완료 기준: 변경된 파일, 삭제된 파일, 추가된 파일이 UI에 정확히 표시되고 복원이 성공
-- 다음 조건: 사용자가 변화와 저장량을 이해할 수 있는 시각화 추가 가능
+- 목표: 두 snapshot의 파일/블록 참조 차이를 계산하고 UI에서 확인
+- 구현 기능: diff added/modified/deleted/unchanged, block-reference added/removed/shared counts, compare command, minimal compare UI
+- 필요한 모듈: `DiffService`, `SnapshotComparison` models, `compare_snapshots` command
+- 구현 방식: snapshot JSON 두 개를 읽고 normalized relative path 기준으로 매칭한 뒤, block hash sequence와 size로 content change를 판정
+- 데이터 흐름: snapshot A + snapshot B -> path map -> file diff rows -> block multiset counts -> comparison summary
+- 화면 구성: snapshot 선택 2개, compare 실행, summary, file diff list
+- 테스트 방법: added/deleted/modified/unchanged fixture, duplicate block reference multiset count, command integration, UI render test
+- 완료 기준: 변경된 파일, 삭제된 파일, 추가된 파일, 동일 파일이 UI에 정확히 표시되고 block reference 변화량이 계산됨
+- 다음 조건: 비교 결과를 바탕으로 restore 또는 visualization 중 다음 Phase를 선택 가능
 
 ### Phase 4. 시각화와 UX
 
@@ -566,22 +566,26 @@ CONTRIBUTING.md
 AGENTS.md
 LICENSE
 docs/
-  README.md
-  development-roadmap.md
-  development-guide.md
   development-log.md
+  project-plan.md
   implemented/
     block-engine.md
     snapshot-engine.md
-    restore-engine.md
-    visualization.md
+    snapshot-comparison.md
   specs/
-    0001-storage-format.md
-    0002-snapshot-format.md
+    0001-repository-format.md
+    0002-block-engine.md
+    0003-snapshot-format.md
+    0004-snapshot-comparison.md
+    0005-block-compression.md
   plans/
-    phase-1-block-engine.md
-    phase-2-snapshot-engine.md
+    README.md
   archive/
+    README.md
+    plans/
+      phase-1-block-engine.md
+      phase-2-snapshot-engine.md
+      phase-3-snapshot-comparison.md
 ```
 
 ### 역할
@@ -590,13 +594,11 @@ docs/
 - `README.ko.md`: 한국어 소개
 - `CONTRIBUTING.md`: 외부 기여 방법
 - `AGENTS.md`: AI coding agent 작업 규칙
-- `docs/development-roadmap.md`: phase와 milestone
-- `docs/development-guide.md`: 작업 전 확인, 테스트, Git 규칙
 - `docs/development-log.md`: 날짜별 작업 기록
 - `docs/implemented/`: 큰 기능 완료 후 구현 기록
 - `docs/specs/`: 설계 결정과 데이터 포맷
-- `docs/plans/`: 실제 작업 체크리스트
-- `docs/archive/`: 완료되었거나 폐기된 오래된 계획
+- `docs/plans/`: 현재 진행 또는 다음 작업 체크리스트
+- `docs/archive/`: 완료되었거나 폐기된 오래된 작업 문서
 
 ## 17. Development Guide 규칙
 
@@ -696,11 +698,11 @@ source file -> chunk -> hash -> block store
 권장 흐름:
 
 ```text
-docs/specs/0001-storage-format.md
-docs/plans/phase-1-block-engine.md
+docs/specs/0002-block-engine.md
+docs/plans/phase-N-current-work.md
 implementation
 docs/implemented/block-engine.md
-docs/archive/plans/phase-1-block-engine.md
+docs/archive/plans/phase-N-current-work.md
 ```
 
 ## 21. AGENTS.md 초안 규칙
@@ -727,11 +729,16 @@ docs/archive/plans/phase-1-block-engine.md
 | 시각화 scope 과대화 | block graph가 복잡해짐 | MVP는 dashboard와 파일 단위 block map에 집중 |
 | 스냅샷 삭제 후 block 정리 | ref count와 GC 필요 | MVP 제외, Future에서 SQLite 기반 GC 설계 |
 | 내용 기반 청킹 부재 | 중간 삽입 변경에 fixed chunk가 약함 | Future에서 FastCDC/Rabin fingerprinting 검토 |
+| 블록 압축 도입 시 dedup 흔들림 | 압축 후 byte를 hash identity로 쓰면 설정 변경에 따라 같은 원본이 다른 block이 됨 | raw chunk SHA-256을 identity로 유지하고 저장 payload만 zstd 등으로 압축 |
 
 ## 23. 확장 기능
 
+### Future compression rule
+
+Block compression은 저장 공간 최적화 후보지만 현재 MVP 구현 대상은 아니다. 이후 도입 시에도 block hash는 반드시 압축 전 raw chunk의 SHA-256으로 유지하고, 새 block의 물리 payload만 선택적으로 압축한다. 기본 후보 알고리즘은 `zstd` level 3이며, 압축 결과가 raw보다 크거나 같으면 raw 저장으로 fallback한다.
+
 - SQLite metadata backend
-- compression
+- compression with raw-byte block identity (`docs/specs/0005-block-compression.md`)
 - encryption
 - content-defined chunking
 - snapshot delete and garbage collection

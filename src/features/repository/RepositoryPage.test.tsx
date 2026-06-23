@@ -1,10 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { RepositoryPage } from './RepositoryPage';
 import type { ChronaApi } from '../../shared/api/chronaApi';
 import type { BlockIngestProgress, RepositoryManifest } from '../../shared/types/chrona';
+
+afterEach(() => cleanup());
 
 function createApiMock() {
   const manifest: RepositoryManifest = {
@@ -27,6 +29,33 @@ function createApiMock() {
       newlyStoredBytes: 9,
       files: [],
     })),
+    createSnapshot: vi.fn(),
+    listSnapshots: vi.fn(async () => []),
+    getSnapshot: vi.fn(),
+    compareSnapshots: vi.fn(async () => ({
+      schemaVersion: 1,
+      baseSnapshotId: 'base',
+      targetSnapshotId: 'target',
+      summary: {
+        addedFileCount: 0,
+        deletedFileCount: 0,
+        modifiedFileCount: 0,
+        unchangedFileCount: 0,
+        totalBeforeBytes: 0,
+        totalAfterBytes: 0,
+        addedBytes: 0,
+        deletedBytes: 0,
+        modifiedBeforeBytes: 0,
+        modifiedAfterBytes: 0,
+        addedBlockReferences: 0,
+        removedBlockReferences: 0,
+        sharedBlockReferences: 0,
+      },
+      files: [],
+    })),
+    selectRepositoryPath: vi.fn(async () => '/picked/chrona-repo'),
+    selectSourceFilePath: vi.fn(async () => '/picked/source.txt'),
+    selectSourceFolderPath: vi.fn(async () => '/picked/source-folder'),
     onBlockIngestProgress: vi.fn(async (handler) => {
       progressHandler = handler;
       return () => undefined;
@@ -67,4 +96,48 @@ describe('RepositoryPage', () => {
     expect(screen.getByText('1 new / 1 reused')).toBeInTheDocument();
     expect(screen.getByText('50.00%')).toBeInTheDocument();
   });
+
+  test('fills paths from native picker actions', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.click(screen.getByRole('button', { name: /choose repository folder/i }));
+    expect(screen.getByLabelText(/repository path/i)).toHaveValue('/picked/chrona-repo');
+
+    await user.click(screen.getByRole('button', { name: /create repository/i }));
+    await waitFor(() => expect(api.createRepository).toHaveBeenCalledWith('/picked/chrona-repo'));
+
+    await user.click(screen.getByRole('button', { name: /choose source folder/i }));
+    expect(screen.getByLabelText(/source path/i)).toHaveValue('/picked/source-folder');
+
+    await user.click(screen.getByRole('button', { name: /choose source file/i }));
+    expect(screen.getByLabelText(/source path/i)).toHaveValue('/picked/source.txt');
+  });
+
+
+  test('renders unnumbered workspace sections and empty result state', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+
+    render(<RepositoryPage api={api} />);
+
+    expect(screen.getByText(/chrona desktop/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /chrona workspace/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /workspace overview/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /switch to dark mode/i })).toBeInTheDocument();
+    const sectionNav = screen.getByRole('navigation', { name: /workspace sections/i });
+    expect(within(sectionNav).getByRole('button', { name: /repository/i })).toBeInTheDocument();
+    expect(within(sectionNav).getByRole('button', { name: /sources/i })).toBeInTheDocument();
+    expect(screen.queryByText(/step 1/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /switch to dark mode/i }));
+    expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /review/i }));
+
+    expect(screen.getByRole('heading', { name: /review/i })).toBeInTheDocument();
+    expect(screen.getByText(/no block run yet/i)).toBeInTheDocument();
+  });
+
 });

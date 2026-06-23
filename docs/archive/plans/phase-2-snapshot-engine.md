@@ -1,6 +1,6 @@
 # Phase 2 Snapshot Engine Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add snapshot creation, persistence, listing, and detail lookup on top of the Phase 1 block engine.
 
@@ -39,7 +39,7 @@ Modify:
 
 ## Task 1: Extend Ingest Metadata With `modifiedAt`
 
-- [ ] **Step 1: Write failing Rust test**
+- [x] **Step 1: Write failing Rust test**
 
 Add to `src-tauri/tests/phase1_core.rs`:
 
@@ -61,7 +61,7 @@ fn ingest_results_include_file_modified_time() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 ```bash
 cd src-tauri && cargo test ingest_results_include_file_modified_time
@@ -69,7 +69,7 @@ cd src-tauri && cargo test ingest_results_include_file_modified_time
 
 Expected: compile failure because `FileIngestResult.modified_at` does not exist.
 
-- [ ] **Step 3: Implement minimal model change**
+- [x] **Step 3: Implement minimal model change**
 
 Update `src-tauri/src/models/ingest.rs`:
 
@@ -104,7 +104,7 @@ export interface FileIngestResult {
 }
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 ```bash
 cd src-tauri && cargo test ingest_results_include_file_modified_time
@@ -112,7 +112,7 @@ cd src-tauri && cargo test ingest_results_include_file_modified_time
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/src/models/ingest.rs src-tauri/src/core/block_ingest_service.rs src-tauri/tests/phase1_core.rs src/shared/types/chrona.ts
@@ -121,7 +121,7 @@ git commit -m "feat: include file modified time in ingest results"
 
 ## Task 2: Add Snapshot Models and Format Tests
 
-- [ ] **Step 1: Write failing integration test**
+- [x] **Step 1: Write failing integration test**
 
 Create `src-tauri/tests/phase2_snapshot.rs`:
 
@@ -161,7 +161,7 @@ fn create_snapshot_writes_snapshot_file_and_index() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 ```bash
 cd src-tauri && cargo test create_snapshot_writes_snapshot_file_and_index
@@ -169,7 +169,7 @@ cd src-tauri && cargo test create_snapshot_writes_snapshot_file_and_index
 
 Expected: compile failure because snapshot modules do not exist.
 
-- [ ] **Step 3: Add snapshot structs**
+- [x] **Step 3: Add snapshot structs**
 
 Create `src-tauri/src/models/snapshot.rs`:
 
@@ -229,7 +229,7 @@ pub struct SnapshotIndexItem {
 }
 ```
 
-- [ ] **Step 4: Export model**
+- [x] **Step 4: Export model**
 
 Update `src-tauri/src/models/mod.rs`:
 
@@ -237,7 +237,7 @@ Update `src-tauri/src/models/mod.rs`:
 pub mod snapshot;
 ```
 
-- [ ] **Step 5: Verify compile failure moves to missing service**
+- [x] **Step 5: Verify compile failure moves to missing service**
 
 ```bash
 cd src-tauri && cargo test create_snapshot_writes_snapshot_file_and_index
@@ -247,7 +247,7 @@ Expected: failure now references missing `snapshot_service`.
 
 ## Task 3: Implement Snapshot Store
 
-- [ ] **Step 1: Write failing store tests**
+- [x] **Step 1: Write failing store tests**
 
 Add to `src-tauri/tests/phase2_snapshot.rs`:
 
@@ -268,7 +268,7 @@ fn snapshot_store_rejects_path_traversal_ids() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify failure**
+- [x] **Step 2: Run test to verify failure**
 
 ```bash
 cd src-tauri && cargo test snapshot_store_rejects_path_traversal_ids
@@ -276,7 +276,7 @@ cd src-tauri && cargo test snapshot_store_rejects_path_traversal_ids
 
 Expected: compile failure because `SnapshotStore` does not exist.
 
-- [ ] **Step 3: Add error variants**
+- [x] **Step 3: Add error variants**
 
 Update `src-tauri/src/core/errors.rs`:
 
@@ -287,7 +287,7 @@ InvalidSnapshotId(String),
 SnapshotNotFound(String),
 ```
 
-- [ ] **Step 4: Implement `SnapshotStore`**
+- [x] **Step 4: Implement `SnapshotStore`**
 
 Create `src-tauri/src/core/snapshot_store.rs` with these public methods:
 
@@ -314,7 +314,7 @@ Implementation rules:
 - `add_to_index` reads existing index, removes any same-id item, inserts the new item, sorts newest first, writes `snapshot-index.json.tmp`, then renames.
 - `get_snapshot` returns `SnapshotNotFound` when the file is missing.
 
-- [ ] **Step 5: Export core module**
+- [x] **Step 5: Export core module**
 
 Update `src-tauri/src/core/mod.rs`:
 
@@ -322,7 +322,7 @@ Update `src-tauri/src/core/mod.rs`:
 pub mod snapshot_store;
 ```
 
-- [ ] **Step 6: Verify store tests**
+- [x] **Step 6: Verify store tests**
 
 ```bash
 cd src-tauri && cargo test snapshot_store_rejects_path_traversal_ids
@@ -332,7 +332,7 @@ Expected: pass.
 
 ## Task 4: Implement Snapshot Service
 
-- [ ] **Step 1: Run existing failing create snapshot test**
+- [x] **Step 1: Run existing failing create snapshot test**
 
 ```bash
 cd src-tauri && cargo test create_snapshot_writes_snapshot_file_and_index
@@ -340,7 +340,7 @@ cd src-tauri && cargo test create_snapshot_writes_snapshot_file_and_index
 
 Expected: failure because `SnapshotService` does not exist.
 
-- [ ] **Step 2: Implement `SnapshotService`**
+- [x] **Step 2: Implement `SnapshotService`**
 
 Create `src-tauri/src/core/snapshot_service.rs`:
 
@@ -391,7 +391,7 @@ fn generate_snapshot_id(created_at: DateTime<Utc>) -> String {
 }
 ```
 
-- [ ] **Step 3: Export core module**
+- [x] **Step 3: Export core module**
 
 Update `src-tauri/src/core/mod.rs`:
 
@@ -399,7 +399,7 @@ Update `src-tauri/src/core/mod.rs`:
 pub mod snapshot_service;
 ```
 
-- [ ] **Step 4: Verify create snapshot test**
+- [x] **Step 4: Verify create snapshot test**
 
 ```bash
 cd src-tauri && cargo test create_snapshot_writes_snapshot_file_and_index
@@ -407,7 +407,7 @@ cd src-tauri && cargo test create_snapshot_writes_snapshot_file_and_index
 
 Expected: pass.
 
-- [ ] **Step 5: Add duplicate snapshot reuse test**
+- [x] **Step 5: Add duplicate snapshot reuse test**
 
 Add to `src-tauri/tests/phase2_snapshot.rs`:
 
@@ -430,7 +430,7 @@ fn second_snapshot_reuses_existing_blocks() {
 }
 ```
 
-- [ ] **Step 6: Verify duplicate reuse**
+- [x] **Step 6: Verify duplicate reuse**
 
 ```bash
 cd src-tauri && cargo test second_snapshot_reuses_existing_blocks
@@ -438,7 +438,7 @@ cd src-tauri && cargo test second_snapshot_reuses_existing_blocks
 
 Expected: pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src-tauri/src/models src-tauri/src/core src-tauri/tests/phase1_core.rs src-tauri/tests/phase2_snapshot.rs src/shared/types/chrona.ts
@@ -447,7 +447,7 @@ git commit -m "feat: add snapshot storage service"
 
 ## Task 5: Add Snapshot Tauri Commands
 
-- [ ] **Step 1: Add command wrappers**
+- [x] **Step 1: Add command wrappers**
 
 Create `src-tauri/src/commands/snapshot_commands.rs`:
 
@@ -493,7 +493,7 @@ pub fn get_snapshot(repository_path: String, snapshot_id: String) -> Result<Snap
 }
 ```
 
-- [ ] **Step 2: Export command module**
+- [x] **Step 2: Export command module**
 
 Update `src-tauri/src/commands/mod.rs`:
 
@@ -501,7 +501,7 @@ Update `src-tauri/src/commands/mod.rs`:
 pub mod snapshot_commands;
 ```
 
-- [ ] **Step 3: Register commands in `src-tauri/src/main.rs`**
+- [x] **Step 3: Register commands in `src-tauri/src/main.rs`**
 
 Import and register:
 
@@ -517,7 +517,7 @@ list_snapshots,
 get_snapshot
 ```
 
-- [ ] **Step 4: Verify command compile**
+- [x] **Step 4: Verify command compile**
 
 ```bash
 cd src-tauri && cargo test
@@ -525,7 +525,7 @@ cd src-tauri && cargo test
 
 Expected: all Rust tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src-tauri/src/commands src-tauri/src/main.rs
@@ -534,7 +534,7 @@ git commit -m "feat: expose snapshot commands"
 
 ## Task 6: Add TypeScript API and Minimal Snapshot UI
 
-- [ ] **Step 1: Add TypeScript types**
+- [x] **Step 1: Add TypeScript types**
 
 Update `src/shared/types/chrona.ts`:
 
@@ -576,7 +576,7 @@ export interface SnapshotIndexItem {
 }
 ```
 
-- [ ] **Step 2: Add API wrappers**
+- [x] **Step 2: Add API wrappers**
 
 Update `src/shared/api/chronaApi.ts` interface and `chronaApi` object:
 
@@ -594,7 +594,7 @@ invoke<SnapshotIndexItem[]>('list_snapshots', { repositoryPath })
 invoke<Snapshot>('get_snapshot', { repositoryPath, snapshotId })
 ```
 
-- [ ] **Step 3: Write failing UI test**
+- [x] **Step 3: Write failing UI test**
 
 Create `src/features/snapshots/SnapshotPanel.test.tsx`:
 
@@ -673,7 +673,7 @@ describe('SnapshotPanel', () => {
 });
 ```
 
-- [ ] **Step 4: Run UI test to verify failure**
+- [x] **Step 4: Run UI test to verify failure**
 
 ```bash
 npm test SnapshotPanel
@@ -681,7 +681,7 @@ npm test SnapshotPanel
 
 Expected: compile failure because `SnapshotPanel` does not exist.
 
-- [ ] **Step 5: Implement `SnapshotPanel`**
+- [x] **Step 5: Implement `SnapshotPanel`**
 
 Create `src/features/snapshots/SnapshotPanel.tsx` with:
 
@@ -702,7 +702,7 @@ interface SnapshotPanelProps {
 }
 ```
 
-- [ ] **Step 6: Mount panel**
+- [x] **Step 6: Mount panel**
 
 Update `RepositoryPage.tsx`:
 
@@ -715,7 +715,7 @@ Update `RepositoryPage.tsx`:
 />
 ```
 
-- [ ] **Step 7: Verify frontend**
+- [x] **Step 7: Verify frontend**
 
 ```bash
 npm test
@@ -724,7 +724,7 @@ npm run build
 
 Expected: both pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/shared src/features src/App.tsx
@@ -733,7 +733,7 @@ git commit -m "feat: add snapshot UI"
 
 ## Task 7: Update Docs and Final Verification
 
-- [ ] **Step 1: Update development log**
+- [x] **Step 1: Update development log**
 
 Add Phase 2 implementation notes to `docs/development-log.md`:
 
@@ -749,7 +749,7 @@ Add Phase 2 implementation notes to `docs/development-log.md`:
 - `npm run build`: passed.
 ```
 
-- [ ] **Step 2: Create implemented record**
+- [x] **Step 2: Create implemented record**
 
 Create `docs/implemented/snapshot-engine.md` after code completion. Include:
 
@@ -760,7 +760,7 @@ Create `docs/implemented/snapshot-engine.md` after code completion. Include:
 - tests
 - known limits
 
-- [ ] **Step 3: Run full verification**
+- [x] **Step 3: Run full verification**
 
 ```bash
 npm test
@@ -774,7 +774,7 @@ Expected:
 - TypeScript production build passes.
 - Cargo passes Phase 1 and Phase 2 integration tests.
 
-- [ ] **Step 4: Commit docs**
+- [x] **Step 4: Commit docs**
 
 ```bash
 git add docs

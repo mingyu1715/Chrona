@@ -7,6 +7,7 @@ use crate::models::block::BlockReference;
 pub struct FileIngestResult {
     pub relative_path: String,
     pub size_bytes: u64,
+    pub modified_at: String,
     pub blocks: Vec<BlockReference>,
 }
 

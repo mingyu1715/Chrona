@@ -9,6 +9,7 @@ use crate::models::repository::{BlockStrategy, RepositoryManifest};
 
 const SCHEMA_VERSION: u32 = 1;
 const BLOCK_SIZE_BYTES: u64 = 1_048_576;
+const SNAPSHOT_INDEX_FILE: &str = "snapshot-index.json";
 
 pub struct RepositoryManager;
 
@@ -18,6 +19,7 @@ impl RepositoryManager {
         fs::create_dir_all(repository_path.join("blocks"))?;
         fs::create_dir_all(repository_path.join("indexes"))?;
         fs::create_dir_all(repository_path.join("logs"))?;
+        ensure_snapshot_layout(repository_path)?;
 
         let manifest = RepositoryManifest {
             schema_version: SCHEMA_VERSION,
@@ -55,7 +57,10 @@ impl RepositoryManager {
             }
         }
 
-        let manifest: RepositoryManifest = serde_json::from_str(&fs::read_to_string(manifest_path)?)?;
+        ensure_snapshot_layout(repository_path)?;
+
+        let manifest: RepositoryManifest =
+            serde_json::from_str(&fs::read_to_string(manifest_path)?)?;
         if manifest.schema_version != SCHEMA_VERSION {
             return Err(ChronaError::UnsupportedRepositoryVersion(
                 manifest.schema_version,
@@ -63,4 +68,13 @@ impl RepositoryManager {
         }
         Ok(manifest)
     }
+}
+
+fn ensure_snapshot_layout(repository_path: &Path) -> ChronaResult<()> {
+    fs::create_dir_all(repository_path.join("snapshots"))?;
+    let index_path = repository_path.join("indexes").join(SNAPSHOT_INDEX_FILE);
+    if !index_path.is_file() {
+        fs::write(index_path, r#"{"schemaVersion":1,"snapshots":[]}"#)?;
+    }
+    Ok(())
 }

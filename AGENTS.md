@@ -53,3 +53,13 @@ Update documentation when behavior changes:
 ## License Rule
 
 Chrona is licensed for non-commercial use under PolyForm Noncommercial License 1.0.0. Do not replace the license with a permissive commercial-use license unless the user explicitly requests it.
+
+## Product Design Direction
+
+Chrona UI should read as a focused desktop workflow app, not a marketing SaaS page or broad analytics dashboard. Keep the interface quiet, dense, and task-oriented.
+
+- Preferred palette: light gray base, white surfaces, Docker-like blue primary actions, green ready states, and restrained amber/error states.
+- Preferred layout: Docker Desktop-inspired section navigation, sidebar product/status area, one active work stage, compact resource/path strips, and drop-down panels for repository, ingest, snapshots, and review.
+- Prefer lucide-react icons for visible commands and panel anchors.
+- Preserve direct path entry even when native picker buttons are available.
+- Avoid decorative gradient orbs, oversized hero treatment, nested cards, and future-feature UI that is not implemented.
