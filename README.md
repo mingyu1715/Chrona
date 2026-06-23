@@ -31,6 +31,7 @@ Implemented:
 Not implemented yet:
 
 - Restore
+- Block compression
 - Integrity verification UI
 - Packaged `.app` release
 
@@ -170,6 +171,20 @@ removed = sum(max(count_before[h] - count_after[h], 0))
 
 This keeps repeated block references meaningful when a file contains the same block more than once.
 
+### 5. Future raw-identity block compression
+
+Compression is a future storage optimization, not part of the current block writer. If added, Chrona should keep block identity based on raw bytes and compress only the physical payload.
+
+```text
+raw_chunk
+  -> SHA-256(raw_chunk)
+  -> dedup lookup by raw hash
+  -> optional zstd compression for new blocks
+  -> write encoded payload
+```
+
+This keeps deduplication and snapshot comparison stable even if compression settings change later.
+
 ### Complexity
 
 Let:
@@ -193,9 +208,9 @@ Then:
 ### Current algorithmic trade-offs
 
 - Fixed-size chunking is deterministic and simple, but less effective than content-defined chunking when bytes are inserted near the beginning of a large file.
-- Chrona currently performs deduplication, not compression.
+- Chrona currently performs deduplication, not compression; future compression must keep raw-byte hashes as block identity.
 - Chrona currently stores a snapshot reference graph, not a Merkle tree.
-- Restore, integrity verification, block garbage collection, compression, encryption, and content-defined chunking are future algorithm candidates.
+- Restore, integrity verification, block garbage collection, compression, encryption, and content-defined chunking are future algorithm candidates. Compression is specified as a future raw-identity payload encoding in `docs/specs/0005-block-compression.md`.
 
 ## Development
 

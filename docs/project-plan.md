@@ -577,6 +577,7 @@ docs/
     0002-block-engine.md
     0003-snapshot-format.md
     0004-snapshot-comparison.md
+    0005-block-compression.md
   plans/
     README.md
   archive/
@@ -728,11 +729,16 @@ docs/archive/plans/phase-N-current-work.md
 | 시각화 scope 과대화 | block graph가 복잡해짐 | MVP는 dashboard와 파일 단위 block map에 집중 |
 | 스냅샷 삭제 후 block 정리 | ref count와 GC 필요 | MVP 제외, Future에서 SQLite 기반 GC 설계 |
 | 내용 기반 청킹 부재 | 중간 삽입 변경에 fixed chunk가 약함 | Future에서 FastCDC/Rabin fingerprinting 검토 |
+| 블록 압축 도입 시 dedup 흔들림 | 압축 후 byte를 hash identity로 쓰면 설정 변경에 따라 같은 원본이 다른 block이 됨 | raw chunk SHA-256을 identity로 유지하고 저장 payload만 zstd 등으로 압축 |
 
 ## 23. 확장 기능
 
+### Future compression rule
+
+Block compression은 저장 공간 최적화 후보지만 현재 MVP 구현 대상은 아니다. 이후 도입 시에도 block hash는 반드시 압축 전 raw chunk의 SHA-256으로 유지하고, 새 block의 물리 payload만 선택적으로 압축한다. 기본 후보 알고리즘은 `zstd` level 3이며, 압축 결과가 raw보다 크거나 같으면 raw 저장으로 fallback한다.
+
 - SQLite metadata backend
-- compression
+- compression with raw-byte block identity (`docs/specs/0005-block-compression.md`)
 - encryption
 - content-defined chunking
 - snapshot delete and garbage collection

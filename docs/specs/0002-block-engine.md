@@ -16,6 +16,12 @@ Phase 1 implements fixed-size block ingest and duplicate block reuse. It does no
 
 Each block is identified by SHA-256 over the exact block bytes. Equal bytes must produce the same block hash and therefore the same storage path.
 
+## Compression
+
+Current block files are stored as raw, uncompressed block bytes. Compression is not implemented in the Phase 1/2/3 engine.
+
+Future compression must preserve the current identity invariant: block hash is SHA-256 over the raw, uncompressed chunk bytes. See `docs/specs/0005-block-compression.md` for the future design constraints.
+
 ## Atomic-like Write
 
 New blocks are written as:

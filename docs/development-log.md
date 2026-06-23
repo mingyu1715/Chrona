@@ -106,3 +106,9 @@
 ### Next Work
 
 - Choose the next Phase between restore and deeper visualization.
+
+### Documentation Update
+
+- Added future block compression design spec in `docs/specs/0005-block-compression.md`.
+- Recorded the raw-byte identity rule: SHA-256 must be calculated before compression, and compression may only affect the physical block payload.
+- Documented `zstd` level 3 as the preferred future default candidate with raw fallback when compression is not beneficial.
