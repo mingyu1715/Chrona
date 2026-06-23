@@ -112,3 +112,9 @@
 - Added future block compression design spec in `docs/specs/0005-block-compression.md`.
 - Recorded the raw-byte identity rule: SHA-256 must be calculated before compression, and compression may only affect the physical block payload.
 - Documented `zstd` level 3 as the preferred future default candidate with raw fallback when compression is not beneficial.
+
+### Planning Update
+
+- Added `docs/specs/0006-home-adaptive-navigation.md` for Home and adaptive quick access.
+- Added active Phase 4 plan in `docs/plans/phase-4-home-adaptive-navigation.md`.
+- Recorded the design constraint that filesystem/source hierarchy remains a stable path-based view; splay tree behavior is limited to the adaptive access index for recent/repeated work.

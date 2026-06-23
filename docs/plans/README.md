@@ -4,6 +4,10 @@ This directory is reserved for active or next-up implementation plans.
 
 Completed phase plans are archived under `docs/archive/plans/` after their implementation record is written in `docs/implemented/`.
 
+Active plans:
+
+- Phase 4: `docs/plans/phase-4-home-adaptive-navigation.md`
+
 Archived completed plans:
 
 - Phase 1: `docs/archive/plans/phase-1-block-engine.md`
