@@ -133,3 +133,20 @@ export interface SnapshotComparison {
   summary: SnapshotComparisonSummary;
   files: SnapshotFileDiff[];
 }
+
+
+export interface RestoreFileResult {
+  relativePath: string;
+  sizeBytes: number;
+  blockCount: number;
+}
+
+export interface RestoreReport {
+  schemaVersion: number;
+  snapshotId: string;
+  targetPath: string;
+  restoredFileCount: number;
+  restoredBytes: number;
+  restoredBlockCount: number;
+  files: RestoreFileResult[];
+}

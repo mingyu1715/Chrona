@@ -28,6 +28,12 @@ pub enum ChronaError {
     InvalidSnapshotId(String),
     #[error("SnapshotNotFound: {0}")]
     SnapshotNotFound(String),
+    #[error("UnsafeRestoreTarget: {0}")]
+    UnsafeRestoreTarget(String),
+    #[error("MissingBlock: {0}")]
+    MissingBlock(String),
+    #[error("Restore: {0}")]
+    Restore(String),
 }
 
 impl From<std::io::Error> for ChronaError {

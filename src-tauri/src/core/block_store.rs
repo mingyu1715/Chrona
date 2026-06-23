@@ -27,6 +27,15 @@ impl BlockStore {
             .join(format!("{hash}.blk")))
     }
 
+    pub fn read_block(&self, hash: &str) -> ChronaResult<Vec<u8>> {
+        let relative_path = Self::block_relative_path(hash)?;
+        let path = self.repository_path.join(relative_path);
+        if !path.is_file() {
+            return Err(ChronaError::MissingBlock(hash.to_string()));
+        }
+        Ok(fs::read(path)?)
+    }
+
     pub fn store_block(
         &self,
         hash: &str,

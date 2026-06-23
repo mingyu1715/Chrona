@@ -32,6 +32,7 @@ function createApiMock() {
     createSnapshot: vi.fn(),
     listSnapshots: vi.fn(async () => []),
     getSnapshot: vi.fn(),
+    restoreSnapshot: vi.fn(),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -56,6 +57,7 @@ function createApiMock() {
     selectRepositoryPath: vi.fn(async () => '/picked/chrona-repo'),
     selectSourceFilePath: vi.fn(async () => '/picked/source.txt'),
     selectSourceFolderPath: vi.fn(async () => '/picked/source-folder'),
+    selectRestoreTargetPath: vi.fn(async () => null),
     onBlockIngestProgress: vi.fn(async (handler) => {
       progressHandler = handler;
       return () => undefined;

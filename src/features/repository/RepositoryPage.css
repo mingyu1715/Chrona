@@ -1278,3 +1278,28 @@ progress {
     text-align: left;
   }
 }
+
+.snapshot-restore {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--surface-raised);
+}
+
+.inline-path-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.restore-report-grid {
+  margin-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .inline-path-row {
+    grid-template-columns: 1fr;
+  }
+}

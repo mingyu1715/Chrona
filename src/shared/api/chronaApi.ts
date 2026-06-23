@@ -6,6 +6,7 @@ import type {
   BlockIngestProgress,
   BlockIngestSummary,
   RepositoryManifest,
+  RestoreReport,
   Snapshot,
   SnapshotComparison,
   SnapshotIndexItem,
@@ -19,9 +20,11 @@ export interface ChronaApi {
   listSnapshots(repositoryPath: string): Promise<SnapshotIndexItem[]>;
   getSnapshot(repositoryPath: string, snapshotId: string): Promise<Snapshot>;
   compareSnapshots(repositoryPath: string, baseSnapshotId: string, targetSnapshotId: string): Promise<SnapshotComparison>;
+  restoreSnapshot(repositoryPath: string, snapshotId: string, targetPath: string): Promise<RestoreReport>;
   selectRepositoryPath(): Promise<string | null>;
   selectSourceFilePath(): Promise<string | null>;
   selectSourceFolderPath(): Promise<string | null>;
+  selectRestoreTargetPath(): Promise<string | null>;
   onBlockIngestProgress(
     handler: (event: BlockIngestProgress) => void,
   ): Promise<() => void>;
@@ -53,6 +56,13 @@ export const chronaApi: ChronaApi = {
       targetSnapshotId,
     });
   },
+  restoreSnapshot(repositoryPath, snapshotId, targetPath) {
+    return invoke<RestoreReport>('restore_snapshot', {
+      repositoryPath,
+      snapshotId,
+      targetPath,
+    });
+  },
   selectRepositoryPath() {
     return openSinglePath({
       directory: true,
@@ -71,6 +81,13 @@ export const chronaApi: ChronaApi = {
       directory: true,
       multiple: false,
       title: 'Choose Source Folder',
+    });
+  },
+  selectRestoreTargetPath() {
+    return openSinglePath({
+      directory: true,
+      multiple: false,
+      title: 'Choose Empty Restore Target Folder',
     });
   },
   onBlockIngestProgress(handler) {
