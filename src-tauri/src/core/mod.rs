@@ -6,6 +6,7 @@ pub mod errors;
 pub mod hasher;
 pub mod path_safety;
 pub mod repository;
+pub mod restore_service;
 pub mod scanner;
 pub mod snapshot_service;
 pub mod snapshot_store;

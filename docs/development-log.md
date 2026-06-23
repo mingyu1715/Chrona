@@ -118,3 +118,27 @@
 - Added `docs/specs/0006-home-adaptive-navigation.md` for Home and adaptive quick access.
 - Added active Phase 4 plan in `docs/plans/phase-4-home-adaptive-navigation.md`.
 - Recorded the design constraint that filesystem/source hierarchy remains a stable path-based view; splay tree behavior is limited to the adaptive access index for recent/repeated work.
+
+### Restore Implementation Update
+
+- Ignored local manual test repositories under `test/` so they do not pollute source control.
+- Started Phase 4 restore work on `feature/restore-engine`.
+- Added `docs/specs/0007-snapshot-restore.md`, `docs/plans/phase-4-snapshot-restore.md`, and `docs/implemented/snapshot-restore.md`.
+- Implemented snapshot restore from stored block files into an empty or new target directory.
+- Added restore target containment checks and safe metadata relative path conversion.
+- Added `.tmp-{operationId}` then rename writes for restored files.
+- Added the `restore_snapshot` Tauri command, TypeScript API, and minimal snapshot detail restore UI.
+
+### Restore Verification
+
+- `cargo test --test phase4_restore`: passed, 4 restore integration tests.
+- `npm test -- SnapshotPanel.test.tsx`: passed, 2 SnapshotPanel UI tests.
+- `cargo test`: passed, 24 Rust integration tests across Phase 1-4 plus lib/main/doc test targets.
+- `npm test`: passed, 3 UI test files and 6 UI tests.
+- `npm run build`: passed, TypeScript and Vite production build.
+
+### Contribution Policy Update
+
+- Added `CLA.md` with a lightweight Chrona Contributor License Agreement.
+- Updated `CONTRIBUTING.md` to require CLA acknowledgment in pull requests.
+- Set `mingyu1715` as the maintainer/copyright holder for contribution rights.

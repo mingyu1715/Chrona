@@ -83,3 +83,86 @@ pub fn normalize_from_base(base: &Path, absolute_path: &Path) -> ChronaResult<St
 pub fn canonicalize_existing(path: &Path) -> ChronaResult<PathBuf> {
     Ok(path.canonicalize()?)
 }
+
+pub fn assert_repository_restore_target_separate(
+    repository: &Path,
+    restore_target: &Path,
+) -> ChronaResult<PathBuf> {
+    let repository = repository.canonicalize()?;
+    let restore_target = canonicalize_existing_or_parent(restore_target)?;
+
+    if restore_target == repository || restore_target.starts_with(&repository) {
+        return Err(ChronaError::UnsafeRestoreTarget(format!(
+            "restore target `{}` must not be inside repository `{}`",
+            restore_target.display(),
+            repository.display()
+        )));
+    }
+
+    if repository.starts_with(&restore_target) {
+        return Err(ChronaError::UnsafeRestoreTarget(format!(
+            "repository `{}` must not be inside restore target `{}`",
+            repository.display(),
+            restore_target.display()
+        )));
+    }
+
+    Ok(restore_target)
+}
+
+pub fn metadata_relative_path_to_path_buf(relative_path: &str) -> ChronaResult<PathBuf> {
+    if relative_path.is_empty() {
+        return Err(ChronaError::UnsafeRelativePath(
+            "relative path cannot be empty".to_string(),
+        ));
+    }
+    if relative_path.starts_with('/') || relative_path.starts_with('\\') {
+        return Err(ChronaError::UnsafeRelativePath(format!(
+            "absolute path is not allowed: {relative_path}"
+        )));
+    }
+    if relative_path.contains('\\') {
+        return Err(ChronaError::UnsafeRelativePath(format!(
+            "metadata paths must use `/` separators only: {relative_path}"
+        )));
+    }
+
+    let mut path = PathBuf::new();
+    for part in relative_path.split('/') {
+        if part.is_empty() || part == "." || part == ".." {
+            return Err(ChronaError::UnsafeRelativePath(format!(
+                "unsafe relative path segment in {relative_path}"
+            )));
+        }
+        if path.as_os_str().is_empty() && part.ends_with(':') {
+            return Err(ChronaError::UnsafeRelativePath(format!(
+                "drive prefix is not allowed: {relative_path}"
+            )));
+        }
+        path.push(part);
+    }
+
+    normalize_relative_path(&path)?;
+    Ok(path)
+}
+
+fn canonicalize_existing_or_parent(path: &Path) -> ChronaResult<PathBuf> {
+    if path.exists() {
+        return Ok(path.canonicalize()?);
+    }
+
+    let parent = path.parent().ok_or_else(|| {
+        ChronaError::Io(format!(
+            "restore target has no parent directory: {}",
+            path.display()
+        ))
+    })?;
+    let file_name = path.file_name().ok_or_else(|| {
+        ChronaError::Io(format!(
+            "restore target has no final path component: {}",
+            path.display()
+        ))
+    })?;
+
+    Ok(parent.canonicalize()?.join(file_name))
+}

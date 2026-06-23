@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Clock3, Files, RefreshCcw, Save, ScrollText } from 'lucide-react';
+import { Clock3, Download, Files, FolderOpen, RefreshCcw, Save, ScrollText } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
 import { SnapshotComparePanel } from './SnapshotComparePanel';
-import type { Snapshot, SnapshotIndexItem } from '../../shared/types/chrona';
+import type { RestoreReport, Snapshot, SnapshotIndexItem } from '../../shared/types/chrona';
 
 interface SnapshotPanelProps {
   api?: ChronaApi;
@@ -23,6 +23,8 @@ export function SnapshotPanel({
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshots, setSnapshots] = useState<SnapshotIndexItem[]>([]);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
+  const [restoreTargetPath, setRestoreTargetPath] = useState('');
+  const [restoreReport, setRestoreReport] = useState<RestoreReport | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +67,7 @@ export function SnapshotPanel({
     setSnapshots(items);
     if (selectedId) {
       setSelectedSnapshot(await api.getSnapshot(repositoryPath, selectedId));
+      setRestoreReport(null);
     }
   }
 
@@ -72,6 +75,12 @@ export function SnapshotPanel({
     repositoryOpen &&
     repositoryPath.trim().length > 0 &&
     sourcePath.trim().length > 0 &&
+    !busy;
+  const canRestore =
+    repositoryOpen &&
+    selectedSnapshot !== null &&
+    repositoryPath.trim().length > 0 &&
+    restoreTargetPath.trim().length > 0 &&
     !busy;
 
   return (
@@ -147,6 +156,7 @@ export function SnapshotPanel({
                 onClick={() =>
                   runAction(async () => {
                     setSelectedSnapshot(await api.getSnapshot(repositoryPath, snapshot.id));
+                    setRestoreReport(null);
                   })
                 }
               >
@@ -176,6 +186,74 @@ export function SnapshotPanel({
                   <dd>{formatBytes(selectedSnapshot.summary.newStoredBytes)}</dd>
                 </div>
               </dl>
+              <div className="snapshot-restore">
+                <div className="field">
+                  <label htmlFor="restore-target-path">Restore target</label>
+                  <div className="inline-path-row">
+                    <input
+                      id="restore-target-path"
+                      value={restoreTargetPath}
+                      onChange={(event) => {
+                        setRestoreTargetPath(event.target.value);
+                        setRestoreReport(null);
+                      }}
+                      placeholder="/tmp/chrona-restore"
+                    />
+                    <button
+                      type="button"
+                      className="button-secondary"
+                      disabled={!repositoryOpen || busy}
+                      onClick={() =>
+                        runAction(async () => {
+                          const selected = await api.selectRestoreTargetPath();
+                          if (selected) {
+                            setRestoreTargetPath(selected);
+                            setRestoreReport(null);
+                          }
+                        })
+                      }
+                    >
+                      <FolderOpen size={16} />
+                      Choose Restore Target
+                    </button>
+                  </div>
+                </div>
+                <div className="actions">
+                  <button
+                    type="button"
+                    disabled={!canRestore}
+                    onClick={() =>
+                      runAction(async () => {
+                        const report = await api.restoreSnapshot(
+                          repositoryPath,
+                          selectedSnapshot.id,
+                          restoreTargetPath,
+                        );
+                        setRestoreReport(report);
+                      })
+                    }
+                  >
+                    <Download size={16} />
+                    Restore Snapshot
+                  </button>
+                </div>
+                {restoreReport && (
+                  <dl className="result-grid compact-grid restore-report-grid">
+                    <div>
+                      <dt>Restored files</dt>
+                      <dd>{restoreReport.restoredFileCount}</dd>
+                    </div>
+                    <div>
+                      <dt>Restored bytes</dt>
+                      <dd>{formatBytes(restoreReport.restoredBytes)}</dd>
+                    </div>
+                    <div>
+                      <dt>Block refs</dt>
+                      <dd>{restoreReport.restoredBlockCount}</dd>
+                    </div>
+                  </dl>
+                )}
+              </div>
               <ul className="snapshot-file-list">
                 {selectedSnapshot.files.map((file) => (
                   <li key={file.relativePath}>

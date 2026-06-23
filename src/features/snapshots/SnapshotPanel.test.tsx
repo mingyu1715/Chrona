@@ -1,9 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
 import { SnapshotPanel } from './SnapshotPanel';
+
+afterEach(() => cleanup());
 
 function apiMock(): ChronaApi {
   return {
@@ -41,6 +43,8 @@ function apiMock(): ChronaApi {
     selectRepositoryPath: vi.fn(async () => null),
     selectSourceFilePath: vi.fn(async () => null),
     selectSourceFolderPath: vi.fn(async () => null),
+    selectRestoreTargetPath: vi.fn(async () => null),
+    restoreSnapshot: vi.fn(),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -114,4 +118,56 @@ describe('SnapshotPanel', () => {
     expect(screen.getAllByText('Initial import').length).toBeGreaterThan(0);
     expect(screen.getByText('a.txt')).toBeInTheDocument();
   });
+
+  test('restores the selected snapshot into a chosen target directory', async () => {
+    const api = {
+      ...apiMock(),
+      selectRestoreTargetPath: vi.fn(async () => '/tmp/restore-target'),
+      restoreSnapshot: vi.fn(async () => ({
+        schemaVersion: 1,
+        snapshotId: '20260619T103000Z_8f31c2',
+        targetPath: '/tmp/restore-target',
+        restoredFileCount: 1,
+        restoredBytes: 5,
+        restoredBlockCount: 1,
+        files: [
+          {
+            relativePath: 'a.txt',
+            sizeBytes: 5,
+            blockCount: 1,
+          },
+        ],
+      })),
+    };
+    const user = userEvent.setup();
+    render(
+      <SnapshotPanel
+        api={api as unknown as ChronaApi}
+        repositoryPath="/tmp/repo"
+        sourcePath="/tmp/source"
+        repositoryOpen
+      />,
+    );
+
+    await user.click(await screen.findByRole('button', { name: /initial import/i }));
+    await user.type(screen.getByLabelText(/restore target/i), '/tmp/restore-target');
+    await waitFor(() =>
+      expect(screen.getByLabelText(/restore target/i)).toHaveValue('/tmp/restore-target'),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /restore snapshot/i })).not.toBeDisabled(),
+    );
+    await user.click(screen.getByRole('button', { name: /restore snapshot/i }));
+
+    await waitFor(() =>
+      expect(api.restoreSnapshot).toHaveBeenCalledWith(
+        '/tmp/repo',
+        '20260619T103000Z_8f31c2',
+        '/tmp/restore-target',
+      ),
+    );
+    expect(screen.getByText('Restored files')).toBeInTheDocument();
+    expect(screen.getByText('Restored bytes')).toBeInTheDocument();
+  });
+
 });

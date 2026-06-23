@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed Phase 3 snapshot comparison.
+Chrona has completed Phase 4 snapshot restore core flow.
 
 Implemented:
 
@@ -27,10 +27,11 @@ Implemented:
 - Added/deleted/modified/unchanged file classification
 - Block-reference multiset change counts
 - Native macOS file/folder picker
+- Snapshot restore command and minimal UI
+- Safe restore target checks and `.tmp` then rename output writes
 
 Not implemented yet:
 
-- Restore
 - Block compression
 - Integrity verification UI
 - Packaged `.app` release
@@ -171,7 +172,30 @@ removed = sum(max(count_before[h] - count_after[h], 0))
 
 This keeps repeated block references meaningful when a file contains the same block more than once.
 
-### 5. Future raw-identity block compression
+### 5. Snapshot restore by ordered block materialization
+
+Restore walks the snapshot reference graph and rebuilds each file by reading physical blocks in the recorded order.
+
+```text
+for each file in snapshot.files:
+  output = open_tmp(target / file.relative_path)
+
+  for block_ref in file.blocks ordered by index:
+    block_bytes = read(block_path(block_ref.hash))
+    append(output, block_bytes)
+
+  sync(output)
+  rename_tmp_to_final(output)
+```
+
+Properties:
+
+- Restore is `O(R)`, where `R` is the total number of restored bytes.
+- Memory remains bounded by the largest block read at a time.
+- The restore target must be outside the repository and must be empty or newly created.
+- Output files use a `.tmp-{operationId}` path before final rename.
+
+### 6. Future raw-identity block compression
 
 Compression is a future storage optimization, not part of the current block writer. If added, Chrona should keep block identity based on raw bytes and compress only the physical payload.
 
@@ -210,7 +234,7 @@ Then:
 - Fixed-size chunking is deterministic and simple, but less effective than content-defined chunking when bytes are inserted near the beginning of a large file.
 - Chrona currently performs deduplication, not compression; future compression must keep raw-byte hashes as block identity.
 - Chrona currently stores a snapshot reference graph, not a Merkle tree.
-- Restore, integrity verification, block garbage collection, compression, encryption, and content-defined chunking are future algorithm candidates. Compression is specified as a future raw-identity payload encoding in `docs/specs/0005-block-compression.md`.
+- Integrity verification, block garbage collection, compression, encryption, and content-defined chunking are future algorithm candidates. Compression is specified as a future raw-identity payload encoding in `docs/specs/0005-block-compression.md`.
 
 ## Development
 

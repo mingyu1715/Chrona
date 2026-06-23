@@ -6,7 +6,8 @@ Completed phase plans are archived under `docs/archive/plans/` after their imple
 
 Active plans:
 
-- Phase 4: `docs/plans/phase-4-home-adaptive-navigation.md`
+- Phase 4 core: `docs/plans/phase-4-snapshot-restore.md`
+- Queued UX plan: `docs/plans/phase-4-home-adaptive-navigation.md`
 
 Archived completed plans:
 

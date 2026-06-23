@@ -77,10 +77,12 @@ function apiMock(result: SnapshotComparison): ChronaApi {
     createSnapshot: vi.fn(),
     listSnapshots: vi.fn(),
     getSnapshot: vi.fn(),
+    restoreSnapshot: vi.fn(),
     compareSnapshots: vi.fn(async () => result),
     selectRepositoryPath: vi.fn(async () => null),
     selectSourceFilePath: vi.fn(async () => null),
     selectSourceFolderPath: vi.fn(async () => null),
+    selectRestoreTargetPath: vi.fn(async () => null),
     onBlockIngestProgress: vi.fn(async () => () => undefined),
   };
 }
