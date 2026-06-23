@@ -46,13 +46,9 @@ By submitting a contribution, you agree to the Chrona Contributor License Agreem
 - you grant the copyright holder (Mingyu) the right to use, modify, and distribute the contribution under alternative licenses, including commercial licenses, at their sole discretion;
 - you provide the contribution as-is, without warranty or required support.
 
-Add this line to each pull request description or a pull request comment:
+No separate signature, checkbox, or pull request comment is required by default. Submitting a pull request, patch, issue, discussion, or other contribution to the repository is treated as agreement to `CLA.md`.
 
-```text
-I agree to the Chrona CLA.
-```
-
-Pull requests without CLA acknowledgment may be closed or left unmerged until the acknowledgment is added.
+The maintainer may still request separate written acknowledgment for larger contributions, organization-owned contributions, or any contribution where rights are unclear.
 
 ## License
 
