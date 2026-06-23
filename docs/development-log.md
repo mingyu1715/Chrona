@@ -136,3 +136,9 @@
 - `cargo test`: passed, 24 Rust integration tests across Phase 1-4 plus lib/main/doc test targets.
 - `npm test`: passed, 3 UI test files and 6 UI tests.
 - `npm run build`: passed, TypeScript and Vite production build.
+
+### Contribution Policy Update
+
+- Added `CLA.md` with a lightweight Chrona Contributor License Agreement.
+- Updated `CONTRIBUTING.md` to require CLA acknowledgment in pull requests.
+- Set `mingyu1715` as the maintainer/copyright holder for contribution rights.
