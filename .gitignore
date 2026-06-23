@@ -10,3 +10,6 @@ src-tauri/blocks/
 src-tauri/indexes/
 src-tauri/logs/
 src-tauri/snapshots/
+
+# Local manual test repositories
+test/
