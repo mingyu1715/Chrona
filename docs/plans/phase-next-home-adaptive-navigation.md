@@ -1,4 +1,4 @@
-# Phase 4 Home and Adaptive Navigation Implementation Plan
+# Next Phase: Home and Adaptive Navigation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -42,7 +42,7 @@ Create:
 - `src-tauri/src/core/access_store.rs`: JSON persistence for `indexes/access-index.json`.
 - `src-tauri/src/core/home_service.rs`: combines repository state and access index into Home summary.
 - `src-tauri/src/commands/home_commands.rs`: Tauri command wrappers.
-- `src-tauri/tests/phase4_access.rs`: Rust tests for index behavior and persistence.
+- `src-tauri/tests/home_access.rs`: Rust tests for index behavior and persistence.
 - `src/features/home/HomePage.tsx`: Home screen UI.
 - `src/features/home/HomePage.test.tsx`: Home UI tests.
 - `src/features/home/homeTypes.ts`: optional UI-local grouping helpers if shared types become too broad.
@@ -125,7 +125,7 @@ The source tree and snapshot list continue to come from their existing stable so
 - [ ] Create `models/access.rs`.
 - [ ] Create `core/access_index.rs` with insert/update/splay/query helpers.
 - [ ] Export modules from `models/mod.rs` and `core/mod.rs`.
-- [ ] Run `cd src-tauri && cargo test phase4_access`.
+- [ ] Run `cd src-tauri && cargo test home_access`.
 - [ ] Commit: `feat: add adaptive access index`.
 
 ## Task 2: Access Persistence
@@ -134,7 +134,7 @@ The source tree and snapshot list continue to come from their existing stable so
 - [ ] Create `core/access_store.rs` using `.tmp` then rename writes.
 - [ ] Ensure missing index returns an empty access index.
 - [ ] Keep repository open validation through `RepositoryManager`.
-- [ ] Run `cd src-tauri && cargo test phase4_access`.
+- [ ] Run `cd src-tauri && cargo test home_access`.
 - [ ] Commit: `feat: persist adaptive access index`.
 
 ## Task 3: Home Service and Commands

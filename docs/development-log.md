@@ -116,14 +116,14 @@
 ### Planning Update
 
 - Added `docs/specs/0006-home-adaptive-navigation.md` for Home and adaptive quick access.
-- Added active Phase 4 plan in `docs/plans/phase-4-home-adaptive-navigation.md`.
+- Queued the Home/adaptive navigation plan, now tracked at `docs/plans/phase-next-home-adaptive-navigation.md`.
 - Recorded the design constraint that filesystem/source hierarchy remains a stable path-based view; splay tree behavior is limited to the adaptive access index for recent/repeated work.
 
 ### Restore Implementation Update
 
 - Ignored local manual test repositories under `test/` so they do not pollute source control.
 - Started Phase 4 restore work on `feature/restore-engine`.
-- Added `docs/specs/0007-snapshot-restore.md`, `docs/plans/phase-4-snapshot-restore.md`, and `docs/implemented/snapshot-restore.md`.
+- Added `docs/specs/0007-snapshot-restore.md`, the Phase 4 snapshot restore plan now archived at `docs/archive/plans/phase-4-snapshot-restore.md`, and `docs/implemented/snapshot-restore.md`.
 - Implemented snapshot restore from stored block files into an empty or new target directory.
 - Added restore target containment checks and safe metadata relative path conversion.
 - Added `.tmp-{operationId}` then rename writes for restored files.
@@ -143,3 +143,11 @@
 - Updated `CONTRIBUTING.md` so contribution submission itself is treated as CLA agreement by default.
 - Set `mingyu1715` as the maintainer/copyright holder for contribution rights.
 - Removed the default requirement for a separate CLA comment or checkbox.
+
+## 2026-06-25
+
+### Documentation Queue Cleanup
+
+- Archived the completed Phase 4 snapshot restore plan under `docs/archive/plans/phase-4-snapshot-restore.md`.
+- Renamed the Home/adaptive navigation work queue to `docs/plans/phase-next-home-adaptive-navigation.md` to avoid colliding with the existing stabilization phase numbering.
+- Updated `docs/plans/README.md` and `docs/project-plan.md` so active and archived plan locations match the current repository state.
