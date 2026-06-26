@@ -32,6 +32,9 @@ Excluded:
 - cloud sync of access history
 - restore implementation
 - block compression implementation
+- automatic filesystem watching
+- automatic snapshot creation from file changes
+- scheduled background backups
 
 ## File Structure
 
@@ -118,6 +121,42 @@ User action
 ```
 
 The source tree and snapshot list continue to come from their existing stable sources.
+
+
+## Future Extension: Watched Sources and Automatic Snapshots
+
+The Home/adaptive navigation work should leave a clean path for future automatic backup, but this plan must not implement filesystem watchers or automatic snapshot creation.
+
+Future behavior:
+
+- user explicitly marks a source as watched
+- app observes create/modify/delete events for that source
+- rapid changes are debounced before snapshot creation
+- automatic snapshot creation reuses the existing snapshot service and block ingest path
+- Home can show watched source status, last automatic snapshot time, and last detected change
+- users can pause watching per source and still run manual snapshots
+
+Candidate future data flow:
+
+```text
+filesystem event
+  -> watched source registry
+  -> debounce/coalesce window
+  -> source/repository containment check
+  -> create snapshot with generated name
+  -> record access event
+  -> Home watched-source status card
+```
+
+Design constraints for that later phase:
+
+- watch mode is opt-in per source, never enabled implicitly by recent access
+- source/repository containment guard still runs before automatic ingest
+- automatic snapshots must surface progress and errors instead of silently failing
+- the main source tree remains stable; watcher state appears as status metadata only
+- missed events should fall back to a full rescan before creating the next snapshot
+- implementation should prefer an established cross-platform watcher crate rather than a hand-rolled polling loop
+
 
 ## Task 1: Access Models and Pure Index
 

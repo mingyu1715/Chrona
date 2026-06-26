@@ -203,7 +203,7 @@ Compression is a future storage optimization, not part of the current block writ
 raw_chunk
   -> SHA-256(raw_chunk)
   -> dedup lookup by raw hash
-  -> optional zstd compression for new blocks
+  -> optional compression for new blocks (standard zstd or fast lz4)
   -> write encoded payload
 ```
 
@@ -232,7 +232,7 @@ Then:
 ### Current algorithmic trade-offs
 
 - Fixed-size chunking is deterministic and simple, but less effective than content-defined chunking when bytes are inserted near the beginning of a large file.
-- Chrona currently performs deduplication, not compression; future compression must keep raw-byte hashes as block identity.
+- Chrona currently performs deduplication, not compression; future compression must keep raw-byte hashes as block identity and use simple modes: raw/off, standard zstd, or fast lz4.
 - Chrona currently stores a snapshot reference graph, not a Merkle tree.
 - Integrity verification, block garbage collection, compression, encryption, and content-defined chunking are future algorithm candidates. Compression is specified as a future raw-identity payload encoding in `docs/specs/0005-block-compression.md`.
 

@@ -151,3 +151,12 @@
 - Archived the completed Phase 4 snapshot restore plan under `docs/archive/plans/phase-4-snapshot-restore.md`.
 - Renamed the Home/adaptive navigation work queue to `docs/plans/phase-next-home-adaptive-navigation.md` to avoid colliding with the existing stabilization phase numbering.
 - Updated `docs/plans/README.md` and `docs/project-plan.md` so active and archived plan locations match the current repository state.
+
+## 2026-06-26
+
+### Planning Update
+
+- Added automatic change detection as a future extension for watched sources, not part of the current Home/adaptive navigation MVP.
+- Documented that future automatic snapshots should be opt-in per source, debounced, and routed through the existing snapshot creation path.
+- Updated the active Home plan, Home/adaptive navigation spec, and project Future list so watcher work stays separate from the current quick-access scope.
+- Refined the future compression direction to simple modes: `standard` uses `zstd` level 3, `fast` uses `lz4`, and `off` keeps raw blocks.

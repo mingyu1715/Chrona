@@ -203,7 +203,7 @@ for each file in snapshot.files:
 raw_chunk
   -> SHA-256(raw_chunk)
   -> dedup lookup by raw hash
-  -> optional zstd compression for new blocks
+  -> optional compression for new blocks (standard zstd or fast lz4)
   -> write encoded payload
 ```
 
@@ -232,7 +232,7 @@ raw_chunk
 ### 현재 알고리즘 trade-off
 
 - Fixed-size chunking은 단순하고 결정적이지만, 큰 파일 앞부분에 byte가 삽입되면 content-defined chunking보다 재사용 효율이 떨어질 수 있습니다.
-- Chrona는 현재 deduplication을 수행하며, compression 알고리즘은 아직 없습니다. 이후 compression을 추가하더라도 block identity는 raw byte hash로 유지해야 합니다.
+- Chrona는 현재 deduplication을 수행하며, compression 알고리즘은 아직 없습니다. 이후 compression을 추가하더라도 block identity는 raw byte hash로 유지하고, 모드는 raw/off, standard zstd, fast lz4 정도로 단순하게 제한해야 합니다.
 - Chrona의 snapshot은 Merkle tree가 아니라 reference graph입니다.
 - Integrity verification, block garbage collection, compression, encryption, content-defined chunking은 이후 알고리즘 후보입니다. Compression은 `docs/specs/0005-block-compression.md`에 future raw-identity payload encoding으로 기록합니다.
 

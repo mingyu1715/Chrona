@@ -44,6 +44,18 @@ Consequences:
 - Compression settings can change later without changing logical block identity.
 - Integrity verification should decompress first, then hash the restored raw bytes.
 
+## Recommended Compression Modes
+
+Chrona should keep compression mode selection simple and explicit. The preferred future modes are:
+
+| Mode | Codec | Purpose |
+| --- | --- | --- |
+| `off` | raw | No compression, easiest compatibility path. |
+| `standard` | `zstd` level 3 | Default mode for normal backup usage. |
+| `fast` | `lz4` | Speed-first mode when low CPU overhead matters more than compression ratio. |
+
+`standard` should be the default once compressed block restore and integrity verification exist. `fast` should be an opt-in mode, not an automatic per-file-type decision.
+
 ## Recommended Algorithm
 
 ```text
@@ -54,20 +66,29 @@ for each raw_chunk:
     reuse block
     continue
 
-  compressed = zstd(raw_chunk, level = 3)
+  match compression_mode:
+    off:
+      write encoded block with compression = none
+      continue
+    standard:
+      compressed = zstd(raw_chunk, level = 3)
+      selected_encoding = zstd
+    fast:
+      compressed = lz4(raw_chunk)
+      selected_encoding = lz4
 
-  if len(compressed) + envelope_overhead < len(raw_chunk):
-    write encoded block with compression = zstd
+  if len(compressed) + envelope_overhead <= len(raw_chunk) * 0.97:
+    write encoded block with compression = selected_encoding
   else:
     write encoded block with compression = none
 ```
 
-Recommended codec:
+Codec policy:
 
-- Primary candidate: `zstd`, default level `3`.
-- Reason: good speed/compression balance for backup-style storage.
-- `lz4` can be considered for speed-first mode.
-- `gzip` is not preferred for the default path because its speed/compression trade-off is weaker for this use case.
+- `zstd` level 3 is the default standard mode because it balances speed and compression ratio for backup-style storage.
+- `lz4` is reserved for fast mode where throughput is more important than maximum compression ratio.
+- `gzip`, `brotli`, and `lzma/xz` are not preferred for the MVP compression path because they add restore/test complexity without improving the core block identity model.
+- File extension or MIME type may be used only as a skip hint later; it should not choose a different codec in the first compression implementation.
 
 ## Storage Format Constraint
 
@@ -88,7 +109,7 @@ Example envelope fields:
 
 ```text
 magic = CHRBLK1
-encoding = none | zstd
+encoding = none | zstd | lz4
 raw_size_bytes
 stored_size_bytes
 raw_sha256
@@ -122,6 +143,7 @@ Physical storage metadata may add fields such as:
   "sizeBytes": 1048576,
   "storedSizeBytes": 324112,
   "compression": {
+    "mode": "standard",
     "algorithm": "zstd",
     "level": 3
   }
@@ -134,7 +156,7 @@ This metadata belongs to block storage/indexing, not to the logical file snapsho
 
 - Atomic-like write still applies: write temporary encoded payload, sync, then rename.
 - If compression fails, the write should fail or fall back to raw according to an explicit policy.
-- If compressed payload is not smaller than raw payload, store raw.
+- If compressed payload is not at least 3% smaller than raw payload after envelope overhead, store raw.
 - Decompression errors must surface as integrity/restore errors.
 - Integrity verification must compare `SHA-256(decompressed_payload)` against the block hash.
 
@@ -147,5 +169,6 @@ Future UI can expose:
 - physical stored bytes
 - compression saved bytes
 - compression ratio
+- selected compression mode: off, standard, or fast
 
 Compression should not be shown as implemented until the block read/restore path can decode compressed blocks.

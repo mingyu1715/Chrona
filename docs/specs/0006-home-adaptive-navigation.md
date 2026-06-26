@@ -25,6 +25,7 @@ The intended user-facing outcome is:
 - Do not replace stable sorting in Source or Snapshot tabs.
 - Do not use adaptive ranking for destructive actions.
 - Do not sync activity metadata to cloud storage in MVP.
+- Do not create snapshots automatically from filesystem watch events in this feature.
 
 ## Core Principle
 
@@ -85,6 +86,23 @@ Actions
 - Select Source
 - Create Snapshot
 ```
+
+## Future Watched Sources
+
+Automatic change detection is a later feature, not part of the Home/adaptive navigation MVP. The Home model may eventually display watched-source status, but it should not own the watcher itself.
+
+Future watched-source status can include:
+
+```text
+source path
+watch enabled/paused
+last detected change time
+last automatic snapshot time
+pending change count
+last watcher error
+```
+
+That future feature should reuse the existing snapshot creation path after a debounce window, so automatic snapshots produce the same metadata and block reuse summary as manual snapshots. The adaptive access index may record that an automatic snapshot occurred, but it should not decide when filesystem events become snapshots.
 
 ## Access Events
 
@@ -313,6 +331,8 @@ UI tests:
 - Should paths outside an opened repository be stored in app settings instead of repository metadata?
 - Should access scoring decay over time?
 - Should pinned items be stored separately from adaptive items?
+- Should watched sources be repository-local, app-global, or both?
+- What debounce/quiescence window should be used before automatic snapshots?
 
 ## Completion Criteria
 
