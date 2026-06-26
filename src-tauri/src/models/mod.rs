@@ -1,3 +1,4 @@
+pub mod access;
 pub mod block;
 pub mod diff;
 pub mod ingest;

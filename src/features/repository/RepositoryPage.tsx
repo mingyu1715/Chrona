@@ -10,17 +10,24 @@ import {
   File,
   FolderOpen,
   HardDrive,
+  Home,
   Layers3,
   Moon,
+  Pin,
+  PinOff,
   Play,
+  RotateCw,
   Sun,
+  Trash2,
 } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
 import { SnapshotPanel } from '../snapshots/SnapshotPanel';
 import type {
+  AccessNode,
   BlockIngestProgress,
   BlockIngestSummary,
+  HomeSummary,
   RepositoryManifest,
 } from '../../shared/types/chrona';
 import './RepositoryPage.css';
@@ -29,8 +36,8 @@ interface RepositoryPageProps {
   api?: ChronaApi;
 }
 
-type ChapterId = 'repository' | 'source' | 'snapshots' | 'review';
-type PanelKey = 'repository' | 'source' | 'store' | 'snapshots' | 'review';
+type ChapterId = 'home' | 'repository' | 'source' | 'snapshots' | 'review';
+type PanelKey = 'home' | 'repository' | 'source' | 'store' | 'snapshots' | 'review';
 type Tone = 'ready' | 'waiting' | 'done';
 type ThemeMode = 'light' | 'dark';
 
@@ -41,6 +48,13 @@ const chapters: Array<{
   description: string;
   icon: ComponentType<{ size?: number }>;
 }> = [
+  {
+    id: 'home',
+    label: 'Home',
+    shortLabel: 'Home',
+    description: 'Resume recent repositories, sources, snapshots, and compare pairs.',
+    icon: Home,
+  },
   {
     id: 'repository',
     label: 'Repository',
@@ -77,11 +91,13 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   const [manifest, setManifest] = useState<RepositoryManifest | null>(null);
   const [progress, setProgress] = useState<BlockIngestProgress | null>(null);
   const [summary, setSummary] = useState<BlockIngestSummary | null>(null);
+  const [homeSummary, setHomeSummary] = useState<HomeSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [activeChapter, setActiveChapter] = useState<ChapterId>('repository');
   const [openPanels, setOpenPanels] = useState<Record<PanelKey, boolean>>({
+    home: true,
     repository: true,
     source: true,
     store: true,
@@ -134,6 +150,71 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     }
   }
 
+  async function refreshHomeSummary(path = repositoryPath) {
+    if (path.trim().length === 0) {
+      setHomeSummary(null);
+      return;
+    }
+    setHomeSummary(await api.getHomeSummary(path));
+  }
+
+  async function recordRepositoryAccess(nextManifest: RepositoryManifest, path: string, action: string) {
+    await api.recordAccessEvent(path, {
+      key: `repository:${nextManifest.repositoryId}`,
+      kind: 'repository',
+      label: labelFromPath(path),
+      path,
+      repositoryId: nextManifest.repositoryId,
+      snapshotId: null,
+      baseSnapshotId: null,
+      targetSnapshotId: null,
+      action,
+      accessedAt: new Date().toISOString(),
+    });
+    await refreshHomeSummary(path);
+  }
+
+  async function recordSourceAccess(action: string) {
+    if (!manifest || repositoryPath.trim().length === 0 || sourcePath.trim().length === 0) {
+      return;
+    }
+    await api.recordAccessEvent(repositoryPath, {
+      key: `source:${sourcePath}`,
+      kind: 'source',
+      label: labelFromPath(sourcePath),
+      path: sourcePath,
+      repositoryId: manifest.repositoryId,
+      snapshotId: null,
+      baseSnapshotId: null,
+      targetSnapshotId: null,
+      action,
+      accessedAt: new Date().toISOString(),
+    });
+    await refreshHomeSummary();
+  }
+
+  async function pinHomeItem(key: string) {
+    await runAction(async () => {
+      await api.pinAccessItem(repositoryPath, key);
+      await refreshHomeSummary();
+    });
+  }
+
+  async function unpinHomeItem(key: string) {
+    await runAction(async () => {
+      await api.unpinAccessItem(repositoryPath, key);
+      await refreshHomeSummary();
+    });
+  }
+
+  async function clearHomeHistory() {
+    await runAction(async () => {
+      await api.clearAccessHistory(repositoryPath);
+      await refreshHomeSummary();
+    });
+  }
+
+
   function togglePanel(panel: PanelKey) {
     setOpenPanels((current) => ({ ...current, [panel]: !current[panel] }));
   }
@@ -147,6 +228,9 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   }
 
   function chapterTone(chapter: ChapterId): Tone {
+    if (chapter === 'home') {
+      return manifest ? 'ready' : 'waiting';
+    }
     if (chapter === 'repository') {
       return manifest ? 'done' : 'ready';
     }
@@ -296,6 +380,29 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
           {error && <p className="error" role="alert">{error}</p>}
 
           <div className="panel-stack">
+            {activeChapter === 'home' && (
+              <DropPanel
+                title="Continue working"
+                kicker="Home"
+                status={homeSummary?.continueWorking ? 'Ready' : manifest ? 'Empty' : 'Waiting'}
+                icon={Home}
+                open={openPanels.home}
+                onToggle={() => togglePanel('home')}
+              >
+                <HomeContent
+                  summary={homeSummary}
+                  repositoryOpen={Boolean(manifest)}
+                  repositoryPath={repositoryPath}
+                  onOpenRepository={() => setActiveChapter('repository')}
+                  onRefresh={() => runAction(async () => refreshHomeSummary())}
+                  onClear={clearHomeHistory}
+                  onPin={pinHomeItem}
+                  onUnpin={unpinHomeItem}
+                  busy={busy}
+                />
+              </DropPanel>
+            )}
+
             {activeChapter === 'repository' && (
               <DropPanel
                 title="Repository path and manifest"
@@ -327,7 +434,9 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     type="button"
                     disabled={busy || repositoryPath.trim().length === 0}
                     onClick={() => runAction(async () => {
-                      setManifest(await api.createRepository(repositoryPath));
+                      const nextManifest = await api.createRepository(repositoryPath);
+                      setManifest(nextManifest);
+                      await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_created');
                       setActiveChapter('source');
                     })}
                   >
@@ -339,7 +448,9 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     className="button-secondary"
                     disabled={busy || repositoryPath.trim().length === 0}
                     onClick={() => runAction(async () => {
-                      setManifest(await api.openRepository(repositoryPath));
+                      const nextManifest = await api.openRepository(repositoryPath);
+                      setManifest(nextManifest);
+                      await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_opened');
                       setActiveChapter('source');
                     })}
                   >
@@ -433,6 +544,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                       onClick={() => runAction(async () => {
                         setSummary(null);
                         setSummary(await api.ingestBlocks(repositoryPath, sourcePath));
+                        await recordSourceAccess('ingest_completed');
                         setActiveChapter('review');
                       })}
                     >
@@ -529,6 +641,138 @@ function DropPanel({ title, kicker, status, icon: Icon, open, onToggle, children
   );
 }
 
+function HomeContent({
+  summary,
+  repositoryOpen,
+  repositoryPath,
+  onOpenRepository,
+  onRefresh,
+  onClear,
+  onPin,
+  onUnpin,
+  busy,
+}: {
+  summary: HomeSummary | null;
+  repositoryOpen: boolean;
+  repositoryPath: string;
+  onOpenRepository: () => void;
+  onRefresh: () => void;
+  onClear: () => void;
+  onPin: (key: string) => void;
+  onUnpin: (key: string) => void;
+  busy: boolean;
+}) {
+  if (!repositoryOpen) {
+    return (
+      <div className="empty-state">
+        <span><Home size={20} /></span>
+        <div>
+          <strong>No repository open</strong>
+          <p>Open a repository to show recent work and pinned paths.</p>
+          <button type="button" onClick={onOpenRepository}>Open Repository</button>
+        </div>
+      </div>
+    );
+  }
+
+  const hasHistory = Boolean(
+    summary?.continueWorking
+    || summary?.pinned.length
+    || summary?.recentRepositories.length
+    || summary?.recentSources.length
+    || summary?.recentSnapshots.length
+    || summary?.recentComparePairs.length,
+  );
+
+  return (
+    <div className="home-content">
+      <div className="home-toolbar">
+        <div>
+          <strong title={repositoryPath}>{labelFromPath(repositoryPath)}</strong>
+          <span>Adaptive access history</span>
+        </div>
+        <div className="home-toolbar-actions">
+          <button type="button" className="button-secondary" disabled={busy} onClick={onRefresh}>
+            <RotateCw size={16} />
+            Refresh
+          </button>
+          <button type="button" className="button-secondary" disabled={busy || !hasHistory} onClick={onClear}>
+            <Trash2 size={16} />
+            Clear History
+          </button>
+        </div>
+      </div>
+
+      {summary?.continueWorking ? (
+        <div className="continue-card">
+          <span><Clock3 size={20} /></span>
+          <div>
+            <small>Continue Working</small>
+            <strong>{summary.continueWorking.label}</strong>
+            <p>{summary.continueWorking.lastAction} · {summary.continueWorking.lastAccessedAt}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="empty-state compact-empty">
+          <span><Clock3 size={18} /></span>
+          <div>
+            <strong>No access history yet</strong>
+            <p>Create/open a repository or store blocks to populate Home.</p>
+          </div>
+        </div>
+      )}
+
+      <div className="home-grid">
+        <AccessList title="Pinned" items={summary?.pinned ?? []} onPin={onPin} onUnpin={onUnpin} />
+        <AccessList title="Recent repositories" items={summary?.recentRepositories ?? []} onPin={onPin} onUnpin={onUnpin} />
+        <AccessList title="Recent sources" items={summary?.recentSources ?? []} onPin={onPin} onUnpin={onUnpin} />
+        <AccessList title="Recent snapshots" items={summary?.recentSnapshots ?? []} onPin={onPin} onUnpin={onUnpin} />
+        <AccessList title="Recent compare pairs" items={summary?.recentComparePairs ?? []} onPin={onPin} onUnpin={onUnpin} />
+      </div>
+    </div>
+  );
+}
+
+function AccessList({
+  title,
+  items,
+  onPin,
+  onUnpin,
+}: {
+  title: string;
+  items: AccessNode[];
+  onPin: (key: string) => void;
+  onUnpin: (key: string) => void;
+}) {
+  return (
+    <section className="access-list">
+      <h3>{title}</h3>
+      {items.length === 0 ? (
+        <p className="muted-line">No items</p>
+      ) : (
+        <ul>
+          {items.map((item) => (
+            <li key={item.key}>
+              <div>
+                <strong>{item.label}</strong>
+                <span>{item.lastAction} · {item.accessCount}x</span>
+              </div>
+              <button
+                type="button"
+                className="icon-button access-pin"
+                aria-label={item.pinned ? `Unpin ${item.label}` : `Pin ${item.label}`}
+                onClick={() => item.pinned ? onUnpin(item.key) : onPin(item.key)}
+              >
+                {item.pinned ? <PinOff size={15} /> : <Pin size={15} />}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function ProgressBox({ progress }: { progress: BlockIngestProgress }) {
   return (
     <div className="progress-box" aria-label="Ingest progress">
@@ -593,4 +837,13 @@ function formatBytes(bytes: number): string {
     return `${(bytes / 1024).toFixed(1)} KiB`;
   }
   return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+function labelFromPath(path: string): string {
+  const normalized = path.trim();
+  if (!normalized) {
+    return 'Untitled';
+  }
+  const parts = normalized.split(/[\\/]+/).filter(Boolean);
+  return parts.at(-1) ?? normalized;
 }

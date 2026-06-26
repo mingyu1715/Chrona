@@ -160,57 +160,57 @@ Design constraints for that later phase:
 
 ## Task 1: Access Models and Pure Index
 
-- [ ] Add Rust tests for insert, repeated access, root splay behavior, pinned ranking, and stable external ordering assumptions.
-- [ ] Create `models/access.rs`.
-- [ ] Create `core/access_index.rs` with insert/update/splay/query helpers.
-- [ ] Export modules from `models/mod.rs` and `core/mod.rs`.
-- [ ] Run `cd src-tauri && cargo test home_access`.
-- [ ] Commit: `feat: add adaptive access index`.
+- [x] Add Rust tests for insert, repeated access, root splay behavior, pinned ranking, and stable external ordering assumptions.
+- [x] Create `models/access.rs`.
+- [x] Create `core/access_index.rs` with insert/update/splay/query helpers.
+- [x] Export modules from `models/mod.rs` and `core/mod.rs`.
+- [x] Run `cd src-tauri && cargo test home_access`.
+- [x] Commit: included in `feat: add home adaptive navigation`.
 
 ## Task 2: Access Persistence
 
-- [ ] Add tests for writing and reloading `indexes/access-index.json`.
-- [ ] Create `core/access_store.rs` using `.tmp` then rename writes.
-- [ ] Ensure missing index returns an empty access index.
-- [ ] Keep repository open validation through `RepositoryManager`.
-- [ ] Run `cd src-tauri && cargo test home_access`.
-- [ ] Commit: `feat: persist adaptive access index`.
+- [x] Add tests for writing and reloading `indexes/access-index.json`.
+- [x] Create `core/access_store.rs` using `.tmp` then rename writes.
+- [x] Ensure missing index returns an empty access index.
+- [x] Keep repository open validation through `RepositoryManager`.
+- [x] Run `cd src-tauri && cargo test home_access`.
+- [x] Commit: included in `feat: add home adaptive navigation`.
 
 ## Task 3: Home Service and Commands
 
-- [ ] Add `HomeService::record_access_event`, `HomeService::get_home_summary`, `pin_access_item`, `unpin_access_item`, and `clear_access_history`.
-- [ ] Add Tauri command wrappers in `home_commands.rs`.
-- [ ] Register commands in `main.rs`.
-- [ ] Add integration tests for source selected, snapshot opened, compare pair opened, and history clear.
-- [ ] Run `cd src-tauri && cargo test`.
-- [ ] Commit: `feat: expose home adaptive navigation commands`.
+- [x] Add `HomeService::record_access_event`, `HomeService::get_home_summary`, `pin_access_item`, `unpin_access_item`, and `clear_access_history`.
+- [x] Add Tauri command wrappers in `home_commands.rs`.
+- [x] Register commands in `main.rs`.
+- [x] Add integration tests for source selected, snapshot opened, compare pair opened, and history clear.
+- [x] Run `cd src-tauri && cargo test`.
+- [x] Commit: included in `feat: add home adaptive navigation`.
 
 ## Task 4: TypeScript API and Types
 
-- [ ] Add `AccessNode`, `AccessNodeKind`, `AccessEvent`, and `HomeSummary` types.
-- [ ] Add API wrappers in `chronaApi.ts`.
-- [ ] Update existing API mocks.
-- [ ] Run `npm test`.
-- [ ] Commit: `feat: add home access api types`.
+- [x] Add `AccessNode`, `AccessNodeKind`, `AccessEvent`, and `HomeSummary` types.
+- [x] Add API wrappers in `chronaApi.ts`.
+- [x] Update existing API mocks.
+- [x] Run `npm test`.
+- [x] Commit: included in `feat: add home adaptive navigation`.
 
 ## Task 5: Home UI
 
-- [ ] Create `HomePage.tsx` with Continue Working, pinned items, recent sections, and quick actions.
-- [ ] Add Home to the workspace sidebar without removing existing Repository/Sources/Snapshots/Review sections.
-- [ ] Record access events from existing repository/source/snapshot/compare actions.
-- [ ] Add pin/unpin controls for Home items.
-- [ ] Add clear history secondary action.
-- [ ] Run `npm test` and `npm run build`.
-- [ ] Commit: `feat: add adaptive home screen`.
+- [x] Add Home UI with Continue Working, pinned items, recent sections, and quick actions in the existing workspace shell.
+- [x] Add Home to the workspace sidebar without removing existing Repository/Sources/Snapshots/Review sections.
+- [x] Record access events from existing repository/source/snapshot/compare actions.
+- [x] Add pin/unpin controls for Home items.
+- [x] Add clear history secondary action.
+- [x] Run `npm test` and `npm run build`.
+- [x] Commit: included in `feat: add home adaptive navigation`.
 
 ## Task 6: Documentation Finish
 
-- [ ] Add `docs/implemented/home-adaptive-navigation.md`.
-- [ ] Update README status and known limitations.
-- [ ] Update `docs/development-log.md` with verification results.
-- [ ] Move this plan to `docs/archive/plans/` after implementation is complete.
-- [ ] Run `cargo test`, `npm test`, and `npm run build`.
-- [ ] Commit: `docs: record home adaptive navigation implementation`.
+- [x] Add `docs/implemented/home-adaptive-navigation.md`.
+- [x] Update README status and known limitations.
+- [x] Update `docs/development-log.md` with verification results.
+- [x] Move this plan to `docs/archive/plans/` after implementation is complete.
+- [x] Run `cargo test`, `npm test`, and `npm run build`.
+- [x] Commit: included in `feat: add home adaptive navigation`.
 
 ## Testing Checklist
 

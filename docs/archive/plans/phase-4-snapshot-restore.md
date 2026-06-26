@@ -43,6 +43,6 @@ This phase completes the first end-to-end backup loop: create repository, ingest
 
 ## Next Work After Phase 4
 
-- Add Home/adaptive quick access from `docs/plans/phase-next-home-adaptive-navigation.md`.
+- Home/adaptive quick access is implemented in `docs/implemented/home-adaptive-navigation.md`.
 - Add restore progress events if large target restores become a UX issue.
 - Add integrity verification before restore in a later stability phase.

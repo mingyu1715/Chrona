@@ -83,6 +83,23 @@ function apiMock(result: SnapshotComparison): ChronaApi {
     selectSourceFilePath: vi.fn(async () => null),
     selectSourceFolderPath: vi.fn(async () => null),
     selectRestoreTargetPath: vi.fn(async () => null),
+    recordAccessEvent: vi.fn(),
+    getHomeSummary: vi.fn(async () => ({
+      continueWorking: null,
+      pinned: [],
+      recentRepositories: [],
+      recentSources: [],
+      recentFiles: [],
+      recentSnapshots: [],
+      recentComparePairs: [],
+    })),
+    pinAccessItem: vi.fn(),
+    unpinAccessItem: vi.fn(),
+    clearAccessHistory: vi.fn(async () => ({
+      schemaVersion: 1,
+      removedCount: 0,
+      remainingCount: 0,
+    })),
     onBlockIngestProgress: vi.fn(async () => () => undefined),
   };
 }
@@ -125,6 +142,15 @@ describe('SnapshotComparePanel', () => {
 
     await waitFor(() =>
       expect(api.compareSnapshots).toHaveBeenCalledWith('/tmp/repo', 'base', 'target'),
+    );
+    expect(api.recordAccessEvent).toHaveBeenCalledWith(
+      '/tmp/repo',
+      expect.objectContaining({
+        kind: 'comparePair',
+        baseSnapshotId: 'base',
+        targetSnapshotId: 'target',
+        action: 'compare_pair_opened',
+      }),
     );
     expect(screen.getByText('1 added')).toBeInTheDocument();
     expect(screen.getByText('1 modified')).toBeInTheDocument();

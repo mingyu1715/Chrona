@@ -3,8 +3,12 @@ import { listen } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-dialog';
 
 import type {
+  AccessEvent,
+  AccessHistorySummary,
+  AccessNode,
   BlockIngestProgress,
   BlockIngestSummary,
+  HomeSummary,
   RepositoryManifest,
   RestoreReport,
   Snapshot,
@@ -21,6 +25,11 @@ export interface ChronaApi {
   getSnapshot(repositoryPath: string, snapshotId: string): Promise<Snapshot>;
   compareSnapshots(repositoryPath: string, baseSnapshotId: string, targetSnapshotId: string): Promise<SnapshotComparison>;
   restoreSnapshot(repositoryPath: string, snapshotId: string, targetPath: string): Promise<RestoreReport>;
+  recordAccessEvent(repositoryPath: string, event: AccessEvent): Promise<AccessNode>;
+  getHomeSummary(repositoryPath: string): Promise<HomeSummary>;
+  pinAccessItem(repositoryPath: string, key: string): Promise<AccessNode>;
+  unpinAccessItem(repositoryPath: string, key: string): Promise<AccessNode>;
+  clearAccessHistory(repositoryPath: string): Promise<AccessHistorySummary>;
   selectRepositoryPath(): Promise<string | null>;
   selectSourceFilePath(): Promise<string | null>;
   selectSourceFolderPath(): Promise<string | null>;
@@ -62,6 +71,21 @@ export const chronaApi: ChronaApi = {
       snapshotId,
       targetPath,
     });
+  },
+  recordAccessEvent(repositoryPath, event) {
+    return invoke<AccessNode>('record_access_event', { repositoryPath, event });
+  },
+  getHomeSummary(repositoryPath) {
+    return invoke<HomeSummary>('get_home_summary', { repositoryPath });
+  },
+  pinAccessItem(repositoryPath, key) {
+    return invoke<AccessNode>('pin_access_item', { repositoryPath, key });
+  },
+  unpinAccessItem(repositoryPath, key) {
+    return invoke<AccessNode>('unpin_access_item', { repositoryPath, key });
+  },
+  clearAccessHistory(repositoryPath) {
+    return invoke<AccessHistorySummary>('clear_access_history', { repositoryPath });
   },
   selectRepositoryPath() {
     return openSinglePath({

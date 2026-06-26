@@ -62,6 +62,22 @@ export function SnapshotPanel({
     }
   }
 
+
+  async function recordSnapshotAccess(snapshot: Snapshot | SnapshotIndexItem, action: string) {
+    await api.recordAccessEvent(repositoryPath, {
+      key: `snapshot:${snapshot.id}`,
+      kind: 'snapshot',
+      label: snapshot.name,
+      path: null,
+      repositoryId: null,
+      snapshotId: snapshot.id,
+      baseSnapshotId: null,
+      targetSnapshotId: null,
+      action,
+      accessedAt: new Date().toISOString(),
+    });
+  }
+
   async function refreshSnapshots(selectedId?: string) {
     const items = await api.listSnapshots(repositoryPath);
     setSnapshots(items);
@@ -120,6 +136,7 @@ export function SnapshotPanel({
                 snapshotName,
               );
               setSnapshotName('');
+              await recordSnapshotAccess(created, 'snapshot_created');
               await refreshSnapshots(created.id);
             })
           }
@@ -155,8 +172,10 @@ export function SnapshotPanel({
                 className="snapshot-list-item"
                 onClick={() =>
                   runAction(async () => {
-                    setSelectedSnapshot(await api.getSnapshot(repositoryPath, snapshot.id));
+                    const detail = await api.getSnapshot(repositoryPath, snapshot.id);
+                    setSelectedSnapshot(detail);
                     setRestoreReport(null);
+                    await recordSnapshotAccess(detail, 'snapshot_opened');
                   })
                 }
               >
