@@ -1,3 +1,4 @@
+use chrona::models::access::{AccessEvent, AccessHistorySummary, AccessNode, HomeSummary};
 use chrona::models::diff::SnapshotComparison;
 use chrona::models::ingest::BlockIngestSummary;
 use chrona::models::repository::RepositoryManifest;
@@ -57,6 +58,31 @@ fn compare_snapshots(
 }
 
 #[tauri::command]
+fn record_access_event(repository_path: String, event: AccessEvent) -> Result<AccessNode, String> {
+    chrona::commands::home_commands::record_access_event(repository_path, event)
+}
+
+#[tauri::command]
+fn get_home_summary(repository_path: String) -> Result<HomeSummary, String> {
+    chrona::commands::home_commands::get_home_summary(repository_path)
+}
+
+#[tauri::command]
+fn pin_access_item(repository_path: String, key: String) -> Result<AccessNode, String> {
+    chrona::commands::home_commands::pin_access_item(repository_path, key)
+}
+
+#[tauri::command]
+fn unpin_access_item(repository_path: String, key: String) -> Result<AccessNode, String> {
+    chrona::commands::home_commands::unpin_access_item(repository_path, key)
+}
+
+#[tauri::command]
+fn clear_access_history(repository_path: String) -> Result<AccessHistorySummary, String> {
+    chrona::commands::home_commands::clear_access_history(repository_path)
+}
+
+#[tauri::command]
 fn restore_snapshot(
     repository_path: String,
     snapshot_id: String,
@@ -76,6 +102,11 @@ fn main() {
             list_snapshots,
             get_snapshot,
             compare_snapshots,
+            record_access_event,
+            get_home_summary,
+            pin_access_item,
+            unpin_access_item,
+            clear_access_history,
             restore_snapshot
         ])
         .run(tauri::generate_context!())

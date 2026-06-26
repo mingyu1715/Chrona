@@ -1,9 +1,12 @@
+pub mod access_index;
+pub mod access_store;
 pub mod block_ingest_service;
 pub mod block_store;
 pub mod chunker;
 pub mod diff_service;
 pub mod errors;
 pub mod hasher;
+pub mod home_service;
 pub mod path_safety;
 pub mod repository;
 pub mod restore_service;

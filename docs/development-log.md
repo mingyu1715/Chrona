@@ -116,7 +116,7 @@
 ### Planning Update
 
 - Added `docs/specs/0006-home-adaptive-navigation.md` for Home and adaptive quick access.
-- Queued the Home/adaptive navigation plan, now tracked at `docs/plans/phase-next-home-adaptive-navigation.md`.
+- Queued the Home/adaptive navigation plan, later archived at `docs/archive/plans/phase-next-home-adaptive-navigation.md`.
 - Recorded the design constraint that filesystem/source hierarchy remains a stable path-based view; splay tree behavior is limited to the adaptive access index for recent/repeated work.
 
 ### Restore Implementation Update
@@ -149,7 +149,7 @@
 ### Documentation Queue Cleanup
 
 - Archived the completed Phase 4 snapshot restore plan under `docs/archive/plans/phase-4-snapshot-restore.md`.
-- Renamed the Home/adaptive navigation work queue to `docs/plans/phase-next-home-adaptive-navigation.md` to avoid colliding with the existing stabilization phase numbering.
+- Renamed the Home/adaptive navigation work queue to `phase-next-home-adaptive-navigation.md` to avoid colliding with the existing stabilization phase numbering; it is now archived under `docs/archive/plans/`.
 - Updated `docs/plans/README.md` and `docs/project-plan.md` so active and archived plan locations match the current repository state.
 
 ## 2026-06-26
@@ -160,3 +160,18 @@
 - Documented that future automatic snapshots should be opt-in per source, debounced, and routed through the existing snapshot creation path.
 - Updated the active Home plan, Home/adaptive navigation spec, and project Future list so watcher work stays separate from the current quick-access scope.
 - Refined the future compression direction to simple modes: `standard` uses `zstd` level 3, `fast` uses `lz4`, and `off` keeps raw blocks.
+
+### Home Adaptive Navigation Implementation
+
+- Implemented repository-local adaptive access history with `AccessIndex`, `AccessStore`, `HomeService`, and Home Tauri commands.
+- Added `indexes/access-index.json` persistence with `.tmp` then rename writes.
+- Added TypeScript access/Home types and `chronaApi` wrappers.
+- Added Home workspace UI with Continue Working, pinned items, recent repositories/sources/snapshots/compare pairs, pin/unpin, refresh, and clear history actions.
+- Recorded access events from repository open/create, source ingest, snapshot create/open, and snapshot comparison.
+- Added `docs/implemented/home-adaptive-navigation.md` and archived the completed Home/adaptive navigation plan.
+
+### Home Verification
+
+- `cargo test`: passed, 30 Rust integration tests across Phase 1-4 plus 6 Home/access tests.
+- `npm test`: passed, 3 UI test files and 7 UI tests.
+- `npm run build`: passed, TypeScript and Vite production build.

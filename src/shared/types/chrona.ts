@@ -150,3 +150,49 @@ export interface RestoreReport {
   restoredBlockCount: number;
   files: RestoreFileResult[];
 }
+
+export type AccessNodeKind = 'repository' | 'source' | 'folder' | 'file' | 'snapshot' | 'comparePair';
+
+export interface AccessEvent {
+  key: string;
+  kind: AccessNodeKind;
+  label: string;
+  path: string | null;
+  repositoryId: string | null;
+  snapshotId: string | null;
+  baseSnapshotId: string | null;
+  targetSnapshotId: string | null;
+  action: string;
+  accessedAt: string;
+}
+
+export interface AccessNode {
+  key: string;
+  kind: AccessNodeKind;
+  label: string;
+  path: string | null;
+  repositoryId: string | null;
+  snapshotId: string | null;
+  baseSnapshotId: string | null;
+  targetSnapshotId: string | null;
+  accessCount: number;
+  lastAccessedAt: string;
+  lastAction: string;
+  pinned: boolean;
+}
+
+export interface HomeSummary {
+  continueWorking: AccessNode | null;
+  pinned: AccessNode[];
+  recentRepositories: AccessNode[];
+  recentSources: AccessNode[];
+  recentFiles: AccessNode[];
+  recentSnapshots: AccessNode[];
+  recentComparePairs: AccessNode[];
+}
+
+export interface AccessHistorySummary {
+  schemaVersion: number;
+  removedCount: number;
+  remainingCount: number;
+}

@@ -4,9 +4,27 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { RepositoryPage } from './RepositoryPage';
 import type { ChronaApi } from '../../shared/api/chronaApi';
-import type { BlockIngestProgress, RepositoryManifest } from '../../shared/types/chrona';
+import type { AccessNode, BlockIngestProgress, RepositoryManifest } from '../../shared/types/chrona';
 
 afterEach(() => cleanup());
+
+function accessNode(overrides: Partial<AccessNode> = {}): AccessNode {
+  return {
+    key: 'source:/tmp/source',
+    kind: 'source',
+    label: 'source',
+    path: '/tmp/source',
+    repositoryId: 'repo-id',
+    snapshotId: null,
+    baseSnapshotId: null,
+    targetSnapshotId: null,
+    accessCount: 2,
+    lastAccessedAt: '2026-06-26T00:00:00Z',
+    lastAction: 'ingest_completed',
+    pinned: false,
+    ...overrides,
+  };
+}
 
 function createApiMock() {
   const manifest: RepositoryManifest = {
@@ -58,6 +76,23 @@ function createApiMock() {
     selectSourceFilePath: vi.fn(async () => '/picked/source.txt'),
     selectSourceFolderPath: vi.fn(async () => '/picked/source-folder'),
     selectRestoreTargetPath: vi.fn(async () => null),
+    recordAccessEvent: vi.fn(),
+    getHomeSummary: vi.fn(async () => ({
+      continueWorking: null,
+      pinned: [],
+      recentRepositories: [],
+      recentSources: [],
+      recentFiles: [],
+      recentSnapshots: [],
+      recentComparePairs: [],
+    })),
+    pinAccessItem: vi.fn(),
+    unpinAccessItem: vi.fn(),
+    clearAccessHistory: vi.fn(async () => ({
+      schemaVersion: 1,
+      removedCount: 0,
+      remainingCount: 0,
+    })),
     onBlockIngestProgress: vi.fn(async (handler) => {
       progressHandler = handler;
       return () => undefined;
@@ -140,6 +175,41 @@ describe('RepositoryPage', () => {
 
     expect(screen.getByRole('heading', { name: /review/i })).toBeInTheDocument();
     expect(screen.getByText(/no block run yet/i)).toBeInTheDocument();
+  });
+
+  test('renders Home recent access after repository activity', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    const recentSource = accessNode({ label: 'demo-source', pinned: true });
+    vi.mocked(api.getHomeSummary).mockResolvedValue({
+      continueWorking: recentSource,
+      pinned: [recentSource],
+      recentRepositories: [accessNode({
+        key: 'repository:repo-id',
+        kind: 'repository',
+        label: 'chrona-repo',
+        path: '/tmp/chrona-repo',
+        accessCount: 1,
+        lastAction: 'repository_created',
+      })],
+      recentSources: [recentSource],
+      recentFiles: [],
+      recentSnapshots: [],
+      recentComparePairs: [],
+    });
+
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /create repository/i }));
+    await waitFor(() => expect(api.recordAccessEvent).toHaveBeenCalled());
+
+    await user.click(screen.getByRole('button', { name: /home/i }));
+
+    expect(screen.getAllByText(/continue working/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('demo-source').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/recent repositories/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('chrona-repo').length).toBeGreaterThan(0);
   });
 
 });

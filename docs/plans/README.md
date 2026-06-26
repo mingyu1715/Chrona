@@ -6,7 +6,7 @@ Completed phase plans are archived under `docs/archive/plans/` after their imple
 
 Active plans:
 
-- Next UX: `docs/plans/phase-next-home-adaptive-navigation.md`
+- None currently.
 
 Archived completed plans:
 
@@ -14,3 +14,4 @@ Archived completed plans:
 - Phase 2: `docs/archive/plans/phase-2-snapshot-engine.md`
 - Phase 3: `docs/archive/plans/phase-3-snapshot-comparison.md`
 - Phase 4: `docs/archive/plans/phase-4-snapshot-restore.md`
+- Home/adaptive navigation: `docs/archive/plans/phase-next-home-adaptive-navigation.md`

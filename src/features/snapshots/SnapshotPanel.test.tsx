@@ -12,6 +12,23 @@ function apiMock(): ChronaApi {
     createRepository: vi.fn(),
     openRepository: vi.fn(),
     ingestBlocks: vi.fn(),
+    recordAccessEvent: vi.fn(),
+    getHomeSummary: vi.fn(async () => ({
+      continueWorking: null,
+      pinned: [],
+      recentRepositories: [],
+      recentSources: [],
+      recentFiles: [],
+      recentSnapshots: [],
+      recentComparePairs: [],
+    })),
+    pinAccessItem: vi.fn(),
+    unpinAccessItem: vi.fn(),
+    clearAccessHistory: vi.fn(async () => ({
+      schemaVersion: 1,
+      removedCount: 0,
+      remainingCount: 0,
+    })),
     onBlockIngestProgress: vi.fn(async () => () => undefined),
     createSnapshot: vi.fn(async () => ({
       schemaVersion: 1,
@@ -114,6 +131,14 @@ describe('SnapshotPanel', () => {
         '/tmp/source',
         'Initial import',
       ),
+    );
+    expect(api.recordAccessEvent).toHaveBeenCalledWith(
+      '/tmp/repo',
+      expect.objectContaining({
+        kind: 'snapshot',
+        snapshotId: '20260619T103000Z_8f31c2',
+        action: 'snapshot_created',
+      }),
     );
     expect(screen.getAllByText('Initial import').length).toBeGreaterThan(0);
     expect(screen.getByText('a.txt')).toBeInTheDocument();

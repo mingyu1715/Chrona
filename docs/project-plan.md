@@ -596,6 +596,7 @@ docs/
     snapshot-engine.md
     snapshot-comparison.md
     snapshot-restore.md
+    home-adaptive-navigation.md
   specs/
     0001-repository-format.md
     0002-block-engine.md
@@ -606,7 +607,6 @@ docs/
     0007-snapshot-restore.md
   plans/
     README.md
-    phase-next-home-adaptive-navigation.md
   archive/
     README.md
     plans/
@@ -614,6 +614,7 @@ docs/
       phase-2-snapshot-engine.md
       phase-3-snapshot-comparison.md
       phase-4-snapshot-restore.md
+      phase-next-home-adaptive-navigation.md
 ```
 
 ### 역할

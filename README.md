@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed Phase 4 snapshot restore core flow.
+Chrona has completed the Phase 4 snapshot restore core flow and the Home/adaptive navigation MVP.
 
 Implemented:
 
@@ -29,6 +29,9 @@ Implemented:
 - Native macOS file/folder picker
 - Snapshot restore command and minimal UI
 - Safe restore target checks and `.tmp` then rename output writes
+- Home workspace section with Continue Working, pinned items, and recent access lists
+- Repository-local adaptive access history in `indexes/access-index.json`
+- Pin/unpin and clear-history controls for access items
 
 Not implemented yet:
 

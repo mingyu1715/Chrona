@@ -64,9 +64,20 @@ export function SnapshotComparePanel({
     setBusy(true);
     setError(null);
     try {
-      setComparison(
-        await api.compareSnapshots(repositoryPath, baseSnapshotId, targetSnapshotId),
-      );
+      const result = await api.compareSnapshots(repositoryPath, baseSnapshotId, targetSnapshotId);
+      setComparison(result);
+      await api.recordAccessEvent(repositoryPath, {
+        key: `compare:${baseSnapshotId}->${targetSnapshotId}`,
+        kind: 'comparePair',
+        label: selectedPairLabel,
+        path: null,
+        repositoryId: null,
+        snapshotId: null,
+        baseSnapshotId,
+        targetSnapshotId,
+        action: 'compare_pair_opened',
+        accessedAt: new Date().toISOString(),
+      });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
     } finally {
