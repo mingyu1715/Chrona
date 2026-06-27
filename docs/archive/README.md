@@ -1,12 +1,13 @@
-# Documentation Archive
+# 문서 보관함
 
-This directory stores completed or retired working documents.
+이 디렉터리는 완료되었거나 현재 작업 대기열에서 빠진 문서를 보관한다.
 
-Archived documents are kept for historical context and development traceability. They should not be treated as the current implementation queue.
+보관 문서는 개발 이력과 의사결정 추적을 위해 남긴다. 현재 구현 대기열로 보지 않는다.
 
-Current rules:
+현재 규칙:
 
-- Completed phase execution plans move to `docs/archive/plans/`.
-- Active or upcoming phase plans stay in `docs/plans/`.
-- Living repository format and behavior specs stay in `docs/specs/` until they are superseded.
-- Final implementation records stay in `docs/implemented/`.
+- 완료된 Phase 실행 계획은 `docs/archive/plans/`로 이동한다.
+- 완료된 설계 문서는 `docs/archive/specs/`로 이동한다.
+- 현재 구현 예정이거나 아직 구현하지 않은 설계 문서는 `docs/specs/`에 둔다.
+- 현재 또는 다음 구현 계획은 `docs/plans/`에 둔다.
+- 완료된 기능의 결과 기록은 `docs/implemented/`에 둔다.

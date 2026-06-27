@@ -17,6 +17,8 @@ import {
   PinOff,
   Play,
   RotateCw,
+  ShieldAlert,
+  ShieldCheck,
   Sun,
   Trash2,
 } from 'lucide-react';
@@ -28,6 +30,7 @@ import type {
   BlockIngestProgress,
   BlockIngestSummary,
   HomeSummary,
+  IntegrityReport,
   RepositoryManifest,
 } from '../../shared/types/chrona';
 import './RepositoryPage.css';
@@ -36,8 +39,8 @@ interface RepositoryPageProps {
   api?: ChronaApi;
 }
 
-type ChapterId = 'home' | 'repository' | 'source' | 'snapshots' | 'review';
-type PanelKey = 'home' | 'repository' | 'source' | 'store' | 'snapshots' | 'review';
+type ChapterId = 'home' | 'repository' | 'source' | 'snapshots' | 'integrity' | 'review';
+type PanelKey = 'home' | 'repository' | 'source' | 'store' | 'snapshots' | 'integrity' | 'review';
 type Tone = 'ready' | 'waiting' | 'done';
 type ThemeMode = 'light' | 'dark';
 
@@ -77,6 +80,13 @@ const chapters: Array<{
     icon: Clock3,
   },
   {
+    id: 'integrity',
+    label: 'Integrity',
+    shortLabel: 'Integrity',
+    description: 'Verify snapshot block references against stored block files.',
+    icon: ShieldCheck,
+  },
+  {
     id: 'review',
     label: 'Review',
     shortLabel: 'Review',
@@ -92,6 +102,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   const [progress, setProgress] = useState<BlockIngestProgress | null>(null);
   const [summary, setSummary] = useState<BlockIngestSummary | null>(null);
   const [homeSummary, setHomeSummary] = useState<HomeSummary | null>(null);
+  const [integrityReport, setIntegrityReport] = useState<IntegrityReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>('light');
@@ -102,6 +113,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     source: true,
     store: true,
     snapshots: true,
+    integrity: true,
     review: true,
   });
 
@@ -214,6 +226,11 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     });
   }
 
+  async function verifyRepositoryIntegrity() {
+    await runAction(async () => {
+      setIntegrityReport(await api.verifyRepository(repositoryPath));
+    });
+  }
 
   function togglePanel(panel: PanelKey) {
     setOpenPanels((current) => ({ ...current, [panel]: !current[panel] }));
@@ -239,6 +256,9 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     }
     if (chapter === 'snapshots') {
       return manifest && sourcePath.trim().length > 0 ? 'ready' : 'waiting';
+    }
+    if (chapter === 'integrity') {
+      return integrityReport ? 'done' : manifest ? 'ready' : 'waiting';
     }
     return summary ? 'done' : 'waiting';
   }
@@ -436,6 +456,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     onClick={() => runAction(async () => {
                       const nextManifest = await api.createRepository(repositoryPath);
                       setManifest(nextManifest);
+                      setIntegrityReport(null);
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_created');
                       setActiveChapter('source');
                     })}
@@ -450,6 +471,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     onClick={() => runAction(async () => {
                       const nextManifest = await api.openRepository(repositoryPath);
                       setManifest(nextManifest);
+                      setIntegrityReport(null);
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_opened');
                       setActiveChapter('source');
                     })}
@@ -573,6 +595,33 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                   repositoryOpen={Boolean(manifest)}
                   embedded
                 />
+              </DropPanel>
+            )}
+
+            {activeChapter === 'integrity' && (
+              <DropPanel
+                title="Repository integrity"
+                kicker="Integrity"
+                status={integrityReport ? integrityStatusLabel(integrityReport.status) : manifest ? 'Ready' : 'Waiting'}
+                icon={ShieldCheck}
+                open={openPanels.integrity}
+                onToggle={() => togglePanel('integrity')}
+              >
+                <div className="run-card">
+                  <div>
+                    <strong>Integrity verification</strong>
+                    <p>Checks snapshot block references, missing blocks, block sizes, and raw SHA-256 identity.</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy || !manifest}
+                    onClick={verifyRepositoryIntegrity}
+                  >
+                    <ShieldCheck size={16} />
+                    Verify Repository
+                  </button>
+                </div>
+                <IntegrityReportContent report={integrityReport} repositoryOpen={Boolean(manifest)} />
               </DropPanel>
             )}
 
@@ -786,6 +835,93 @@ function ProgressBox({ progress }: { progress: BlockIngestProgress }) {
   );
 }
 
+function IntegrityReportContent({
+  report,
+  repositoryOpen,
+}: {
+  report: IntegrityReport | null;
+  repositoryOpen: boolean;
+}) {
+  if (!repositoryOpen) {
+    return (
+      <div className="empty-state integrity-empty">
+        <span><ShieldAlert size={20} /></span>
+        <div>
+          <strong>No repository open</strong>
+          <p>Open a repository before running integrity verification.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="empty-state integrity-empty">
+        <span><ShieldCheck size={20} /></span>
+        <div>
+          <strong>No integrity report yet</strong>
+          <p>Run verification to check stored blocks against snapshot references.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="integrity-report">
+      <div className={`integrity-status integrity-status-${report.status}`}>
+        {report.status === 'failed' ? <ShieldAlert size={18} /> : <ShieldCheck size={18} />}
+        <strong>Integrity {integrityStatusLabel(report.status)}</strong>
+        <span>{report.checkedAt}</span>
+      </div>
+
+      <dl className="result-grid integrity-grid">
+        <div>
+          <dt>Snapshots checked</dt>
+          <dd>{report.snapshotCount}</dd>
+        </div>
+        <div>
+          <dt>Files checked</dt>
+          <dd>{report.fileCount}</dd>
+        </div>
+        <div>
+          <dt>Block references</dt>
+          <dd>{report.blockReferenceCount}</dd>
+        </div>
+        <div>
+          <dt>Unique blocks</dt>
+          <dd>{report.uniqueBlockCount}</dd>
+        </div>
+        <div>
+          <dt>Missing blocks</dt>
+          <dd>{report.missingBlockCount}</dd>
+        </div>
+        <div>
+          <dt>Corrupt blocks</dt>
+          <dd>{report.corruptBlockCount}</dd>
+        </div>
+      </dl>
+
+      {report.issues.length === 0 ? (
+        <p className="integrity-clean">No integrity issues found</p>
+      ) : (
+        <ul className="issue-list" aria-label="Integrity issues">
+          {report.issues.map((issue, index) => (
+            <li key={`${issue.code}-${index}`} className={`issue-list-${issue.severity}`}>
+              <div>
+                <strong>{issue.code}</strong>
+                <p>{issue.message}</p>
+              </div>
+              <small>
+                {[issue.snapshotId, issue.relativePath, issue.blockHash].filter(Boolean).join(' · ')}
+              </small>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ResultContent({ summary, reuseRatio }: { summary: BlockIngestSummary | null; reuseRatio: string }) {
   if (!summary) {
     return (
@@ -827,6 +963,16 @@ function ResultContent({ summary, reuseRatio }: { summary: BlockIngestSummary | 
       </div>
     </dl>
   );
+}
+
+function integrityStatusLabel(status: IntegrityReport['status']): string {
+  if (status === 'healthy') {
+    return 'Healthy';
+  }
+  if (status === 'warning') {
+    return 'Warning';
+  }
+  return 'Failed';
 }
 
 function formatBytes(bytes: number): string {

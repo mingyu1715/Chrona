@@ -803,6 +803,127 @@ progress {
   margin-top: 16px;
 }
 
+.integrity-report {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.integrity-status {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px 13px;
+}
+
+.integrity-status strong {
+  color: var(--text);
+}
+
+.integrity-status span {
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.integrity-status-healthy {
+  border-color: #86c9b8;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.integrity-status-warning {
+  border-color: #d1ad67;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.integrity-status-failed {
+  border-color: #e3a4a0;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.integrity-grid {
+  margin-top: 0;
+}
+
+.integrity-clean {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0;
+  background: var(--surface);
+  color: var(--success);
+  font-weight: 780;
+  padding: 12px 13px;
+}
+
+.issue-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.issue-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 12px;
+}
+
+.issue-list-error {
+  border-color: #e3a4a0;
+}
+
+.issue-list-warning {
+  border-color: #d1ad67;
+}
+
+.issue-list strong,
+.issue-list p,
+.issue-list small {
+  display: block;
+  min-width: 0;
+}
+
+.issue-list strong {
+  font-size: 0.88rem;
+}
+
+.issue-list p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.issue-list small {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.integrity-empty {
+  margin-top: 14px;
+}
+
 .snapshot-compare {
   min-width: 0;
   border-top: 1px solid var(--border);

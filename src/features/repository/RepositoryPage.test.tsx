@@ -51,6 +51,19 @@ function createApiMock() {
     listSnapshots: vi.fn(async () => []),
     getSnapshot: vi.fn(),
     restoreSnapshot: vi.fn(),
+    verifyRepository: vi.fn(async () => ({
+      schemaVersion: 1,
+      repositoryPath: '/tmp/chrona-repo',
+      checkedAt: '2026-06-26T00:00:00Z',
+      status: 'healthy' as const,
+      snapshotCount: 1,
+      fileCount: 2,
+      blockReferenceCount: 2,
+      uniqueBlockCount: 1,
+      missingBlockCount: 0,
+      corruptBlockCount: 0,
+      issues: [],
+    })),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -210,6 +223,25 @@ describe('RepositoryPage', () => {
     expect(screen.getAllByText('demo-source').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/recent repositories/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText('chrona-repo').length).toBeGreaterThan(0);
+  });
+
+  test('verifies repository integrity and renders the report', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await waitFor(() => expect(api.openRepository).toHaveBeenCalledWith('/tmp/chrona-repo'));
+
+    await user.click(screen.getByRole('button', { name: /integrity/i }));
+    await user.click(screen.getByRole('button', { name: /verify repository/i }));
+
+    await waitFor(() => expect(api.verifyRepository).toHaveBeenCalledWith('/tmp/chrona-repo'));
+    expect(screen.getByText(/integrity healthy/i)).toBeInTheDocument();
+    expect(screen.getByText('Snapshots checked').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Missing blocks').nextElementSibling).toHaveTextContent('0');
+    expect(screen.getByText('No integrity issues found')).toBeInTheDocument();
   });
 
 });

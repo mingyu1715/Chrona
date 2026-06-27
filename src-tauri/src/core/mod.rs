@@ -7,6 +7,7 @@ pub mod diff_service;
 pub mod errors;
 pub mod hasher;
 pub mod home_service;
+pub mod integrity_service;
 pub mod path_safety;
 pub mod repository;
 pub mod restore_service;

@@ -2,6 +2,7 @@ pub mod access;
 pub mod block;
 pub mod diff;
 pub mod ingest;
+pub mod integrity;
 pub mod progress;
 pub mod repository;
 pub mod restore;

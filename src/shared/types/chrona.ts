@@ -151,6 +151,33 @@ export interface RestoreReport {
   files: RestoreFileResult[];
 }
 
+export type IntegrityStatus = 'healthy' | 'warning' | 'failed';
+
+export type IntegrityIssueSeverity = 'warning' | 'error';
+
+export interface IntegrityIssue {
+  severity: IntegrityIssueSeverity;
+  code: string;
+  message: string;
+  snapshotId: string | null;
+  relativePath: string | null;
+  blockHash: string | null;
+}
+
+export interface IntegrityReport {
+  schemaVersion: number;
+  repositoryPath: string;
+  checkedAt: string;
+  status: IntegrityStatus;
+  snapshotCount: number;
+  fileCount: number;
+  blockReferenceCount: number;
+  uniqueBlockCount: number;
+  missingBlockCount: number;
+  corruptBlockCount: number;
+  issues: IntegrityIssue[];
+}
+
 export type AccessNodeKind = 'repository' | 'source' | 'folder' | 'file' | 'snapshot' | 'comparePair';
 
 export interface AccessEvent {

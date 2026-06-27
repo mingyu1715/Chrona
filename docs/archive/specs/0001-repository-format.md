@@ -1,5 +1,9 @@
 # 0001. Repository Format
 
+## Status
+
+Implemented in Phase 1.
+
 ## Scope
 
 Phase 1 defines only the repository layout needed by the block engine. Snapshot metadata, deletion, garbage collection, compression, encryption, and SQLite metadata are outside this phase.

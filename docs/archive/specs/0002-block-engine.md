@@ -1,5 +1,9 @@
 # 0002. Block Engine
 
+## Status
+
+Implemented in Phase 1.
+
 ## Scope
 
 Phase 1 implements fixed-size block ingest and duplicate block reuse. It does not create snapshots. The output is a block ingest summary that Phase 2 can use to build snapshot metadata.

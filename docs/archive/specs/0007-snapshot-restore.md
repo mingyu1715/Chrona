@@ -1,5 +1,9 @@
 # 0007. Snapshot Restore
 
+## Status
+
+Implemented in Phase 4.
+
 ## Scope
 
 This spec defines the first restore implementation on top of existing snapshot metadata and physical block files. It does not change the repository format created by Phase 1 or the snapshot JSON format created by Phase 2.

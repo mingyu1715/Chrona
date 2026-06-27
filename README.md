@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed the Phase 4 snapshot restore core flow and the Home/adaptive navigation MVP.
+Chrona has completed the Phase 4 snapshot restore core flow, the Home/adaptive navigation MVP, and the first Phase 5 integrity verification slice.
 
 Implemented:
 
@@ -32,11 +32,13 @@ Implemented:
 - Home workspace section with Continue Working, pinned items, and recent access lists
 - Repository-local adaptive access history in `indexes/access-index.json`
 - Pin/unpin and clear-history controls for access items
+- Read-only repository integrity verification command and UI
+- Missing block, block size mismatch, and raw SHA-256 mismatch detection
 
 Not implemented yet:
 
 - Block compression
-- Integrity verification UI
+- Auto-repair and block garbage collection
 - Packaged `.app` release
 
 ## Tech Stack
@@ -198,7 +200,41 @@ Properties:
 - The restore target must be outside the repository and must be empty or newly created.
 - Output files use a `.tmp-{operationId}` path before final rename.
 
-### 6. Future raw-identity block compression
+### 6. Repository integrity verification
+
+Integrity verification checks whether recorded snapshot references still point to valid physical block files. It does not repair data; it produces a report.
+
+```text
+unique_blocks = map()
+
+for each snapshot in snapshot_index:
+  for each file in snapshot.files:
+    for each ref in file.blocks:
+      unique_blocks[ref.hash] = expected_size(ref)
+
+for each (hash, expected_size) in unique_blocks:
+  path = block_path(hash)
+
+  if path is missing:
+    emit missingBlock
+    continue
+
+  bytes = read(path)
+
+  if len(bytes) != expected_size:
+    emit blockSizeMismatch
+
+  if SHA-256(bytes) != hash:
+    emit blockHashMismatch
+```
+
+Properties:
+
+- Duplicate references are counted in metadata statistics but the physical block is checked once per unique hash.
+- Verification is read-only and never rewrites repository contents.
+- A healthy report means all referenced raw blocks currently match snapshot metadata.
+
+### 7. Future raw-identity block compression
 
 Compression is a future storage optimization, not part of the current block writer. If added, Chrona should keep block identity based on raw bytes and compress only the physical payload.
 
@@ -237,7 +273,7 @@ Then:
 - Fixed-size chunking is deterministic and simple, but less effective than content-defined chunking when bytes are inserted near the beginning of a large file.
 - Chrona currently performs deduplication, not compression; future compression must keep raw-byte hashes as block identity and use simple modes: raw/off, standard zstd, or fast lz4.
 - Chrona currently stores a snapshot reference graph, not a Merkle tree.
-- Integrity verification, block garbage collection, compression, encryption, and content-defined chunking are future algorithm candidates. Compression is specified as a future raw-identity payload encoding in `docs/specs/0005-block-compression.md`.
+- Block garbage collection, auto-repair, compression, encryption, and content-defined chunking are future algorithm candidates. Compression is specified as a future raw-identity payload encoding in `docs/specs/0005-block-compression.md`.
 
 ## Development
 
