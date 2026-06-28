@@ -10,6 +10,7 @@ import type {
   BlockIngestSummary,
   HomeSummary,
   IntegrityReport,
+  RepositoryInventoryReport,
   RepositoryManifest,
   RestoreReport,
   Snapshot,
@@ -27,6 +28,7 @@ export interface ChronaApi {
   compareSnapshots(repositoryPath: string, baseSnapshotId: string, targetSnapshotId: string): Promise<SnapshotComparison>;
   restoreSnapshot(repositoryPath: string, snapshotId: string, targetPath: string): Promise<RestoreReport>;
   verifyRepository(repositoryPath: string): Promise<IntegrityReport>;
+  getRepositoryInventory(repositoryPath: string): Promise<RepositoryInventoryReport>;
   recordAccessEvent(repositoryPath: string, event: AccessEvent): Promise<AccessNode>;
   getHomeSummary(repositoryPath: string): Promise<HomeSummary>;
   pinAccessItem(repositoryPath: string, key: string): Promise<AccessNode>;
@@ -76,6 +78,9 @@ export const chronaApi: ChronaApi = {
   },
   verifyRepository(repositoryPath) {
     return invoke<IntegrityReport>('verify_repository', { repositoryPath });
+  },
+  getRepositoryInventory(repositoryPath) {
+    return invoke<RepositoryInventoryReport>('get_repository_inventory', { repositoryPath });
   },
   recordAccessEvent(repositoryPath, event) {
     return invoke<AccessNode>('record_access_event', { repositoryPath, event });

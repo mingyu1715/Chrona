@@ -10,7 +10,7 @@
 
 ## 현재 구현 계획
 
-- Phase 5b 저장소 인벤토리 탐색: `docs/plans/phase-5-repository-inventory-explorer.md`
+- 없음
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
@@ -18,9 +18,6 @@
   - 상태: 설계만 있음
   - 구현 계획: 없음
   - 현재 작업 범위: 제외
-- 저장소 인벤토리 탐색: `docs/specs/0009-repository-inventory-explorer.md`
-  - 상태: 다음 구현 대상
-  - 구현 계획: `docs/plans/phase-5-repository-inventory-explorer.md`
 
 ## 보관된 완료 계획
 
@@ -30,6 +27,7 @@
 - Phase 4 스냅샷 복원: `docs/archive/plans/phase-4-snapshot-restore.md`
 - 홈/적응형 탐색: `docs/archive/plans/phase-next-home-adaptive-navigation.md`
 - Phase 5a 무결성 검증: `docs/archive/plans/phase-5-integrity-verification.md`
+- Phase 5b 저장소 인벤토리 탐색: `docs/archive/plans/phase-5-repository-inventory-explorer.md`
 
 ## 보관된 완료 설계
 
@@ -40,6 +38,7 @@
 - 홈/적응형 탐색: `docs/archive/specs/0006-home-adaptive-navigation.md`
 - 스냅샷 복원: `docs/archive/specs/0007-snapshot-restore.md`
 - 무결성 검증: `docs/archive/specs/0008-integrity-verification.md`
+- 저장소 인벤토리 탐색: `docs/archive/specs/0009-repository-inventory-explorer.md`
 
 ## 설계와 상세 계획이 모두 없는 후보
 

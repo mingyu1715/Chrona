@@ -1,6 +1,6 @@
 # Repository Inventory Explorer Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a Repository Explorer/Inventory view that shows recorded source files, file kinds, snapshot presence/deletion state, and current original-file existence status.
 
@@ -88,7 +88,7 @@ Modify:
 - Modify: `src-tauri/src/models/mod.rs`
 - Test: `src-tauri/tests/phase5_inventory.rs`
 
-- [ ] **Step 1: Write failing kind classification test**
+- [x] **Step 1: Write failing kind classification test**
 
 Add `src-tauri/tests/phase5_inventory.rs`:
 
@@ -107,7 +107,7 @@ fn classifies_file_kind_from_extension() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify RED**
+- [x] **Step 2: Run test to verify RED**
 
 Run:
 
@@ -117,7 +117,7 @@ cd src-tauri && cargo test --test phase5_inventory classifies_file_kind_from_ext
 
 Expected: compile failure because `inventory` model and `inventory_service` do not exist.
 
-- [ ] **Step 3: Add inventory models**
+- [x] **Step 3: Add inventory models**
 
 Create `src-tauri/src/models/inventory.rs`:
 
@@ -210,7 +210,7 @@ Modify `src-tauri/src/models/mod.rs`:
 pub mod inventory;
 ```
 
-- [ ] **Step 4: Add minimal classifier**
+- [x] **Step 4: Add minimal classifier**
 
 Create `src-tauri/src/core/inventory_service.rs`:
 
@@ -251,7 +251,7 @@ Modify `src-tauri/src/core/mod.rs`:
 pub mod inventory_service;
 ```
 
-- [ ] **Step 5: Run test to verify GREEN**
+- [x] **Step 5: Run test to verify GREEN**
 
 Run:
 
@@ -268,7 +268,7 @@ Expected: test passes.
 - Modify: `src-tauri/src/core/inventory_service.rs`
 - Test: `src-tauri/tests/phase5_inventory.rs`
 
-- [ ] **Step 1: Write failing one-snapshot inventory test**
+- [x] **Step 1: Write failing one-snapshot inventory test**
 
 Append to `src-tauri/tests/phase5_inventory.rs`:
 
@@ -321,7 +321,7 @@ fn inventory_reports_files_from_latest_snapshot() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify RED**
+- [x] **Step 2: Run test to verify RED**
 
 Run:
 
@@ -331,7 +331,7 @@ cd src-tauri && cargo test --test phase5_inventory inventory_reports_files_from_
 
 Expected: compile failure because `InventoryService` is not implemented.
 
-- [ ] **Step 3: Implement `InventoryService::get_repository_inventory`**
+- [x] **Step 3: Implement `InventoryService::get_repository_inventory`**
 
 Extend `src-tauri/src/core/inventory_service.rs` with:
 
@@ -549,7 +549,7 @@ fn extension(relative_path: &str) -> Option<String> {
 }
 ```
 
-- [ ] **Step 4: Run one-snapshot test**
+- [x] **Step 4: Run one-snapshot test**
 
 Run:
 
@@ -566,7 +566,7 @@ Expected: test passes.
 - Modify: `src-tauri/tests/phase5_inventory.rs`
 - Modify: `src-tauri/src/core/inventory_service.rs`
 
-- [ ] **Step 1: Write failing deleted/missing test**
+- [x] **Step 1: Write failing deleted/missing test**
 
 Append:
 
@@ -606,7 +606,7 @@ fn inventory_distinguishes_deleted_in_latest_from_missing_source_file() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify RED or behavior gap**
+- [x] **Step 2: Run test to verify RED or behavior gap**
 
 Run:
 
@@ -616,7 +616,7 @@ cd src-tauri && cargo test --test phase5_inventory inventory_distinguishes_delet
 
 Expected: fail until source-root state and latest presence aggregation are correct.
 
-- [ ] **Step 3: Fix source-root tracking and latest presence**
+- [x] **Step 3: Fix source-root tracking and latest presence**
 
 In `inventory_service.rs`, ensure each accumulated file tracks the source root from the newest snapshot where the file appears:
 
@@ -648,7 +648,7 @@ Call it with:
 entry.record_seen(&snapshot.id, &snapshot.created_at, &snapshot.source_root, &file, is_latest);
 ```
 
-- [ ] **Step 4: Add source-root-missing test**
+- [x] **Step 4: Add source-root-missing test**
 
 Append:
 
@@ -675,7 +675,7 @@ fn inventory_marks_source_root_missing_without_failing_report() {
 }
 ```
 
-- [ ] **Step 5: Add empty repository test**
+- [x] **Step 5: Add empty repository test**
 
 Append:
 
@@ -696,7 +696,7 @@ fn inventory_handles_repository_without_snapshots() {
 }
 ```
 
-- [ ] **Step 6: Run inventory tests**
+- [x] **Step 6: Run inventory tests**
 
 Run:
 
@@ -716,7 +716,7 @@ Expected: all Phase 5 inventory tests pass.
 - Modify: `src/shared/types/chrona.ts`
 - Modify: `src/shared/api/chronaApi.ts`
 
-- [ ] **Step 1: Add command wrapper**
+- [x] **Step 1: Add command wrapper**
 
 Create `src-tauri/src/commands/inventory_commands.rs`:
 
@@ -734,7 +734,7 @@ pub fn get_repository_inventory(repository_path: String) -> Result<RepositoryInv
 }
 ```
 
-- [ ] **Step 2: Register Rust modules and handler**
+- [x] **Step 2: Register Rust modules and handler**
 
 Modify `src-tauri/src/commands/mod.rs`:
 
@@ -755,7 +755,7 @@ fn get_repository_inventory(repository_path: String) -> Result<RepositoryInvento
 
 Add `get_repository_inventory` to `tauri::generate_handler![...]`.
 
-- [ ] **Step 3: Add TypeScript types**
+- [x] **Step 3: Add TypeScript types**
 
 Add to `src/shared/types/chrona.ts`:
 
@@ -806,7 +806,7 @@ export interface RepositoryInventoryReport {
 }
 ```
 
-- [ ] **Step 4: Add API wrapper**
+- [x] **Step 4: Add API wrapper**
 
 Modify `src/shared/api/chronaApi.ts`:
 
@@ -822,7 +822,7 @@ getRepositoryInventory(repositoryPath) {
 }
 ```
 
-- [ ] **Step 5: Verify Rust compile and TS compile**
+- [x] **Step 5: Verify Rust compile and TS compile**
 
 Run:
 
@@ -843,7 +843,7 @@ Expected: Rust inventory tests pass and TypeScript build succeeds after test moc
 - Modify: `src/features/snapshots/SnapshotPanel.test.tsx`
 - Modify: `src/features/snapshots/SnapshotComparePanel.test.tsx`
 
-- [ ] **Step 1: Add failing UI test**
+- [x] **Step 1: Add failing UI test**
 
 In `RepositoryPage.test.tsx`, add mock `getRepositoryInventory` returning:
 
@@ -935,7 +935,7 @@ npm test -- RepositoryPage.test.tsx
 
 Expected: fail because Explorer UI does not exist.
 
-- [ ] **Step 2: Add Explorer chapter and state**
+- [x] **Step 2: Add Explorer chapter and state**
 
 Modify `RepositoryPage.tsx`:
 
@@ -962,7 +962,7 @@ async function refreshInventory() {
 
 - Reset `inventoryReport` when repository is created/opened.
 
-- [ ] **Step 3: Add Explorer rendering**
+- [x] **Step 3: Add Explorer rendering**
 
 Render a `DropPanel` for active `explorer`:
 
@@ -1002,7 +1002,7 @@ Render a `DropPanel` for active `explorer`:
 
 `InventoryContent` should render summary cards, filters, and a table. Use exact status strings from the API for MVP labels: `presentInLatest`, `deletedInLatest`, `exists`, `missing`, `sourceRootMissing`, `unchecked`.
 
-- [ ] **Step 4: Add CSS**
+- [x] **Step 4: Add CSS**
 
 Add styles to `RepositoryPage.css`:
 
@@ -1056,7 +1056,7 @@ Add styles to `RepositoryPage.css`:
 }
 ```
 
-- [ ] **Step 5: Update all ChronaApi mocks**
+- [x] **Step 5: Update all ChronaApi mocks**
 
 Add this mock to `SnapshotPanel.test.tsx`, `SnapshotComparePanel.test.tsx`, and any other `ChronaApi` mock that does not test inventory directly:
 
@@ -1080,7 +1080,7 @@ getRepositoryInventory: vi.fn(async () => ({
 })),
 ```
 
-- [ ] **Step 6: Run UI tests**
+- [x] **Step 6: Run UI tests**
 
 Run:
 
@@ -1101,11 +1101,11 @@ Expected: all UI tests and build pass.
 - Modify: `README.md`
 - Modify: `README.ko.md`
 
-- [ ] **Step 1: Add implemented doc**
+- [x] **Step 1: Add implemented doc**
 
 Create `docs/implemented/repository-inventory-explorer.md` with implemented scope, data flow, safety/limits, and verification commands.
 
-- [ ] **Step 2: Update README status**
+- [x] **Step 2: Update README status**
 
 Add to implemented feature list:
 
@@ -1115,7 +1115,7 @@ Add to implemented feature list:
 
 Keep compression under not implemented/future.
 
-- [ ] **Step 3: Update development log**
+- [x] **Step 3: Update development log**
 
 Add a `Repository Inventory Explorer Implementation` section with:
 
@@ -1125,7 +1125,7 @@ Add a `Repository Inventory Explorer Implementation` section with:
 - Compression remains future work and is not part of this slice.
 ```
 
-- [ ] **Step 4: Archive plan after implementation**
+- [x] **Step 4: Archive plan after implementation**
 
 Move:
 
@@ -1141,7 +1141,7 @@ docs/archive/plans/phase-5-repository-inventory-explorer.md
 
 Update `docs/plans/README.md` so active plans return to `None`.
 
-- [ ] **Step 5: Final verification**
+- [x] **Step 5: Final verification**
 
 Run:
 

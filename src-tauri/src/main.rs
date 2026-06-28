@@ -2,6 +2,7 @@ use chrona::models::access::{AccessEvent, AccessHistorySummary, AccessNode, Home
 use chrona::models::diff::SnapshotComparison;
 use chrona::models::ingest::BlockIngestSummary;
 use chrona::models::integrity::IntegrityReport;
+use chrona::models::inventory::RepositoryInventoryReport;
 use chrona::models::repository::RepositoryManifest;
 use chrona::models::restore::RestoreReport;
 use chrona::models::snapshot::{Snapshot, SnapshotIndexItem};
@@ -97,6 +98,11 @@ fn verify_repository(repository_path: String) -> Result<IntegrityReport, String>
     chrona::commands::integrity_commands::verify_repository(repository_path)
 }
 
+#[tauri::command]
+fn get_repository_inventory(repository_path: String) -> Result<RepositoryInventoryReport, String> {
+    chrona::commands::inventory_commands::get_repository_inventory(repository_path)
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -114,7 +120,8 @@ fn main() {
             unpin_access_item,
             clear_access_history,
             restore_snapshot,
-            verify_repository
+            verify_repository,
+            get_repository_inventory
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Chrona application");

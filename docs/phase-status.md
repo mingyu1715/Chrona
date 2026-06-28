@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`에 남아 있는 문서는 `0005-block-compression.md`, `0009-repository-inventory-explorer.md`뿐이다.
+현재 `docs/specs/`에는 구현 계획이 없는 향후 설계 `0005-block-compression.md`만 남아 있다.
 
 ## 현재 구현 상태
 
@@ -26,16 +26,15 @@
 | 스냅샷 비교 | 구현 완료 | `docs/archive/specs/0004-snapshot-comparison.md` | `docs/archive/plans/phase-3-snapshot-comparison.md` | `docs/implemented/snapshot-comparison.md` | 파일 단위 비교와 블록 참조 멀티셋 비교 구현 완료. |
 | 스냅샷 복원 | 구현 완료 | `docs/archive/specs/0007-snapshot-restore.md` | `docs/archive/plans/phase-4-snapshot-restore.md` | `docs/implemented/snapshot-restore.md` | 비어 있거나 새 대상 폴더로 복원하는 MVP 구현 완료. |
 | 홈/적응형 탐색 | 구현 완료 | `docs/archive/specs/0006-home-adaptive-navigation.md` | `docs/archive/plans/phase-next-home-adaptive-navigation.md` | `docs/implemented/home-adaptive-navigation.md` | 접근 기록은 저장소 내부 메타데이터로 관리하며 실제 파일 시스템 트리 정렬은 바꾸지 않음. |
-| 무결성 검증 | 현재 브랜치에서 구현 완료, 커밋/병합 대기 | `docs/archive/specs/0008-integrity-verification.md` | `docs/archive/plans/phase-5-integrity-verification.md` | `docs/implemented/integrity-verification.md` | 누락 블록, 손상 블록, SHA-256 불일치를 읽기 전용으로 검증하는 기능이 작업 트리에 구현됨. |
-| 저장소 인벤토리 탐색 | 다음 구현 대상 | `docs/specs/0009-repository-inventory-explorer.md` | `docs/plans/phase-5-repository-inventory-explorer.md` | 없음 | 기록된 파일, 파일 종류, 스냅샷 기준 존재/삭제 상태, 현재 원본 파일 존재 여부를 보여주는 기능. |
-| 블록 압축 | 향후 작업, 구현 계획 없음 | `docs/specs/0005-block-compression.md` | 없음 | 없음 | 설계만 있음. 현재 구현 범위와 저장소 인벤토리 탐색 범위에서 제외. |
+| 무결성 검증 | 구현 완료, 원격 기능 브랜치 푸시 완료 | `docs/archive/specs/0008-integrity-verification.md` | `docs/archive/plans/phase-5-integrity-verification.md` | `docs/implemented/integrity-verification.md` | 누락 블록, 손상 블록, SHA-256 불일치를 읽기 전용으로 검증함. |
+| 저장소 인벤토리 탐색 | 구현 완료 | `docs/archive/specs/0009-repository-inventory-explorer.md` | `docs/archive/plans/phase-5-repository-inventory-explorer.md` | `docs/implemented/repository-inventory-explorer.md` | 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태, 현재 원본 파일 존재 여부, 검색/필터 UI 구현 완료. |
+| 블록 압축 | 향후 작업, 구현 계획 없음 | `docs/specs/0005-block-compression.md` | 없음 | 없음 | 설계만 있음. 현재 구현 범위에서 제외. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
 | 설계 문서 | 상태 | 구현 상태 | 계획 상태 |
 | --- | --- | --- | --- |
 | `0005-block-compression.md` | 향후 설계만 있음 | 미구현 | 구현 계획 없음 |
-| `0009-repository-inventory-explorer.md` | 다음 구현 대상 | 미구현 | 현재 구현 계획 있음 |
 
 ## 보관된 완료 설계 문서
 
@@ -47,21 +46,12 @@
 | `docs/archive/specs/0004-snapshot-comparison.md` | 구현 완료 | 메타데이터 기반 비교 완료 | Phase 3 계획 보관 완료 |
 | `docs/archive/specs/0006-home-adaptive-navigation.md` | 구현 완료 | 홈/적응형 접근 MVP 완료 | 홈/적응형 탐색 계획 보관 완료 |
 | `docs/archive/specs/0007-snapshot-restore.md` | 구현 완료 | 빈 대상 폴더 복원 MVP 완료 | Phase 4 계획 보관 완료 |
-| `docs/archive/specs/0008-integrity-verification.md` | 현재 브랜치에서 구현 완료 | 작업 트리에서 완료, 커밋/병합 대기 | Phase 5 무결성 검증 계획 보관 완료 |
+| `docs/archive/specs/0008-integrity-verification.md` | 구현 완료 | 원격 기능 브랜치 푸시 완료 | Phase 5 무결성 검증 계획 보관 완료 |
+| `docs/archive/specs/0009-repository-inventory-explorer.md` | 구현 완료 | 메타데이터 기반 저장소 탐색과 UI 완료 | Phase 5 인벤토리 계획 보관 완료 |
 
 ## 현재 진행 계획
 
-현재 진행 계획:
-
-```text
-docs/plans/phase-5-repository-inventory-explorer.md
-```
-
-구현을 시작하기 전에 현재 `feature/integrity-verification` 작업 트리를 먼저 커밋/푸시해서 정리한다. 그 다음 아래 브랜치로 새 작업을 시작한다.
-
-```text
-feature/repository-inventory-explorer
-```
+현재 활성 구현 계획은 없다. 저장소 인벤토리 구현 계획은 완료되어 `docs/archive/plans/`로 이동했다.
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
@@ -95,21 +85,17 @@ feature/repository-inventory-explorer
 - Phase 3: 스냅샷 비교
 - Phase 4: 스냅샷 복원
 - 별도 작업: 홈/적응형 탐색
-- Phase 5a: 무결성 검증. 현재 브랜치에서 구현 완료, 커밋/병합 대기
+- Phase 5a: 무결성 검증
+- Phase 5b: 저장소 인벤토리 탐색
 
 ### 현재 다음 작업
 
-- Phase 5b: 저장소 인벤토리 탐색
-  - 저장소에 기록된 파일을 보여준다.
-  - 파일 종류를 보여준다.
-  - 최신 스냅샷 기준 존재/삭제 상태를 보여준다.
-  - 현재 원본 파일이 실제 디스크에 남아 있는지 보여준다.
-  - 블록 데이터는 읽지 않는다.
-  - 압축은 구현하지 않는다.
+- 확정된 활성 계획 없음
+- 아래 후보 중 하나를 선택한 뒤 해당 작업만 spec과 plan으로 상세화
 
 ### 다음 계획 후보
 
-저장소 인벤토리 탐색 이후 아래 중 하나를 선택한다.
+아래 중 하나를 선택한다.
 
 1. 저장소 통계 대시보드
 2. 파일 검사기 / 블록 지도
@@ -127,7 +113,7 @@ feature/repository-inventory-explorer
 
 ## 즉시 다음 작업
 
-1. 현재 `feature/integrity-verification` 브랜치를 커밋/푸시한다.
-2. `feature/repository-inventory-explorer` 작업을 시작한다.
-3. `docs/plans/phase-5-repository-inventory-explorer.md`를 테스트 우선 방식으로 구현한다.
-4. 구현 후 이 상태 문서를 다시 갱신한다.
+1. `docs/specs/0005-block-compression.md`를 현재 저장/복원/무결성 구조와 대조한다.
+2. raw/off, Zstd 표준, LZ4 빠른 모드의 현재 Phase 구현 계획을 작성한다.
+3. 별도 기능 브랜치에서 테스트 우선으로 압축 저장과 읽기를 구현한다.
+4. 압축 완료 후 다음 기능 후보를 다시 선택한다.

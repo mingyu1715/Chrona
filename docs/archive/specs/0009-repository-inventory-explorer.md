@@ -2,7 +2,7 @@
 
 ## Status
 
-Next Phase 5 slice plan. Not implemented yet.
+Implemented and archived after completion of the Phase 5 repository inventory slice.
 
 ## Goal
 

@@ -47,15 +47,13 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - 선택 스냅샷을 지정 폴더로 복원
 - Home/adaptive navigation
 - 블록 무결성 검증
+- Repository Inventory Explorer
 - README, 개발 로그, 구현 기록 문서
 
 ### 다음 구현 대상
 
-- Repository Inventory Explorer
-  - repository에 기록된 원본 파일 목록
-  - 파일 종류 분류
-  - 최신 snapshot 기준 존재/삭제 상태
-  - 현재 원본 파일 경로 존재/누락 상태
+- 확정된 활성 계획 없음
+- 통계 대시보드, 파일 검사기/블록 지도, 릴리스 패키징 중 하나를 선택한 뒤 상세화
 
 ### 아직 세부 계획 없음
 
@@ -257,7 +255,7 @@ chrona-repository/
 4. size와 raw SHA-256을 검증한다.
 5. missing/corrupt issue를 report로 반환한다.
 
-### 다음 구현 대상: Repository Inventory Explorer
+### 구현 완료: Repository Inventory Explorer
 
 1. snapshot index와 snapshot JSON을 읽는다.
 2. relative path별로 기록된 파일을 aggregate한다.
@@ -276,6 +274,7 @@ src-tauri/src/
     block_commands.rs
     home_commands.rs
     integrity_commands.rs
+    inventory_commands.rs
     repository_commands.rs
     restore_commands.rs
     snapshot_commands.rs
@@ -290,6 +289,7 @@ src-tauri/src/
     hasher.rs
     home_service.rs
     integrity_service.rs
+    inventory_service.rs
     path_safety.rs
     repository.rs
     restore_service.rs
@@ -302,6 +302,7 @@ src-tauri/src/
     diff.rs
     ingest.rs
     integrity.rs
+    inventory.rs
     progress.rs
     repository.rs
     restore.rs
@@ -324,16 +325,6 @@ src/
   shared/
     api/chronaApi.ts
     types/chrona.ts
-```
-
-### 다음 추가 예정 modules
-
-```text
-src-tauri/src/
-  commands/inventory_commands.rs
-  core/inventory_service.rs
-  models/inventory.rs
-src-tauri/tests/phase5_inventory.rs
 ```
 
 아직 없는 modules:
@@ -359,11 +350,8 @@ src-tauri/tests/phase5_inventory.rs
 - `DiffService`: snapshot comparison 계산
 - `RestoreService`: snapshot에서 파일 재조립
 - `IntegrityService`: 저장된 block 존재/size/hash 검증
-- `AccessIndex`, `AccessStore`, `HomeService`: Home/adaptive access 기록
-
-### 다음 구현 대상
-
 - `InventoryService`: repository에 기록된 파일, 종류, 상태를 metadata-only로 집계
+- `AccessIndex`, `AccessStore`, `HomeService`: Home/adaptive access 기록
 
 ### 아직 없음
 
@@ -384,17 +372,8 @@ src-tauri/tests/phase5_inventory.rs
 - Snapshot restore target/result
 - Home/adaptive navigation
 - Integrity verification report
+- Repository Explorer / Inventory summary, kind breakdown, filters, file table
 - Light/dark theme과 Docker Desktop 참고 sidebar layout
-
-### 다음 구현 대상
-
-- Repository Explorer / Inventory
-  - summary cards
-  - file kind breakdown
-  - search/filter controls
-  - file table
-  - latest snapshot presence state
-  - source existence state
 
 ### 아직 없음
 
@@ -408,7 +387,7 @@ src-tauri/tests/phase5_inventory.rs
 
 현재 구현된 시각화는 summary cards, status panels, list/table 중심이다. 고급 block visualization은 아직 없다.
 
-다음 우선순위는 Repository Inventory Explorer처럼 metadata를 사용자가 이해할 수 있게 보여주는 화면이다. 그 다음에 필요하면 statistics dashboard와 file block map을 별도 spec/plan으로 설계한다.
+Repository Inventory Explorer까지 metadata 기반 가시화가 구현됐다. 다음 시각화는 필요성을 확인한 뒤 statistics dashboard와 file block map 중 하나만 별도 spec/plan으로 설계한다.
 
 MVP에서는 전체 저장소의 거대한 block graph를 만들지 않는다. 파일 단위 block map과 snapshot별 통계 시각화는 아직 세부 계획이 없다.
 
@@ -423,6 +402,7 @@ src-tauri/tests/
   phase3_diff.rs
   phase4_restore.rs
   phase5_integrity.rs
+  phase5_inventory.rs
   home_access.rs
 src/features/**/*.test.tsx
 ```
@@ -434,13 +414,7 @@ src/features/**/*.test.tsx
 - TypeScript/Vite build: `npm run build`
 - whitespace: `git diff --check`
 
-### 다음 추가 예정 테스트
-
-```text
-src-tauri/tests/phase5_inventory.rs
-```
-
-Repository Inventory Explorer 구현 시 다음을 검증한다.
+Repository Inventory Explorer는 다음을 검증한다.
 
 - one snapshot inventory
 - file kind classification
@@ -460,22 +434,21 @@ Repository Inventory Explorer 구현 시 다음을 검증한다.
 - Phase 3: 스냅샷 비교
 - Phase 4: 스냅샷 복원
 - 별도 작업: 홈/적응형 탐색
-- Phase 5a: 무결성 검증, 현재 브랜치에서 구현 완료 상태이며 커밋/병합 대기
+- Phase 5a: 무결성 검증
+- Phase 5b: Repository Inventory Explorer
 
 완료된 설계 문서는 `docs/archive/specs/`에 보관한다.
 
 ### 현재 구현 계획
 
-- Phase 5b: Repository Inventory Explorer
-  - Spec: `docs/specs/0009-repository-inventory-explorer.md`
-  - Plan: `docs/plans/phase-5-repository-inventory-explorer.md`
+- 없음. 다음 작업 선택 후 현재 Phase만 상세화한다.
 
 ### 설계는 있지만 구현 계획이 없는 작업
 
 - Block compression
   - Spec: `docs/specs/0005-block-compression.md`
   - 구현 계획 없음
-  - Repository Inventory Explorer 범위에서 제외
+  - 현재 구현 범위에서 제외
 
 ### 설계와 상세 계획이 모두 없는 후보
 
@@ -534,7 +507,7 @@ Repository Inventory Explorer 구현 시 다음을 검증한다.
 
 ### Phase 5a. Integrity Verification
 
-- 상태: 현재 브랜치에서 구현 완료, commit/merge 대기
+- 상태: 구현 완료, 원격 기능 브랜치 푸시 완료
 - Spec: `docs/archive/specs/0008-integrity-verification.md`
 - Plan: `docs/archive/plans/phase-5-integrity-verification.md`
 - Implemented: `docs/implemented/integrity-verification.md`
@@ -542,11 +515,11 @@ Repository Inventory Explorer 구현 시 다음을 검증한다.
 
 ### Phase 5b. Repository Inventory Explorer
 
-- 상태: 다음 active plan, 미구현
-- Spec: `docs/specs/0009-repository-inventory-explorer.md`
-- Plan: `docs/plans/phase-5-repository-inventory-explorer.md`
-- Implemented: 없음
-- 목표: repository에 기록된 파일, 파일 종류, 최신 snapshot 기준 삭제 여부, 현재 원본 파일 존재 여부를 보여줌
+- 상태: 구현 완료
+- Spec: `docs/archive/specs/0009-repository-inventory-explorer.md`
+- Plan: `docs/archive/plans/phase-5-repository-inventory-explorer.md`
+- Implemented: `docs/implemented/repository-inventory-explorer.md`
+- 완료 범위: 기록된 파일, 파일 종류, 최신 snapshot 기준 삭제 여부, 현재 원본 파일 존재 여부, 검색과 상태 필터
 - 제외: compression, block payload read, garbage collection, snapshot delete, watcher
 
 ### Phase 5c. Repository Statistics Dashboard
@@ -662,12 +635,11 @@ docs/
     snapshot-restore.md
     home-adaptive-navigation.md
     integrity-verification.md
+    repository-inventory-explorer.md
   specs/
     0005-block-compression.md
-    0009-repository-inventory-explorer.md
   plans/
     README.md
-    phase-5-repository-inventory-explorer.md
   archive/
     README.md
     specs/
@@ -679,12 +651,14 @@ docs/
       0006-home-adaptive-navigation.md
       0007-snapshot-restore.md
       0008-integrity-verification.md
+      0009-repository-inventory-explorer.md
     plans/
       phase-1-block-engine.md
       phase-2-snapshot-engine.md
       phase-3-snapshot-comparison.md
       phase-4-snapshot-restore.md
       phase-5-integrity-verification.md
+      phase-5-repository-inventory-explorer.md
       phase-next-home-adaptive-navigation.md
 ```
 

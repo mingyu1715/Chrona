@@ -64,6 +64,59 @@ function createApiMock() {
       corruptBlockCount: 0,
       issues: [],
     })),
+    getRepositoryInventory: vi.fn(async () => ({
+      schemaVersion: 1,
+      repositoryPath: '/tmp/chrona-repo',
+      generatedAt: '2026-06-27T00:00:00Z',
+      snapshotCount: 2,
+      knownFileCount: 3,
+      latestFileCount: 2,
+      deletedInLatestCount: 1,
+      sourceExistsCount: 1,
+      sourceMissingCount: 1,
+      sourceRootMissingCount: 0,
+      totalOriginalBytesLatest: 12,
+      totalBlockReferencesLatest: 2,
+      uniqueBlockCountLatest: 2,
+      kindStats: [
+        { kind: 'document' as const, fileCount: 1, totalBytesLatest: 5 },
+        { kind: 'image' as const, fileCount: 1, totalBytesLatest: 7 },
+      ],
+      files: [
+        {
+          relativePath: 'notes.md',
+          fileName: 'notes.md',
+          extension: 'md',
+          kind: 'document' as const,
+          snapshotState: 'presentInLatest' as const,
+          sourceState: 'exists' as const,
+          latestSizeBytes: 5,
+          latestModifiedAt: '2026-06-27T00:00:00Z',
+          firstSeenSnapshotId: 'first',
+          firstSeenAt: '2026-06-26T00:00:00Z',
+          lastSeenSnapshotId: 'latest',
+          lastSeenAt: '2026-06-27T00:00:00Z',
+          seenInSnapshotCount: 2,
+          blockReferenceCountLatest: 1,
+        },
+        {
+          relativePath: 'old.txt',
+          fileName: 'old.txt',
+          extension: 'txt',
+          kind: 'text' as const,
+          snapshotState: 'deletedInLatest' as const,
+          sourceState: 'missing' as const,
+          latestSizeBytes: null,
+          latestModifiedAt: null,
+          firstSeenSnapshotId: 'first',
+          firstSeenAt: '2026-06-26T00:00:00Z',
+          lastSeenSnapshotId: 'first',
+          lastSeenAt: '2026-06-26T00:00:00Z',
+          seenInSnapshotCount: 1,
+          blockReferenceCountLatest: 0,
+        },
+      ],
+    })),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -242,6 +295,57 @@ describe('RepositoryPage', () => {
     expect(screen.getByText('Snapshots checked').nextElementSibling).toHaveTextContent('1');
     expect(screen.getByText('Missing blocks').nextElementSibling).toHaveTextContent('0');
     expect(screen.getByText('No integrity issues found')).toBeInTheDocument();
+  });
+
+  test('opens repository explorer and renders inventory rows', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await waitFor(() => expect(api.openRepository).toHaveBeenCalledWith('/tmp/chrona-repo'));
+
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+
+    await waitFor(() =>
+      expect(api.getRepositoryInventory).toHaveBeenCalledWith('/tmp/chrona-repo'),
+    );
+    const inventorySummary = screen.getByText('Known files').closest('dl');
+    expect(inventorySummary).not.toBeNull();
+    expect(within(inventorySummary!).getByText('Known files').nextElementSibling)
+      .toHaveTextContent('3');
+    expect(within(inventorySummary!).getByText('Deleted in latest').nextElementSibling)
+      .toHaveTextContent('1');
+    expect(screen.getByText('notes.md')).toBeInTheDocument();
+    expect(screen.getByText('old.txt')).toBeInTheDocument();
+    expect(screen.getByText('deletedInLatest')).toBeInTheDocument();
+    expect(screen.getByText('missing')).toBeInTheDocument();
+  });
+
+  test('filters inventory rows by path and snapshot state', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+    await screen.findByText('notes.md');
+
+    await user.type(screen.getByLabelText(/file search/i), 'notes');
+    expect(screen.getByText('notes.md')).toBeInTheDocument();
+    expect(screen.queryByText('old.txt')).not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText(/file search/i));
+    await user.selectOptions(
+      screen.getByLabelText(/snapshot state/i),
+      'deletedInLatest',
+    );
+    expect(screen.getByText('old.txt')).toBeInTheDocument();
+    expect(screen.queryByText('notes.md')).not.toBeInTheDocument();
   });
 
 });

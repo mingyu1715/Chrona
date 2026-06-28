@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed the Phase 4 snapshot restore core flow, the Home/adaptive navigation MVP, and the first Phase 5 integrity verification slice.
+Chrona has completed the Phase 4 snapshot restore core flow, the Home/adaptive navigation MVP, Phase 5 integrity verification, and the repository inventory explorer.
 
 Implemented:
 
@@ -34,6 +34,9 @@ Implemented:
 - Pin/unpin and clear-history controls for access items
 - Read-only repository integrity verification command and UI
 - Missing block, block size mismatch, and raw SHA-256 mismatch detection
+- Repository Explorer for recorded files, file kinds, and latest-snapshot presence state
+- Current source existence, missing-file, and missing-root status
+- Path search plus file-kind, snapshot-state, and source-state filters
 
 Not implemented yet:
 

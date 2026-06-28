@@ -178,6 +178,63 @@ export interface IntegrityReport {
   issues: IntegrityIssue[];
 }
 
+export type FileKind =
+  | 'document'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'archive'
+  | 'code'
+  | 'text'
+  | 'data'
+  | 'binary'
+  | 'folderless'
+  | 'unknown';
+
+export type SnapshotPresenceState = 'presentInLatest' | 'deletedInLatest';
+export type SourceExistenceState = 'exists' | 'missing' | 'sourceRootMissing' | 'unchecked';
+
+export interface FileKindStat {
+  kind: FileKind;
+  fileCount: number;
+  totalBytesLatest: number;
+}
+
+export interface InventoryFileEntry {
+  relativePath: string;
+  fileName: string;
+  extension: string | null;
+  kind: FileKind;
+  snapshotState: SnapshotPresenceState;
+  sourceState: SourceExistenceState;
+  latestSizeBytes: number | null;
+  latestModifiedAt: string | null;
+  firstSeenSnapshotId: string;
+  firstSeenAt: string;
+  lastSeenSnapshotId: string;
+  lastSeenAt: string;
+  seenInSnapshotCount: number;
+  blockReferenceCountLatest: number;
+}
+
+export interface RepositoryInventoryReport {
+  schemaVersion: number;
+  repositoryPath: string;
+  generatedAt: string;
+  snapshotCount: number;
+  knownFileCount: number;
+  latestFileCount: number;
+  deletedInLatestCount: number;
+  sourceExistsCount: number;
+  sourceMissingCount: number;
+  sourceRootMissingCount: number;
+  totalOriginalBytesLatest: number;
+  totalBlockReferencesLatest: number;
+  uniqueBlockCountLatest: number;
+  kindStats: FileKindStat[];
+  files: InventoryFileEntry[];
+}
+
 export type AccessNodeKind = 'repository' | 'source' | 'folder' | 'file' | 'snapshot' | 'comparePair';
 
 export interface AccessEvent {

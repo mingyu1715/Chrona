@@ -201,7 +201,7 @@
 ### 저장소 인벤토리 탐색 계획
 
 - 메타데이터만 읽는 저장소 내용 보기를 위한 `docs/specs/0009-repository-inventory-explorer.md`를 추가했다.
-- 현재 계획 `docs/plans/phase-5-repository-inventory-explorer.md`를 추가했다.
+- 현재 계획 `docs/archive/plans/phase-5-repository-inventory-explorer.md`를 추가했다.
 - 기능 범위를 기록된 파일, 파일 종류, 스냅샷 기준 존재/삭제 상태, 현재 원본 파일 존재 여부로 제한했다.
 - 블록 압축은 `docs/specs/0005-block-compression.md` 아래 향후 작업으로 유지하고, 이번 작업 범위에서 제외한다고 정리했다.
 
@@ -226,3 +226,32 @@
 - 구현 완료된 설계 문서 `0001`, `0002`, `0003`, `0004`, `0006`, `0007`, `0008`을 `docs/archive/specs/`로 이동했다.
 - 현재 `docs/specs/`에는 미구현 또는 다음 구현 대상인 `0005-block-compression.md`, `0009-repository-inventory-explorer.md`만 남겼다.
 - 블록 압축은 설계만 있고 구현 계획이 없는 향후 작업으로 `docs/phase-status.md`, `docs/plans/README.md`, `docs/project-plan.md`에 명시했다.
+
+## 2026-06-28
+
+### 저장소 인벤토리 탐색 구현
+
+- `feature/repository-inventory` 브랜치에서 저장소 인벤토리 기능을 구현했다.
+- 모든 스냅샷 JSON을 relative path 기준으로 집계하는 `InventoryService`와 보고서 모델을 추가했다.
+- 확장자 기반 파일 종류 분류와 최신 스냅샷 기준 존재/삭제 상태 계산을 추가했다.
+- 폴더 source와 단일 파일 source 모두 현재 원본 존재 여부를 확인하도록 구현했다.
+- 삭제된 파일의 최신 크기와 수정 시각은 남기지 않고 `null`로 반환하도록 했다.
+- 경로 결합 전에 기존 metadata relative path 안전 검사 함수를 재사용하도록 했다.
+- `get_repository_inventory` Tauri 명령과 TypeScript API를 추가했다.
+- Explorer 화면에 요약, 파일 종류별 통계, 경로 검색, 종류/스냅샷/원본 상태 필터, 스크롤 가능한 파일 표를 추가했다.
+- 블록 payload는 읽거나 수정하지 않으며 압축은 이번 구현 범위에 포함하지 않았다.
+
+### 문서 정리
+
+- `docs/implemented/repository-inventory-explorer.md`를 추가했다.
+- 완료된 `0009` spec과 Phase 5b 계획을 각각 `docs/archive/specs/`, `docs/archive/plans/`로 이동했다.
+- 현재 `docs/specs/`에는 구현 계획이 없는 블록 압축 설계만 남겼다.
+- 활성 구현 계획은 없음으로 바꾸고 다음 작업은 별도 선택 후 상세화하도록 정리했다.
+
+### 저장소 인벤토리 검증
+
+- `cargo test --test phase5_inventory`: 인벤토리 통합 테스트 7개 통과.
+- `cargo test`: 기존 기능과 인벤토리를 포함한 Rust 통합 테스트 40개 통과.
+- `npm test`: UI 테스트 파일 3개, 테스트 10개 통과.
+- `npm run build`: TypeScript 및 Vite 프로덕션 빌드 통과.
+- `cargo fmt --all -- --check`, `git diff --check HEAD`: 포맷과 공백 검사 통과.
