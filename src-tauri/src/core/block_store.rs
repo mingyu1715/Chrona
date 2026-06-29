@@ -2,16 +2,32 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use crate::core::block_codec::{decode_block, encode_block};
 use crate::core::errors::{ChronaError, ChronaResult};
 use crate::models::block::BlockStoreWrite;
+use crate::models::repository::CompressionMode;
 
 pub struct BlockStore {
     repository_path: PathBuf,
+    compression_mode: CompressionMode,
 }
 
 impl BlockStore {
     pub fn new(repository_path: PathBuf) -> Self {
-        Self { repository_path }
+        Self {
+            repository_path,
+            compression_mode: CompressionMode::Off,
+        }
+    }
+
+    pub fn with_compression_mode(
+        repository_path: PathBuf,
+        compression_mode: CompressionMode,
+    ) -> Self {
+        Self {
+            repository_path,
+            compression_mode,
+        }
     }
 
     pub fn block_relative_path(hash: &str) -> ChronaResult<PathBuf> {
@@ -33,7 +49,8 @@ impl BlockStore {
         if !path.is_file() {
             return Err(ChronaError::MissingBlock(hash.to_string()));
         }
-        Ok(fs::read(path)?)
+        let stored = fs::read(path)?;
+        Ok(decode_block(&stored, hash)?.bytes)
     }
 
     pub fn store_block(
@@ -45,9 +62,13 @@ impl BlockStore {
         let relative_path = Self::block_relative_path(hash)?;
         let final_path = self.repository_path.join(&relative_path);
         if final_path.is_file() {
+            let stored = fs::read(&final_path)?;
+            let decoded = decode_block(&stored, hash)?;
             return Ok(BlockStoreWrite {
                 hash: hash.to_string(),
-                size_bytes: bytes.len() as u64,
+                raw_size_bytes: decoded.bytes.len() as u64,
+                stored_size_bytes: decoded.stored_size_bytes,
+                encoding: decoded.encoding,
                 storage_path: relative_path,
                 was_new: false,
             });
@@ -62,7 +83,8 @@ impl BlockStore {
         fs::create_dir_all(parent)?;
 
         let tmp_path = tmp_path_for(parent, hash, operation_id);
-        let write_result = write_tmp_then_rename(&tmp_path, &final_path, bytes);
+        let encoded = encode_block(bytes, hash, self.compression_mode)?;
+        let write_result = write_tmp_then_rename(&tmp_path, &final_path, &encoded.bytes);
         if let Err(error) = write_result {
             let _ = fs::remove_file(&tmp_path);
             return Err(error);
@@ -70,7 +92,9 @@ impl BlockStore {
 
         Ok(BlockStoreWrite {
             hash: hash.to_string(),
-            size_bytes: bytes.len() as u64,
+            raw_size_bytes: encoded.raw_size_bytes,
+            stored_size_bytes: encoded.stored_size_bytes,
+            encoding: encoded.encoding,
             storage_path: relative_path,
             was_new: true,
         })

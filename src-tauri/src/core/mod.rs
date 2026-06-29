@@ -1,5 +1,6 @@
 pub mod access_index;
 pub mod access_store;
+pub mod block_codec;
 pub mod block_ingest_service;
 pub mod block_store;
 pub mod chunker;

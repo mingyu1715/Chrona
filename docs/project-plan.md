@@ -48,16 +48,16 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - Home/adaptive navigation
 - 블록 무결성 검증
 - Repository Inventory Explorer
+- 블록 압축(`off` raw, `standard` Zstd level 3, `fast` LZ4 frame)
 - README, 개발 로그, 구현 기록 문서
 
 ### 다음 구현 대상
 
-- 확정된 활성 계획 없음
-- 통계 대시보드, 파일 검사기/블록 지도, 릴리스 패키징 중 하나를 선택한 뒤 상세화
+- File Inspector / Block Map의 spec과 세부 구현 계획 작성
+- 특정 파일의 블록 구성과 스냅샷별 변경 이력을 확인하는 기능 구현
 
 ### 아직 세부 계획 없음
 
-- 블록 압축: `docs/specs/0005-block-compression.md`에 설계만 있고 구현 계획은 없음
 - 저장 공간 분석 대시보드
 - 파일별 블록 목록 및 변경 이력
 - File Inspector / Block Map
@@ -67,7 +67,6 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 
 - 자동 백업 스케줄러
 - 암호화
-- 압축
 - 내용 기반 청킹
 - 클라우드 연동
 - 완전한 macOS 권한 자동 처리
@@ -281,6 +280,7 @@ src-tauri/src/
   core/
     access_index.rs
     access_store.rs
+    block_codec.rs
     block_ingest_service.rs
     block_store.rs
     chunker.rs
@@ -333,7 +333,6 @@ src/
 - dashboard feature module
 - file-inspector feature module
 - block-map visualization module
-- compression module
 - garbage collection module
 - watcher module
 
@@ -344,7 +343,8 @@ src/
 - `RepositoryManager`: 저장소 생성, 열기, manifest 검증
 - `FileScanner`: 파일 목록 수집과 metadata relative path 정규화
 - `FixedChunker`: 파일을 고정 크기 block으로 streaming
-- `BlockStore`: block 저장, reuse 판정, block read
+- `BlockCodec`: raw/Zstd/LZ4 payload 인코딩과 압축 envelope 검증
+- `BlockStore`: block 저장, reuse 판정, 압축 payload의 투명한 raw read
 - `SnapshotStore`: snapshot JSON과 snapshot index 저장/조회
 - `SnapshotService`: block ingest와 snapshot metadata 생성을 조율
 - `DiffService`: snapshot comparison 계산
@@ -356,7 +356,6 @@ src/
 ### 아직 없음
 
 - `StatisticsService`
-- `CompressionService`
 - `GarbageCollectionService`
 - `WatcherService`
 
@@ -436,19 +435,13 @@ Repository Inventory Explorer는 다음을 검증한다.
 - 별도 작업: 홈/적응형 탐색
 - Phase 5a: 무결성 검증
 - Phase 5b: Repository Inventory Explorer
+- Phase 6: 블록 압축
 
 완료된 설계 문서는 `docs/archive/specs/`에 보관한다.
 
-### 현재 구현 계획
+### 다음 구현 계획
 
-- 없음. 다음 작업 선택 후 현재 Phase만 상세화한다.
-
-### 설계는 있지만 구현 계획이 없는 작업
-
-- Block compression
-  - Spec: `docs/specs/0005-block-compression.md`
-  - 구현 계획 없음
-  - 현재 구현 범위에서 제외
+- File Inspector / Block Map을 다음 대상으로 삼고, 구현 전에 현재 Phase의 spec과 plan을 작성한다.
 
 ### 설계와 상세 계획이 모두 없는 후보
 
@@ -520,7 +513,15 @@ Repository Inventory Explorer는 다음을 검증한다.
 - Plan: `docs/archive/plans/phase-5-repository-inventory-explorer.md`
 - Implemented: `docs/implemented/repository-inventory-explorer.md`
 - 완료 범위: 기록된 파일, 파일 종류, 최신 snapshot 기준 삭제 여부, 현재 원본 파일 존재 여부, 검색과 상태 필터
-- 제외: compression, block payload read, garbage collection, snapshot delete, watcher
+- 당시 범위에서 제외: compression, block payload read, garbage collection, snapshot delete, watcher
+
+### Phase 6. Block Compression
+
+- 상태: 구현 완료
+- Spec: `docs/archive/specs/0005-block-compression.md`
+- Plan: `docs/archive/plans/phase-6-block-compression.md`
+- Implemented: `docs/implemented/block-compression.md`
+- 완료 범위: schema 1 raw 저장소 호환, schema 2 신규 저장소의 Standard 기본값, Off/Standard/Fast 모드, 3% raw fallback, 압축 블록 복원과 무결성 검증
 
 ### Phase 5c. Repository Statistics Dashboard
 
@@ -540,13 +541,10 @@ Repository Inventory Explorer는 다음을 검증한다.
 - 목표: README 기준 설치/실행/테스트 정리, macOS `.app` packaging, release note, smoke test
 - 다음 문서 후보: `docs/plans/phase-release-packaging.md`
 
-### Future. Compression and Storage Extensions
+### Future. Storage Extensions
 
 - 상태: Future
-- Compression spec: `docs/specs/0005-block-compression.md`
-- 구현 plan: 없음
-- 원칙: raw chunk SHA-256 identity 유지, payload만 optional encoding
-- 다른 future: SQLite backend, encryption, content-defined chunking, snapshot delete/GC, watcher, cloud adapter, migration tool
+- 범위: SQLite backend, encryption, content-defined chunking, snapshot delete/GC, watcher, cloud adapter, migration tool
 
 ## 14. 2인 역할 분담
 
@@ -636,8 +634,8 @@ docs/
     home-adaptive-navigation.md
     integrity-verification.md
     repository-inventory-explorer.md
+    block-compression.md
   specs/
-    0005-block-compression.md
   plans/
     README.md
   archive/
@@ -648,6 +646,7 @@ docs/
       0002-block-engine.md
       0003-snapshot-format.md
       0004-snapshot-comparison.md
+      0005-block-compression.md
       0006-home-adaptive-navigation.md
       0007-snapshot-restore.md
       0008-integrity-verification.md
@@ -659,6 +658,7 @@ docs/
       phase-4-snapshot-restore.md
       phase-5-integrity-verification.md
       phase-5-repository-inventory-explorer.md
+      phase-6-block-compression.md
       phase-next-home-adaptive-navigation.md
 ```
 
@@ -813,12 +813,11 @@ docs/archive/plans/phase-N-current-work.md
 
 ## 23. 확장 기능
 
-### Future compression rule
+### 구현된 compression rule
 
-Block compression은 저장 공간 최적화 후보지만 현재 MVP 구현 대상은 아니다. 이후 도입 시에도 block hash는 반드시 압축 전 raw chunk의 SHA-256으로 유지하고, 새 block의 물리 payload만 선택적으로 압축한다. 압축 모드는 `off`(raw), `standard`(`zstd` level 3), `fast`(`lz4`)로 제한한다. 기본값은 `standard`이며, 압축 결과가 envelope overhead를 포함해 raw보다 최소 3% 이상 작지 않으면 raw 저장으로 fallback한다.
+Block compression은 raw chunk의 SHA-256을 block identity로 유지하고 새 block의 물리 payload만 선택적으로 압축한다. 압축 모드는 `off`(raw), `standard`(Zstd level 3), `fast`(LZ4 frame)이며 신규 저장소의 기본값은 `standard`다. 압축 결과가 envelope overhead를 포함해 raw보다 최소 3% 이상 작지 않으면 raw 저장으로 fallback한다. schema 1 저장소와 기존 raw block은 그대로 읽을 수 있다.
 
 - SQLite metadata backend
-- compression with raw-byte block identity, standard zstd mode, and fast lz4 mode (`docs/specs/0005-block-compression.md`, 설계만 있음, 구현 계획 없음)
 - encryption
 - content-defined chunking
 - snapshot delete and garbage collection

@@ -9,6 +9,7 @@ use chrona::core::hasher::sha256_hex;
 use chrona::core::path_safety::{assert_source_repository_separate, normalize_relative_path};
 use chrona::core::repository::RepositoryManager;
 use chrona::models::progress::BlockIngestProgress;
+use chrona::models::repository::CompressionMode;
 use tempfile::TempDir;
 
 fn write_file(path: &Path, bytes: &[u8]) {
@@ -57,10 +58,15 @@ fn creates_repository_layout_and_manifest() {
 
     let manifest = RepositoryManager::create(&repo_path).unwrap();
 
-    assert_eq!(manifest.schema_version, 1);
+    assert_eq!(manifest.schema_version, 2);
     assert_eq!(manifest.block_strategy.strategy_type, "fixed");
     assert_eq!(manifest.block_strategy.size_bytes, 1_048_576);
     assert_eq!(manifest.block_strategy.hash, "sha256");
+    assert_eq!(manifest.block_strategy.encoding_version, 2);
+    assert_eq!(
+        manifest.block_strategy.compression_mode,
+        CompressionMode::Standard
+    );
     assert!(repo_path.join("manifest.json").is_file());
     assert!(repo_path.join("blocks").is_dir());
     assert!(repo_path.join("indexes").is_dir());
@@ -73,9 +79,10 @@ fn rejects_unsupported_repository_version() {
     let repo_path = temp.path().join("chrona-repo");
     RepositoryManager::create(&repo_path).unwrap();
     let manifest_path = repo_path.join("manifest.json");
-    let mut manifest = fs::read_to_string(&manifest_path).unwrap();
-    manifest = manifest.replace("\"schemaVersion\":1", "\"schemaVersion\":99");
-    fs::write(manifest_path, manifest).unwrap();
+    let mut manifest: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&manifest_path).unwrap()).unwrap();
+    manifest["schemaVersion"] = serde_json::json!(99);
+    fs::write(manifest_path, serde_json::to_vec(&manifest).unwrap()).unwrap();
 
     let error = RepositoryManager::open(&repo_path).unwrap_err();
 

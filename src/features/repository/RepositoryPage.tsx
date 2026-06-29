@@ -30,6 +30,7 @@ import type {
   AccessNode,
   BlockIngestProgress,
   BlockIngestSummary,
+  CompressionMode,
   FileKind,
   HomeSummary,
   IntegrityReport,
@@ -126,6 +127,8 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   const [repositoryPath, setRepositoryPath] = useState('');
   const [sourcePath, setSourcePath] = useState('');
   const [manifest, setManifest] = useState<RepositoryManifest | null>(null);
+  const [compressionModeDraft, setCompressionModeDraft] =
+    useState<CompressionMode>('standard');
   const [progress, setProgress] = useState<BlockIngestProgress | null>(null);
   const [summary, setSummary] = useState<BlockIngestSummary | null>(null);
   const [homeSummary, setHomeSummary] = useState<HomeSummary | null>(null);
@@ -264,6 +267,17 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   async function verifyRepositoryIntegrity() {
     await runAction(async () => {
       setIntegrityReport(await api.verifyRepository(repositoryPath));
+    });
+  }
+
+  async function applyCompressionMode() {
+    await runAction(async () => {
+      const nextManifest = await api.setRepositoryCompressionMode(
+        repositoryPath,
+        compressionModeDraft,
+      );
+      setManifest(nextManifest);
+      setCompressionModeDraft(nextManifest.blockStrategy.compressionMode);
     });
   }
 
@@ -500,6 +514,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     onClick={() => runAction(async () => {
                       const nextManifest = await api.createRepository(repositoryPath);
                       setManifest(nextManifest);
+                      setCompressionModeDraft(nextManifest.blockStrategy.compressionMode);
                       setIntegrityReport(null);
                       setInventoryReport(null);
                       setInventoryQuery('');
@@ -520,6 +535,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     onClick={() => runAction(async () => {
                       const nextManifest = await api.openRepository(repositoryPath);
                       setManifest(nextManifest);
+                      setCompressionModeDraft(nextManifest.blockStrategy.compressionMode);
                       setIntegrityReport(null);
                       setInventoryReport(null);
                       setInventoryQuery('');
@@ -549,7 +565,39 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                         <dt>Hash</dt>
                         <dd>{manifest.blockStrategy.hash}</dd>
                       </div>
+                      <div>
+                        <dt>Encoding version</dt>
+                        <dd>{manifest.blockStrategy.encodingVersion}</dd>
+                      </div>
+                      <div>
+                        <dt>Compression mode</dt>
+                        <dd>{manifest.blockStrategy.compressionMode}</dd>
+                      </div>
                     </dl>
+                    <div className="compression-control">
+                      <label className="field">
+                        <span>Compression mode</span>
+                        <select
+                          value={compressionModeDraft}
+                          onChange={(event) =>
+                            setCompressionModeDraft(event.target.value as CompressionMode)}
+                        >
+                          <option value="off">Off · raw blocks</option>
+                          <option value="standard">Standard · Zstd level 3</option>
+                          <option value="fast">Fast · LZ4 frame</option>
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        disabled={
+                          busy
+                          || compressionModeDraft === manifest.blockStrategy.compressionMode
+                        }
+                        onClick={applyCompressionMode}
+                      >
+                        Apply Compression Mode
+                      </button>
+                    </div>
                     <div className="panel-footer-actions">
                       <button type="button" onClick={() => setActiveChapter('source')}>
                         Open Sources
@@ -1245,6 +1293,20 @@ function ResultContent({ summary, reuseRatio }: { summary: BlockIngestSummary | 
       <div>
         <dt>Newly stored bytes</dt>
         <dd>{formatBytes(summary.newlyStoredBytes)}</dd>
+      </div>
+      <div>
+        <dt>New logical bytes</dt>
+        <dd>{formatBytes(summary.newLogicalBytes)}</dd>
+      </div>
+      <div>
+        <dt>Compression saved</dt>
+        <dd>{formatBytes(summary.compressionSavedBytes)}</dd>
+      </div>
+      <div>
+        <dt>New block encodings</dt>
+        <dd>
+          {summary.newRawBlockCount} raw · {summary.newZstdBlockCount} zstd · {summary.newLz4BlockCount} lz4
+        </dd>
       </div>
       <div>
         <dt>Reuse ratio</dt>

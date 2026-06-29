@@ -8,6 +8,7 @@ import type {
   AccessNode,
   BlockIngestProgress,
   BlockIngestSummary,
+  CompressionMode,
   HomeSummary,
   IntegrityReport,
   RepositoryInventoryReport,
@@ -21,6 +22,10 @@ import type {
 export interface ChronaApi {
   createRepository(repositoryPath: string): Promise<RepositoryManifest>;
   openRepository(repositoryPath: string): Promise<RepositoryManifest>;
+  setRepositoryCompressionMode(
+    repositoryPath: string,
+    compressionMode: CompressionMode,
+  ): Promise<RepositoryManifest>;
   ingestBlocks(repositoryPath: string, sourcePath: string): Promise<BlockIngestSummary>;
   createSnapshot(repositoryPath: string, sourcePath: string, name: string): Promise<Snapshot>;
   listSnapshots(repositoryPath: string): Promise<SnapshotIndexItem[]>;
@@ -49,6 +54,12 @@ export const chronaApi: ChronaApi = {
   },
   openRepository(repositoryPath) {
     return invoke<RepositoryManifest>('open_repository', { repositoryPath });
+  },
+  setRepositoryCompressionMode(repositoryPath, compressionMode) {
+    return invoke<RepositoryManifest>('set_repository_compression_mode', {
+      repositoryPath,
+      compressionMode,
+    });
   },
   ingestBlocks(repositoryPath, sourcePath) {
     return invoke<BlockIngestSummary>('ingest_blocks', { repositoryPath, sourcePath });

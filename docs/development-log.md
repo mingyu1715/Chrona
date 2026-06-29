@@ -255,3 +255,44 @@
 - `npm test`: UI 테스트 파일 3개, 테스트 10개 통과.
 - `npm run build`: TypeScript 및 Vite 프로덕션 빌드 통과.
 - `cargo fmt --all -- --check`, `git diff --check HEAD`: 포맷과 공백 검사 통과.
+
+### Phase 6 블록 압축 시작
+
+- 기능 구현을 우선하고 전체 UI 구조 개선은 핵심 기능 완료 뒤로 미루기로 했다.
+- `feature/block-compression` 브랜치를 만들었다.
+- `docs/specs/0005-block-compression.md`를 기준으로 `docs/plans/phase-6-block-compression.md`를 작성했다.
+- 현재 범위는 raw/off, Zstd level 3 표준, LZ4 frame 빠른 모드, 3% raw fallback, legacy raw block 호환, 복원/무결성 decode 연결이다.
+- 기존 raw block을 자동 재작성하거나 파일 형식별 codec을 자동 선택하는 기능은 제외했다.
+
+## 2026-06-29
+
+### Phase 6 블록 압축 구현
+
+- 신규 저장소를 schema 2, block encoding version 2, `standard` 모드로 생성하도록 변경했다.
+- 저장소별 압축 모드는 `off` raw, `standard` Zstd level 3, `fast` LZ4 frame으로 구현했다.
+- 원본 블록의 SHA-256을 identity로 유지하고 중복 조회 뒤 신규 블록에만 압축을 적용했다.
+- 압축 envelope 전체가 raw보다 최소 3% 작을 때만 압축본을 저장하고, 나머지는 raw로 저장하도록 했다.
+- compressed envelope에 magic/version, codec, raw/payload 크기, raw SHA-256을 기록하고 최대 1 MiB로 제한해 decode하도록 구현했다.
+- block 저장의 `.tmp` 작성, `sync_all`, rename 흐름을 압축 payload에도 그대로 적용했다.
+
+### 호환성과 기능 연결
+
+- schema 1 저장소와 기존 raw block을 migration 없이 읽고, compression mode를 바꿀 때 manifest만 schema 2로 갱신하도록 했다.
+- `BlockStore`가 raw/Zstd/LZ4를 투명하게 decode해 복원과 무결성 검증이 같은 raw block 경로를 사용하도록 했다.
+- `CHRBLK01`로 시작하는 정상 raw block은 전체 raw SHA-256을 먼저 확인해 envelope로 오인하지 않도록 회귀 테스트를 추가했다.
+- ingest/snapshot summary에 logical new bytes, physical stored bytes, compression saved bytes, raw/Zstd/LZ4 신규 block 수를 추가했다.
+- Repository 화면에 현재 압축 모드, 모드 변경 control, 압축 저장 결과 통계를 최소 범위로 연결했다.
+
+### 문서 정리
+
+- `docs/implemented/block-compression.md`에 구현 결과와 제한 사항을 기록했다.
+- 완료된 `0005` spec과 Phase 6 계획을 각각 `docs/archive/specs/`, `docs/archive/plans/`로 이동했다.
+- README, 단계 상태표, 프로젝트 계획, 계획 색인에서 압축을 구현 완료로 변경했다.
+- 다음 기능 구현 대상을 File Inspector / Block Map 상세화로 정리했다.
+
+### Phase 6 검증
+
+- `cargo test`: 기존 기능과 압축 통합 테스트 17개를 포함해 Rust 테스트 57개 통과.
+- `npm test -- --run`: UI 테스트 파일 3개, 테스트 11개 통과.
+- `npm run build`: TypeScript 및 Vite 프로덕션 빌드 통과.
+- `cargo fmt --all -- --check`, `git diff --check HEAD`: 포맷과 공백 검사 통과.

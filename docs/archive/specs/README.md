@@ -8,6 +8,7 @@
 - `0002-block-engine.md`: 블록 엔진
 - `0003-snapshot-format.md`: 스냅샷 포맷
 - `0004-snapshot-comparison.md`: 스냅샷 비교
+- `0005-block-compression.md`: 블록 압축
 - `0006-home-adaptive-navigation.md`: 홈/적응형 탐색
 - `0007-snapshot-restore.md`: 스냅샷 복원
 - `0008-integrity-verification.md`: 무결성 검증

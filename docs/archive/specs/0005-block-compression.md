@@ -1,10 +1,10 @@
-# 0005. Block Compression Future Design
+# 0005. Block Compression Design
 
 ## Status
 
-Future design. Not implemented in the current application.
+Implemented and archived after completion of Phase 6 block compression.
 
-This document records the constraints Chrona must preserve if block payload compression is added later.
+This document records the constraints preserved by the implemented block payload compression.
 
 ## Goal
 
@@ -42,11 +42,11 @@ Consequences:
 - The same source bytes always produce the same block hash.
 - Snapshot comparison can continue to compare ordered raw block hash sequences.
 - Compression settings can change later without changing logical block identity.
-- Integrity verification should decompress first, then hash the restored raw bytes.
+- Integrity verification decompresses first, then hashes the restored raw bytes.
 
-## Recommended Compression Modes
+## Compression Modes
 
-Chrona should keep compression mode selection simple and explicit. The preferred future modes are:
+Chrona keeps compression mode selection simple and explicit:
 
 | Mode | Codec | Purpose |
 | --- | --- | --- |
@@ -54,9 +54,9 @@ Chrona should keep compression mode selection simple and explicit. The preferred
 | `standard` | `zstd` level 3 | Default mode for normal backup usage. |
 | `fast` | `lz4` | Speed-first mode when low CPU overhead matters more than compression ratio. |
 
-`standard` should be the default once compressed block restore and integrity verification exist. `fast` should be an opt-in mode, not an automatic per-file-type decision.
+`standard` is the default for new repositories. `fast` is an opt-in mode, not an automatic per-file-type decision.
 
-## Recommended Algorithm
+## Implemented Algorithm
 
 ```text
 for each raw_chunk:
@@ -98,20 +98,16 @@ Current Phase 1 block files are raw payloads at:
 blocks/{hash[0..2]}/{hash[2..4]}/{hash}.blk
 ```
 
-A future compressed block format must be introduced as an explicit repository format extension. Two viable designs are:
-
-1. Self-describing block envelope inside `.blk` files.
-2. Raw/compression metadata stored in a block index.
-
-The preferred future direction is a self-describing envelope because restore and verification can decode a block without relying on a separate index file.
+The compressed block format is an explicit repository format extension using a self-describing envelope inside `.blk` files. Restore and verification decode a block without relying on a separate index file.
 
 Example envelope fields:
 
 ```text
-magic = CHRBLK1
-encoding = none | zstd | lz4
+magic = CHRBLK01
+envelope_version
+encoding = zstd | lz4
 raw_size_bytes
-stored_size_bytes
+payload_size_bytes
 raw_sha256
 payload
 ```
@@ -119,12 +115,13 @@ payload
 Compatibility rule:
 
 - Existing schema version 1 `.blk` files are interpreted as raw payloads.
-- Compressed/enveloped blocks require a repository schema or block encoding version bump.
-- A migration path must be documented before writing enveloped blocks in existing repositories.
+- New repositories use schema version 2 and block encoding version 2.
+- Updating a schema 1 repository's compression mode upgrades only its manifest; existing blocks are not rewritten.
+- A raw block beginning with the envelope magic is identified by matching its complete raw SHA-256 before envelope parsing.
 
 ## Metadata Additions
 
-Snapshot `BlockReference` should continue to store logical raw block data:
+Snapshot `BlockReference` continues to store logical raw block data:
 
 ```json
 {
@@ -135,34 +132,19 @@ Snapshot `BlockReference` should continue to store logical raw block data:
 }
 ```
 
-Physical storage metadata may add fields such as:
-
-```json
-{
-  "hash": "sha256-of-raw-block",
-  "sizeBytes": 1048576,
-  "storedSizeBytes": 324112,
-  "compression": {
-    "mode": "standard",
-    "algorithm": "zstd",
-    "level": 3
-  }
-}
-```
-
-This metadata belongs to block storage/indexing, not to the logical file snapshot identity.
+Ingest and snapshot summaries record logical new bytes, physically stored bytes, compression savings, and the number of new raw/Zstd/LZ4 blocks. These values do not change logical file snapshot identity.
 
 ## Safety Rules
 
 - Atomic-like write still applies: write temporary encoded payload, sync, then rename.
-- If compression fails, the write should fail or fall back to raw according to an explicit policy.
+- Codec errors fail the block write and leave no final `.blk` file.
 - If compressed payload is not at least 3% smaller than raw payload after envelope overhead, store raw.
 - Decompression errors must surface as integrity/restore errors.
 - Integrity verification must compare `SHA-256(decompressed_payload)` against the block hash.
 
-## UI Implications
+## UI
 
-Future UI can expose:
+The Repository UI exposes:
 
 - original input bytes
 - logical unique raw bytes
@@ -171,4 +153,4 @@ Future UI can expose:
 - compression ratio
 - selected compression mode: off, standard, or fast
 
-Compression should not be shown as implemented until the block read/restore path can decode compressed blocks.
+Restore and integrity verification decode compressed blocks through `BlockStore`, so the mode and storage metrics are shown as implemented behavior.

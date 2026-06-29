@@ -32,10 +32,21 @@ function createApiMock() {
     appVersion: '0.1.0',
     repositoryId: 'repo-id',
     createdAt: '2026-06-19T00:00:00Z',
-    blockStrategy: { type: 'fixed', sizeBytes: 1048576, hash: 'sha256' },
+    blockStrategy: {
+      type: 'fixed',
+      sizeBytes: 1048576,
+      hash: 'sha256',
+      encodingVersion: 2,
+      compressionMode: 'standard',
+    },
   };
   let progressHandler: ((event: BlockIngestProgress) => void) | undefined;
-  const api: ChronaApi = {
+  const api: ChronaApi & {
+    setRepositoryCompressionMode(
+      repositoryPath: string,
+      compressionMode: 'off' | 'standard' | 'fast',
+    ): Promise<RepositoryManifest>;
+  } = {
     createRepository: vi.fn(async () => manifest),
     openRepository: vi.fn(async () => manifest),
     ingestBlocks: vi.fn(async () => ({
@@ -45,6 +56,11 @@ function createApiMock() {
       newBlockCount: 1,
       reusedBlockCount: 1,
       newlyStoredBytes: 9,
+      newLogicalBytes: 9,
+      compressionSavedBytes: 0,
+      newRawBlockCount: 1,
+      newZstdBlockCount: 0,
+      newLz4BlockCount: 0,
       files: [],
     })),
     createSnapshot: vi.fn(),
@@ -63,6 +79,13 @@ function createApiMock() {
       missingBlockCount: 0,
       corruptBlockCount: 0,
       issues: [],
+    })),
+    setRepositoryCompressionMode: vi.fn(async (_repositoryPath, compressionMode) => ({
+      ...manifest,
+      blockStrategy: {
+        ...manifest.blockStrategy,
+        compressionMode,
+      },
     })),
     getRepositoryInventory: vi.fn(async () => ({
       schemaVersion: 1,
@@ -346,6 +369,24 @@ describe('RepositoryPage', () => {
     );
     expect(screen.getByText('old.txt')).toBeInTheDocument();
     expect(screen.queryByText('notes.md')).not.toBeInTheDocument();
+  });
+
+  test('updates the repository compression mode', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /repository/i }));
+
+    await user.selectOptions(screen.getByLabelText(/compression mode/i), 'fast');
+    await user.click(screen.getByRole('button', { name: /apply compression mode/i }));
+
+    await waitFor(() =>
+      expect(api.setRepositoryCompressionMode)
+        .toHaveBeenCalledWith('/tmp/chrona-repo', 'fast'),
+    );
   });
 
 });

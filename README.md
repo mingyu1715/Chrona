@@ -37,10 +37,12 @@ Implemented:
 - Repository Explorer for recorded files, file kinds, and latest-snapshot presence state
 - Current source existence, missing-file, and missing-root status
 - Path search plus file-kind, snapshot-state, and source-state filters
+- Schema 2 raw/off, Zstd level 3 standard, and LZ4 fast compression modes
+- 3% raw fallback and schema 1 legacy raw block compatibility
+- Compressed-block restore and decoded raw SHA-256 integrity verification
 
 Not implemented yet:
 
-- Block compression
 - Auto-repair and block garbage collection
 - Packaged `.app` release
 
@@ -235,11 +237,11 @@ Properties:
 
 - Duplicate references are counted in metadata statistics but the physical block is checked once per unique hash.
 - Verification is read-only and never rewrites repository contents.
-- A healthy report means all referenced raw blocks currently match snapshot metadata.
+- A healthy report means every referenced block's decoded raw bytes match snapshot metadata.
 
-### 7. Future raw-identity block compression
+### 7. Raw-identity block compression
 
-Compression is a future storage optimization, not part of the current block writer. If added, Chrona should keep block identity based on raw bytes and compress only the physical payload.
+Chrona keeps block identity based on uncompressed raw bytes and compresses only new physical payloads. Standard uses Zstd level 3, fast uses LZ4 frame encoding, and off stores raw blocks.
 
 ```text
 raw_chunk
@@ -249,7 +251,7 @@ raw_chunk
   -> write encoded payload
 ```
 
-This keeps deduplication and snapshot comparison stable even if compression settings change later.
+Compressed storage is selected only when the complete envelope is at least 3% smaller than raw bytes. Existing schema 1 raw blocks remain readable without rewriting.
 
 ### Complexity
 
@@ -274,9 +276,9 @@ Then:
 ### Current algorithmic trade-offs
 
 - Fixed-size chunking is deterministic and simple, but less effective than content-defined chunking when bytes are inserted near the beginning of a large file.
-- Chrona currently performs deduplication, not compression; future compression must keep raw-byte hashes as block identity and use simple modes: raw/off, standard zstd, or fast lz4.
+- Chrona supports raw/off, standard Zstd level 3, and fast LZ4 frame modes while keeping raw-byte hashes as block identity.
 - Chrona currently stores a snapshot reference graph, not a Merkle tree.
-- Block garbage collection, auto-repair, compression, encryption, and content-defined chunking are future algorithm candidates. Compression is specified as a future raw-identity payload encoding in `docs/specs/0005-block-compression.md`.
+- Block garbage collection, auto-repair, encryption, and content-defined chunking remain future algorithm candidates. Compression implementation details are in `docs/implemented/block-compression.md`.
 
 ## Development
 

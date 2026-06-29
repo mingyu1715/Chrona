@@ -73,6 +73,7 @@ function apiMock(result: SnapshotComparison): ChronaApi {
   return {
     createRepository: vi.fn(),
     openRepository: vi.fn(),
+    setRepositoryCompressionMode: vi.fn(),
     ingestBlocks: vi.fn(),
     createSnapshot: vi.fn(),
     listSnapshots: vi.fn(),

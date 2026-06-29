@@ -11,6 +11,7 @@ function apiMock(): ChronaApi {
   return {
     createRepository: vi.fn(),
     openRepository: vi.fn(),
+    setRepositoryCompressionMode: vi.fn(),
     ingestBlocks: vi.fn(),
     recordAccessEvent: vi.fn(),
     getHomeSummary: vi.fn(async () => ({
@@ -43,6 +44,11 @@ function apiMock(): ChronaApi {
         newBlockCount: 1,
         reusedBlockCount: 0,
         newStoredBytes: 5,
+        newLogicalBytes: 5,
+        compressionSavedBytes: 0,
+        newRawBlockCount: 1,
+        newZstdBlockCount: 0,
+        newLz4BlockCount: 0,
       },
       files: [],
     })),
@@ -126,6 +132,11 @@ function apiMock(): ChronaApi {
         newBlockCount: 1,
         reusedBlockCount: 0,
         newStoredBytes: 5,
+        newLogicalBytes: 5,
+        compressionSavedBytes: 0,
+        newRawBlockCount: 1,
+        newZstdBlockCount: 0,
+        newLz4BlockCount: 0,
       },
       files: [
         {

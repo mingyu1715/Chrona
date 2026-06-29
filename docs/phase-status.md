@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`에는 구현 계획이 없는 향후 설계 `0005-block-compression.md`만 남아 있다.
+현재 `docs/specs/`와 `docs/plans/`에는 활성 설계/계획이 없다.
 
 ## 현재 구현 상태
 
@@ -28,13 +28,11 @@
 | 홈/적응형 탐색 | 구현 완료 | `docs/archive/specs/0006-home-adaptive-navigation.md` | `docs/archive/plans/phase-next-home-adaptive-navigation.md` | `docs/implemented/home-adaptive-navigation.md` | 접근 기록은 저장소 내부 메타데이터로 관리하며 실제 파일 시스템 트리 정렬은 바꾸지 않음. |
 | 무결성 검증 | 구현 완료, 원격 기능 브랜치 푸시 완료 | `docs/archive/specs/0008-integrity-verification.md` | `docs/archive/plans/phase-5-integrity-verification.md` | `docs/implemented/integrity-verification.md` | 누락 블록, 손상 블록, SHA-256 불일치를 읽기 전용으로 검증함. |
 | 저장소 인벤토리 탐색 | 구현 완료 | `docs/archive/specs/0009-repository-inventory-explorer.md` | `docs/archive/plans/phase-5-repository-inventory-explorer.md` | `docs/implemented/repository-inventory-explorer.md` | 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태, 현재 원본 파일 존재 여부, 검색/필터 UI 구현 완료. |
-| 블록 압축 | 향후 작업, 구현 계획 없음 | `docs/specs/0005-block-compression.md` | 없음 | 없음 | 설계만 있음. 현재 구현 범위에서 제외. |
+| 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
-| 설계 문서 | 상태 | 구현 상태 | 계획 상태 |
-| --- | --- | --- | --- |
-| `0005-block-compression.md` | 향후 설계만 있음 | 미구현 | 구현 계획 없음 |
+현재 없음.
 
 ## 보관된 완료 설계 문서
 
@@ -44,6 +42,7 @@
 | `docs/archive/specs/0002-block-engine.md` | 구현 완료 | 원본 고정 크기 블록 엔진 완료 | Phase 1 계획 보관 완료 |
 | `docs/archive/specs/0003-snapshot-format.md` | 구현 완료 | 스냅샷 생성, 목록 조회, 상세 조회 완료 | Phase 2 계획 보관 완료 |
 | `docs/archive/specs/0004-snapshot-comparison.md` | 구현 완료 | 메타데이터 기반 비교 완료 | Phase 3 계획 보관 완료 |
+| `docs/archive/specs/0005-block-compression.md` | 구현 완료 | schema 2 envelope와 legacy raw 호환 완료 | Phase 6 계획 보관 완료 |
 | `docs/archive/specs/0006-home-adaptive-navigation.md` | 구현 완료 | 홈/적응형 접근 MVP 완료 | 홈/적응형 탐색 계획 보관 완료 |
 | `docs/archive/specs/0007-snapshot-restore.md` | 구현 완료 | 빈 대상 폴더 복원 MVP 완료 | Phase 4 계획 보관 완료 |
 | `docs/archive/specs/0008-integrity-verification.md` | 구현 완료 | 원격 기능 브랜치 푸시 완료 | Phase 5 무결성 검증 계획 보관 완료 |
@@ -51,13 +50,11 @@
 
 ## 현재 진행 계획
 
-현재 활성 구현 계획은 없다. 저장소 인벤토리 구현 계획은 완료되어 `docs/archive/plans/`로 이동했다.
+현재 활성 구현 계획은 없다.
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
-| 영역 | 설계 문서 | 상태 |
-| --- | --- | --- |
-| 블록 압축 | `docs/specs/0005-block-compression.md` | 향후 설계만 있음. 구현 계획 없음. 저장소 인벤토리 탐색 범위에서 제외. |
+현재 없음.
 
 ## 설계와 세부 구현 계획이 모두 없는 작업
 
@@ -87,23 +84,26 @@
 - 별도 작업: 홈/적응형 탐색
 - Phase 5a: 무결성 검증
 - Phase 5b: 저장소 인벤토리 탐색
+- Phase 6: 블록 압축
 
 ### 현재 다음 작업
 
-- 확정된 활성 계획 없음
-- 아래 후보 중 하나를 선택한 뒤 해당 작업만 spec과 plan으로 상세화
+- 파일 검사기 / 블록 지도 상세화
+  - 인벤토리 파일 선택
+  - snapshot별 block reference sequence
+  - 파일 변경 이력
+  - 저장 block encoding과 크기 정보
 
 ### 다음 계획 후보
 
-아래 중 하나를 선택한다.
+파일 검사기 / 블록 지도 이후 아래 중 하나를 선택한다.
 
 1. 저장소 통계 대시보드
-2. 파일 검사기 / 블록 지도
-3. 릴리스 패키징 및 기본 실행 테스트 강화
+2. 릴리스 패키징 및 기본 실행 테스트 강화
+3. 스냅샷 삭제 / 블록 정리
 
 ### 향후 작업
 
-- 블록 압축: 설계만 있음, 구현 계획 없음
 - 스냅샷 삭제 / 블록 정리
 - 파일 감시 / 자동 스냅샷
 - SQLite 전환
@@ -113,7 +113,7 @@
 
 ## 즉시 다음 작업
 
-1. `docs/specs/0005-block-compression.md`를 현재 저장/복원/무결성 구조와 대조한다.
-2. raw/off, Zstd 표준, LZ4 빠른 모드의 현재 Phase 구현 계획을 작성한다.
-3. 별도 기능 브랜치에서 테스트 우선으로 압축 저장과 읽기를 구현한다.
-4. 압축 완료 후 다음 기능 후보를 다시 선택한다.
+1. 현재 압축 브랜치를 최종 검증하고 커밋·푸시한다.
+2. 파일 검사기 / 블록 지도의 현재 Phase spec과 plan을 작성한다.
+3. 별도 기능 브랜치에서 테스트 우선으로 구현한다.
+4. 핵심 기능 완료 뒤 전체 UI 사용성 개선 Phase를 진행한다.

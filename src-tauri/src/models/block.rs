@@ -1,6 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BlockEncoding {
+    Raw,
+    Zstd,
+    Lz4,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScannedFile {
     pub absolute_path: PathBuf,
@@ -29,7 +36,9 @@ pub struct FileChunk {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BlockStoreWrite {
     pub hash: String,
-    pub size_bytes: u64,
+    pub raw_size_bytes: u64,
+    pub stored_size_bytes: u64,
+    pub encoding: BlockEncoding,
     pub storage_path: PathBuf,
     pub was_new: bool,
 }

@@ -1,7 +1,11 @@
+export type CompressionMode = 'off' | 'standard' | 'fast';
+
 export interface BlockStrategy {
   type: 'fixed';
   sizeBytes: number;
   hash: 'sha256';
+  encodingVersion: number;
+  compressionMode: CompressionMode;
 }
 
 export interface RepositoryManifest {
@@ -34,6 +38,11 @@ export interface BlockIngestSummary {
   newBlockCount: number;
   reusedBlockCount: number;
   newlyStoredBytes: number;
+  newLogicalBytes: number;
+  compressionSavedBytes: number;
+  newRawBlockCount: number;
+  newZstdBlockCount: number;
+  newLz4BlockCount: number;
   files: FileIngestResult[];
 }
 
@@ -57,6 +66,11 @@ export interface SnapshotSummary {
   newBlockCount: number;
   reusedBlockCount: number;
   newStoredBytes: number;
+  newLogicalBytes: number;
+  compressionSavedBytes: number;
+  newRawBlockCount: number;
+  newZstdBlockCount: number;
+  newLz4BlockCount: number;
 }
 
 export interface SnapshotFile {

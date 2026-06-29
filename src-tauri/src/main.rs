@@ -3,7 +3,7 @@ use chrona::models::diff::SnapshotComparison;
 use chrona::models::ingest::BlockIngestSummary;
 use chrona::models::integrity::IntegrityReport;
 use chrona::models::inventory::RepositoryInventoryReport;
-use chrona::models::repository::RepositoryManifest;
+use chrona::models::repository::{CompressionMode, RepositoryManifest};
 use chrona::models::restore::RestoreReport;
 use chrona::models::snapshot::{Snapshot, SnapshotIndexItem};
 
@@ -15,6 +15,17 @@ fn create_repository(repository_path: String) -> Result<RepositoryManifest, Stri
 #[tauri::command]
 fn open_repository(repository_path: String) -> Result<RepositoryManifest, String> {
     chrona::commands::repository_commands::open_repository(repository_path)
+}
+
+#[tauri::command]
+fn set_repository_compression_mode(
+    repository_path: String,
+    compression_mode: CompressionMode,
+) -> Result<RepositoryManifest, String> {
+    chrona::commands::repository_commands::set_repository_compression_mode(
+        repository_path,
+        compression_mode,
+    )
 }
 
 #[tauri::command]
@@ -109,6 +120,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             create_repository,
             open_repository,
+            set_repository_compression_mode,
             ingest_blocks,
             create_snapshot,
             list_snapshots,

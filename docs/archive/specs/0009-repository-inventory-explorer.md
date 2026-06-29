@@ -12,7 +12,7 @@ Show what a Chrona repository contains in human-readable form: recorded source f
 
 Compression changes the physical block payload format and therefore affects restore, integrity verification, and future block metadata. Repository Inventory Explorer only reads existing snapshot metadata and performs optional source-path existence checks, so it improves user visibility without changing storage format.
 
-Compression remains a future storage optimization in `docs/specs/0005-block-compression.md`.
+Compression was outside this phase and is documented separately in `docs/archive/specs/0005-block-compression.md`.
 
 ## Scope
 

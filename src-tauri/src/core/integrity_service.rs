@@ -1,11 +1,10 @@
 use std::collections::{HashMap, HashSet};
-use std::fs;
 use std::path::Path;
 
 use chrono::Utc;
 
 use crate::core::block_store::BlockStore;
-use crate::core::errors::ChronaResult;
+use crate::core::errors::{ChronaError, ChronaResult};
 use crate::core::hasher::sha256_hex;
 use crate::core::repository::RepositoryManager;
 use crate::core::snapshot_store::SnapshotStore;
@@ -25,6 +24,7 @@ impl IntegrityService {
     pub fn verify_repository(&self, repository_path: &Path) -> ChronaResult<IntegrityReport> {
         RepositoryManager::open(repository_path)?;
         let snapshot_store = SnapshotStore::new(repository_path.to_path_buf());
+        let block_store = BlockStore::new(repository_path.to_path_buf());
         let snapshot_items = snapshot_store.list_snapshots()?;
         let mut issues = Vec::new();
         let mut file_count = 0_u64;
@@ -114,8 +114,24 @@ impl IntegrityService {
                 continue;
             }
 
-            let bytes = match fs::read(&block_path) {
+            let bytes = match block_store.read_block(hash) {
                 Ok(bytes) => bytes,
+                Err(
+                    error @ (ChronaError::Decompression(_)
+                    | ChronaError::InvalidBlockEnvelope(_)
+                    | ChronaError::UnsupportedBlockEncoding(_)),
+                ) => {
+                    corrupt_block_hashes.insert(hash.clone());
+                    issues.push(IntegrityIssue {
+                        severity: IntegrityIssueSeverity::Error,
+                        code: "blockDecodeFailed".to_string(),
+                        message: format!("failed to decode block `{hash}`: {error}"),
+                        snapshot_id: Some(expected.snapshot_id.clone()),
+                        relative_path: Some(expected.relative_path.clone()),
+                        block_hash: Some(hash.clone()),
+                    });
+                    continue;
+                }
                 Err(error) => {
                     corrupt_block_hashes.insert(hash.clone());
                     issues.push(IntegrityIssue {

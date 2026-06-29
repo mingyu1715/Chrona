@@ -24,6 +24,14 @@ pub enum ChronaError {
     Scan(String),
     #[error("Hash: {0}")]
     Hash(String),
+    #[error("Compression: {0}")]
+    Compression(String),
+    #[error("Decompression: {0}")]
+    Decompression(String),
+    #[error("InvalidBlockEnvelope: {0}")]
+    InvalidBlockEnvelope(String),
+    #[error("UnsupportedBlockEncoding: {0}")]
+    UnsupportedBlockEncoding(u8),
     #[error("InvalidSnapshotId: {0}")]
     InvalidSnapshotId(String),
     #[error("SnapshotNotFound: {0}")]

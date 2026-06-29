@@ -24,7 +24,7 @@ Each block is identified by SHA-256 over the exact block bytes. Equal bytes must
 
 Current block files are stored as raw, uncompressed block bytes. Compression is not implemented in the Phase 1/2/3 engine.
 
-Future compression must preserve the current identity invariant: block hash is SHA-256 over the raw, uncompressed chunk bytes. See `docs/specs/0005-block-compression.md` for the future design constraints.
+Compression preserves the identity invariant: block hash is SHA-256 over the raw, uncompressed chunk bytes. See `docs/archive/specs/0005-block-compression.md` for the implemented format.
 
 ## Atomic-like Write
 
