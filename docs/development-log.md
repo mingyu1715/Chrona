@@ -296,3 +296,14 @@
 - `npm test -- --run`: UI 테스트 파일 3개, 테스트 11개 통과.
 - `npm run build`: TypeScript 및 Vite 프로덕션 빌드 통과.
 - `cargo fmt --all -- --check`, `git diff --check HEAD`: 포맷과 공백 검사 통과.
+
+## 2026-06-30
+
+### Phase 7 파일 검사기 / 블록 지도 설계
+
+- `feature/file-inspector-block-map` 브랜치에서 다음 기능 작업을 시작했다.
+- Explorer에서 파일을 선택하면 같은 화면에서 ordered block sequence와 snapshot별 변경 이력을 확인하는 흐름으로 정했다.
+- 별도 chapter와 하단 drawer 대신 Explorer master-detail 구성을 사용한다.
+- raw/Zstd/LZ4 encoding, logical/physical block 크기, history 내 block 재사용 횟수를 표시 범위에 포함했다.
+- block payload 미리보기, 파일/스냅샷 수정·삭제, 고급 graph library, 전체 UI 재설계는 제외했다.
+- 승인된 설계를 `docs/specs/0011-file-inspector-block-map.md`에 기록했다.

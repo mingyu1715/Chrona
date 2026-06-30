@@ -53,14 +53,12 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 
 ### 다음 구현 대상
 
-- File Inspector / Block Map의 spec과 세부 구현 계획 작성
+- 승인된 File Inspector / Block Map spec을 기준으로 세부 구현 계획 작성
 - 특정 파일의 블록 구성과 스냅샷별 변경 이력을 확인하는 기능 구현
 
 ### 아직 세부 계획 없음
 
 - 저장 공간 분석 대시보드
-- 파일별 블록 목록 및 변경 이력
-- File Inspector / Block Map
 - 패키징된 `.app` 릴리스와 signing
 
 ### MVP에서 제외하거나 Future로 유지
@@ -441,12 +439,12 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 ### 다음 구현 계획
 
-- File Inspector / Block Map을 다음 대상으로 삼고, 구현 전에 현재 Phase의 spec과 plan을 작성한다.
+- File Inspector / Block Map spec은 승인되었고 Phase 7 구현 plan을 작성한다.
+- Spec: `docs/specs/0011-file-inspector-block-map.md`
 
 ### 설계와 상세 계획이 모두 없는 후보
 
 - Repository Statistics Dashboard
-- File Inspector / Block Map
 - Packaged `.app` release/signing
 - Snapshot delete and garbage collection
 - Watcher/automatic snapshots
@@ -529,11 +527,13 @@ Repository Inventory Explorer는 다음을 검증한다.
 - 목표: 저장량, 절약량, reuse ratio, snapshot별 변화량을 dashboard로 표시
 - 다음 문서 후보: `docs/specs/0010-repository-statistics-dashboard.md`
 
-### Phase 5d. File Inspector / Block Map
+### Phase 7. File Inspector / Block Map
 
-- 상태: 후보, 세부 spec/plan 없음
+- 상태: 설계 승인, 구현 plan 작성 전
+- Spec: `docs/specs/0011-file-inspector-block-map.md`
 - 목표: 특정 파일의 block reference sequence와 snapshot별 변경 이력을 시각화
-- 다음 문서 후보: `docs/specs/0011-file-inspector-block-map.md`
+- 범위: Explorer master-detail, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata
+- 제외: payload preview, 수정/삭제, 고급 graph library, 전체 UI 재설계
 
 ### Release Phase. Packaging and Release Hardening
 

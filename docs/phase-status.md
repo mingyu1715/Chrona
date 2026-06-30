@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`와 `docs/plans/`에는 활성 설계/계획이 없다.
+현재 `docs/specs/`에는 Phase 7 파일 검사기/블록 지도 설계가 있고, `docs/plans/`에는 아직 활성 구현 계획이 없다.
 
 ## 현재 구현 상태
 
@@ -29,10 +29,11 @@
 | 무결성 검증 | 구현 완료, 원격 기능 브랜치 푸시 완료 | `docs/archive/specs/0008-integrity-verification.md` | `docs/archive/plans/phase-5-integrity-verification.md` | `docs/implemented/integrity-verification.md` | 누락 블록, 손상 블록, SHA-256 불일치를 읽기 전용으로 검증함. |
 | 저장소 인벤토리 탐색 | 구현 완료 | `docs/archive/specs/0009-repository-inventory-explorer.md` | `docs/archive/plans/phase-5-repository-inventory-explorer.md` | `docs/implemented/repository-inventory-explorer.md` | 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태, 현재 원본 파일 존재 여부, 검색/필터 UI 구현 완료. |
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
+| 파일 검사기 / 블록 지도 | 설계 승인, 구현 계획 작성 전 | `docs/specs/0011-file-inspector-block-map.md` | 없음 | 없음 | Explorer 파일 선택, ordered block map, snapshot별 변경 이력, physical encoding/크기 표시 범위 확정. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
-현재 없음.
+- `docs/specs/0011-file-inspector-block-map.md`
 
 ## 보관된 완료 설계 문서
 
@@ -54,7 +55,9 @@
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
-현재 없음.
+- 파일 검사기 / 파일 블록 지도
+  - Spec: `docs/specs/0011-file-inspector-block-map.md`
+  - 다음 단계: 사용자 문서 검토 후 Phase 7 구현 계획 작성
 
 ## 설계와 세부 구현 계획이 모두 없는 작업
 
@@ -63,7 +66,6 @@
 | 영역 | 현재 상세 수준 | 다음 문서 후보 |
 | --- | --- | --- |
 | 통계 대시보드 | `project-plan`에만 언급됨 | `docs/specs/0010-repository-statistics-dashboard.md` |
-| 파일 검사기 / 파일 블록 지도 | `project-plan`에만 언급됨 | `docs/specs/0011-file-inspector-block-map.md` |
 | 패키징된 `.app` 릴리스 / 서명 | 릴리스 준비 후보로만 언급됨 | `docs/plans/phase-release-packaging.md` |
 | 스냅샷 삭제 / 블록 정리 | 향후 작업 | `docs/specs/00xx-snapshot-delete-gc.md` |
 | 파일 감시 / 자동 스냅샷 | 향후 작업 | `docs/specs/00xx-watched-sources.md` |
@@ -86,9 +88,11 @@
 - Phase 5b: 저장소 인벤토리 탐색
 - Phase 6: 블록 압축
 
-### 현재 다음 작업
+### 현재 다음 작업: Phase 7
 
-- 파일 검사기 / 블록 지도 상세화
+- 파일 검사기 / 블록 지도
+  - 승인된 spec 검토
+  - 세부 구현 plan 작성
   - 인벤토리 파일 선택
   - snapshot별 block reference sequence
   - 파일 변경 이력
@@ -113,7 +117,7 @@
 
 ## 즉시 다음 작업
 
-1. 현재 압축 브랜치를 최종 검증하고 커밋·푸시한다.
-2. 파일 검사기 / 블록 지도의 현재 Phase spec과 plan을 작성한다.
-3. 별도 기능 브랜치에서 테스트 우선으로 구현한다.
+1. `0011` spec을 검토하고 Phase 7 구현 plan을 작성한다.
+2. `feature/file-inspector-block-map`에서 테스트 우선으로 구현한다.
+3. 전체 검증 후 spec/plan을 archive하고 구현 기록을 추가한다.
 4. 핵심 기능 완료 뒤 전체 UI 사용성 개선 Phase를 진행한다.
