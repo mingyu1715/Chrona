@@ -1,10 +1,17 @@
-use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use crate::core::block_codec::{decode_block, encode_block};
+use crate::core::block_codec::{
+    decode_block, encode_block, inspect_envelope_header, BLOCK_ENVELOPE_HEADER_SIZE,
+    BLOCK_ENVELOPE_MAGIC,
+};
 use crate::core::errors::{ChronaError, ChronaResult};
-use crate::models::block::BlockStoreWrite;
+use crate::core::hasher::sha256_reader_hex;
+use crate::models::block::{BlockEncoding, BlockStoreWrite};
+use crate::models::file_inspector::{
+    BlockStorageEncoding, BlockStorageState, PhysicalBlockInspection,
+};
 use crate::models::repository::CompressionMode;
 
 pub struct BlockStore {
@@ -53,6 +60,100 @@ impl BlockStore {
         Ok(decode_block(&stored, hash)?.bytes)
     }
 
+    pub fn inspect_block(
+        &self,
+        hash: &str,
+        expected_raw_size_bytes: u64,
+    ) -> ChronaResult<PhysicalBlockInspection> {
+        let relative_path = Self::block_relative_path(hash)?;
+        let path = self.repository_path.join(relative_path);
+        if !path.is_file() {
+            return Ok(inspection_issue(
+                BlockStorageState::Missing,
+                format!("missing block file for `{hash}`"),
+            ));
+        }
+
+        let physical_size_bytes = match fs::metadata(&path) {
+            Ok(metadata) => metadata.len(),
+            Err(error) => {
+                return Ok(inspection_issue(
+                    BlockStorageState::Unreadable,
+                    error.to_string(),
+                ));
+            }
+        };
+        let mut file = match File::open(&path) {
+            Ok(file) => file,
+            Err(error) => {
+                return Ok(inspection_issue(
+                    BlockStorageState::Unreadable,
+                    error.to_string(),
+                ));
+            }
+        };
+        let mut header = vec![0_u8; BLOCK_ENVELOPE_HEADER_SIZE];
+        let header_size = match file.read(&mut header) {
+            Ok(size) => size,
+            Err(error) => {
+                return Ok(inspection_issue(
+                    BlockStorageState::Unreadable,
+                    error.to_string(),
+                ));
+            }
+        };
+        header.truncate(header_size);
+
+        if header.starts_with(BLOCK_ENVELOPE_MAGIC) {
+            let physical_hash = match File::open(&path).and_then(sha256_reader_hex) {
+                Ok(hash) => hash,
+                Err(error) => {
+                    return Ok(inspection_issue(
+                        BlockStorageState::Unreadable,
+                        error.to_string(),
+                    ));
+                }
+            };
+            if physical_hash == hash && physical_size_bytes == expected_raw_size_bytes {
+                return Ok(available_inspection(
+                    BlockStorageEncoding::Raw,
+                    physical_size_bytes,
+                    expected_raw_size_bytes,
+                ));
+            }
+        }
+
+        match inspect_envelope_header(
+            &header,
+            physical_size_bytes,
+            hash,
+            expected_raw_size_bytes,
+        ) {
+            Ok(Some(metadata)) => Ok(available_inspection(
+                storage_encoding(metadata.encoding),
+                physical_size_bytes,
+                expected_raw_size_bytes,
+            )),
+            Ok(None) if physical_size_bytes == expected_raw_size_bytes => Ok(
+                available_inspection(
+                    BlockStorageEncoding::Raw,
+                    physical_size_bytes,
+                    expected_raw_size_bytes,
+                ),
+            ),
+            Ok(None) => Ok(inspection_issue(
+                BlockStorageState::InvalidHeader,
+                format!(
+                    "raw block size is {physical_size_bytes} but snapshot expects {expected_raw_size_bytes}"
+                ),
+            )),
+            Err(error) => Ok(inspection_issue(
+                BlockStorageState::InvalidHeader,
+                error.to_string(),
+            )),
+        }
+    }
+
     pub fn store_block(
         &self,
         hash: &str,
@@ -98,6 +199,38 @@ impl BlockStore {
             storage_path: relative_path,
             was_new: true,
         })
+    }
+}
+
+fn storage_encoding(encoding: BlockEncoding) -> BlockStorageEncoding {
+    match encoding {
+        BlockEncoding::Raw => BlockStorageEncoding::Raw,
+        BlockEncoding::Zstd => BlockStorageEncoding::Zstd,
+        BlockEncoding::Lz4 => BlockStorageEncoding::Lz4,
+    }
+}
+
+fn available_inspection(
+    encoding: BlockStorageEncoding,
+    stored_size_bytes: u64,
+    raw_size_bytes: u64,
+) -> PhysicalBlockInspection {
+    PhysicalBlockInspection {
+        encoding,
+        storage_state: BlockStorageState::Available,
+        stored_size_bytes: Some(stored_size_bytes),
+        compression_saved_bytes: Some(raw_size_bytes.saturating_sub(stored_size_bytes)),
+        issue: None,
+    }
+}
+
+fn inspection_issue(storage_state: BlockStorageState, issue: String) -> PhysicalBlockInspection {
+    PhysicalBlockInspection {
+        encoding: BlockStorageEncoding::Unknown,
+        storage_state,
+        stored_size_bytes: None,
+        compression_saved_bytes: None,
+        issue: Some(issue),
     }
 }
 

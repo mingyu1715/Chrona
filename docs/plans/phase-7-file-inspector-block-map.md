@@ -71,7 +71,7 @@ Modify:
 - Modify: `src-tauri/src/core/block_store.rs`
 - Modify: `src-tauri/src/core/hasher.rs`
 
-- [ ] **Step 1: Write failing raw and compressed metadata tests**
+- [x] **Step 1: Write failing raw and compressed metadata tests**
 
 Create `phase7_file_inspector.rs` with real `BlockStore` writes:
 
@@ -156,7 +156,7 @@ fn block_storage_inspection_reports_missing_and_invalid_header() {
 }
 ~~~
 
-- [ ] **Step 2: Run Task 1 tests and verify RED**
+- [x] **Step 2: Run Task 1 tests and verify RED**
 
 ~~~bash
 cd src-tauri
@@ -165,7 +165,7 @@ cargo test --test phase7_file_inspector block_storage_inspection
 
 Expected: compile failure because `file_inspector` models and `BlockStore::inspect_block` do not exist.
 
-- [ ] **Step 3: Add serialized storage models**
+- [x] **Step 3: Add serialized storage models**
 
 In `models/file_inspector.rs` add:
 
@@ -200,7 +200,7 @@ pub struct PhysicalBlockInspection {
 
 Export the module from `models/mod.rs`.
 
-- [ ] **Step 4: Add streaming SHA-256 and envelope header inspection**
+- [x] **Step 4: Add streaming SHA-256 and envelope header inspection**
 
 Add to `core/hasher.rs`:
 
@@ -240,7 +240,7 @@ pub fn inspect_envelope_header(
 
 Return `Ok(None)` when magic is absent. For an envelope, validate version, encoding, reserved bytes, raw size, payload size, physical file size, and raw hash exactly as defined in spec 0011. Do not instantiate a decoder.
 
-- [ ] **Step 5: Implement `BlockStore::inspect_block`**
+- [x] **Step 5: Implement `BlockStore::inspect_block`**
 
 Add:
 
@@ -263,7 +263,7 @@ Implementation rules:
 7. Open/read errors return `Unreadable` with issue text.
 8. Available entries return physical stored bytes and `expected_raw_size_bytes.saturating_sub(physical_size)`.
 
-- [ ] **Step 6: Run Task 1 tests and existing compression tests**
+- [x] **Step 6: Run Task 1 tests and existing compression tests**
 
 ~~~bash
 cd src-tauri
@@ -273,7 +273,7 @@ cargo test --test phase6_compression
 
 Expected: all targeted tests pass, including the existing magic-prefixed raw decode test.
 
-- [ ] **Step 7: Commit Task 1**
+- [x] **Step 7: Commit Task 1**
 
 ~~~bash
 git add src-tauri/src/models/file_inspector.rs src-tauri/src/models/mod.rs \

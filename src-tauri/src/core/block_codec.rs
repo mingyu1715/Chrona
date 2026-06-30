@@ -8,8 +8,8 @@ use crate::models::block::BlockEncoding;
 use crate::models::repository::CompressionMode;
 
 pub const BLOCK_ENVELOPE_MAGIC: &[u8; 8] = b"CHRBLK01";
+pub const BLOCK_ENVELOPE_HEADER_SIZE: usize = 60;
 const ENVELOPE_VERSION: u8 = 1;
-const HEADER_SIZE: usize = 60;
 const MAX_RAW_BLOCK_SIZE: u64 = 1_048_576;
 const ZSTD_ENCODING: u8 = 1;
 const LZ4_ENCODING: u8 = 2;
@@ -27,6 +27,83 @@ pub struct DecodedBlock {
     pub bytes: Vec<u8>,
     pub encoding: BlockEncoding,
     pub stored_size_bytes: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlockEnvelopeMetadata {
+    pub encoding: BlockEncoding,
+    pub raw_size_bytes: u64,
+    pub payload_size_bytes: u64,
+}
+
+pub fn inspect_envelope_header(
+    header: &[u8],
+    physical_size_bytes: u64,
+    expected_hash: &str,
+    expected_raw_size_bytes: u64,
+) -> ChronaResult<Option<BlockEnvelopeMetadata>> {
+    if !header.starts_with(BLOCK_ENVELOPE_MAGIC) {
+        return Ok(None);
+    }
+    if header.len() < BLOCK_ENVELOPE_HEADER_SIZE {
+        return Err(ChronaError::InvalidBlockEnvelope(format!(
+            "header is truncated: {} bytes",
+            header.len()
+        )));
+    }
+    if header[8] != ENVELOPE_VERSION {
+        return Err(ChronaError::InvalidBlockEnvelope(format!(
+            "unsupported envelope version: {}",
+            header[8]
+        )));
+    }
+    if header[10..12] != [0, 0] {
+        return Err(ChronaError::InvalidBlockEnvelope(
+            "reserved header bytes must be zero".to_string(),
+        ));
+    }
+
+    let encoding = match header[9] {
+        ZSTD_ENCODING => BlockEncoding::Zstd,
+        LZ4_ENCODING => BlockEncoding::Lz4,
+        value => return Err(ChronaError::UnsupportedBlockEncoding(value)),
+    };
+    let raw_size_bytes = read_u64(&header[12..20]);
+    if raw_size_bytes > MAX_RAW_BLOCK_SIZE {
+        return Err(ChronaError::InvalidBlockEnvelope(format!(
+            "raw block size {raw_size_bytes} exceeds {MAX_RAW_BLOCK_SIZE}"
+        )));
+    }
+    if raw_size_bytes != expected_raw_size_bytes {
+        return Err(ChronaError::InvalidBlockEnvelope(format!(
+            "raw block size is {raw_size_bytes} but snapshot expects {expected_raw_size_bytes}"
+        )));
+    }
+
+    let payload_size_bytes = read_u64(&header[20..28]);
+    let expected_physical_size = (BLOCK_ENVELOPE_HEADER_SIZE as u64)
+        .checked_add(payload_size_bytes)
+        .ok_or_else(|| {
+            ChronaError::InvalidBlockEnvelope("payload size overflows u64".to_string())
+        })?;
+    if expected_physical_size != physical_size_bytes {
+        return Err(ChronaError::InvalidBlockEnvelope(format!(
+            "physical block size is {physical_size_bytes} but header declares {expected_physical_size}"
+        )));
+    }
+
+    let expected_hash_bytes = decode_hash(expected_hash)?;
+    if header[28..60] != expected_hash_bytes {
+        return Err(ChronaError::InvalidBlockEnvelope(
+            "header hash does not match block path hash".to_string(),
+        ));
+    }
+
+    Ok(Some(BlockEnvelopeMetadata {
+        encoding,
+        raw_size_bytes,
+        payload_size_bytes,
+    }))
 }
 
 pub fn encode_block(
@@ -87,7 +164,7 @@ pub fn decode_block(stored: &[u8], expected_hash: &str) -> ChronaResult<DecodedB
             stored_size_bytes: stored.len() as u64,
         });
     }
-    if stored.len() < HEADER_SIZE {
+    if stored.len() < BLOCK_ENVELOPE_HEADER_SIZE {
         return Err(ChronaError::InvalidBlockEnvelope(format!(
             "header is truncated: {} bytes",
             stored.len()
@@ -117,7 +194,7 @@ pub fn decode_block(stored: &[u8], expected_hash: &str) -> ChronaResult<DecodedB
         )));
     }
     let payload_size = read_u64(&stored[20..28]);
-    let payload = &stored[HEADER_SIZE..];
+    let payload = &stored[BLOCK_ENVELOPE_HEADER_SIZE..];
     if payload_size != payload.len() as u64 {
         return Err(ChronaError::InvalidBlockEnvelope(format!(
             "payload size is {} but header declares {payload_size}",
@@ -168,7 +245,7 @@ fn raw_block(raw: &[u8]) -> EncodedBlock {
 }
 
 fn build_envelope(raw: &[u8], raw_hash: &[u8; 32], encoding: u8, payload: &[u8]) -> Vec<u8> {
-    let mut envelope = Vec::with_capacity(HEADER_SIZE + payload.len());
+    let mut envelope = Vec::with_capacity(BLOCK_ENVELOPE_HEADER_SIZE + payload.len());
     envelope.extend_from_slice(BLOCK_ENVELOPE_MAGIC);
     envelope.push(ENVELOPE_VERSION);
     envelope.push(encoding);

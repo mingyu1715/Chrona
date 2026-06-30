@@ -1,6 +1,7 @@
 pub mod access;
 pub mod block;
 pub mod diff;
+pub mod file_inspector;
 pub mod ingest;
 pub mod integrity;
 pub mod inventory;
