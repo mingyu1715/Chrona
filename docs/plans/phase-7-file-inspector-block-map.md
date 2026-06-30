@@ -292,7 +292,7 @@ git commit -m "feat: inspect physical block metadata"
 - Modify: `src-tauri/src/core/errors.rs`
 - Modify: `src-tauri/tests/phase7_file_inspector.rs`
 
-- [ ] **Step 1: Add deterministic snapshot fixture helpers**
+- [x] **Step 1: Add deterministic snapshot fixture helpers**
 
 Use `SnapshotStore` directly so history times and IDs are deterministic:
 
@@ -356,7 +356,7 @@ fn snapshot_file(
 }
 ~~~
 
-- [ ] **Step 2: Write failing history transition tests**
+- [x] **Step 2: Write failing history transition tests**
 
 Create snapshots where `notes.txt` is added, unchanged with a different `modified_at`, modified with a different ordered block list, deleted, and added again. Assert newest-first states:
 
@@ -380,7 +380,7 @@ assert_eq!(
 
 Add tests that ordered references are preserved, duplicate hashes in one version count once, and a hash seen in two present versions gets `seen_in_version_count == 2`.
 
-- [ ] **Step 3: Write failing validation and partial-storage tests**
+- [x] **Step 3: Write failing validation and partial-storage tests**
 
 Add:
 
@@ -425,7 +425,7 @@ fn file_inspector_keeps_report_when_a_block_is_missing() {
 }
 ~~~
 
-- [ ] **Step 4: Run history tests and verify RED**
+- [x] **Step 4: Run history tests and verify RED**
 
 ~~~bash
 cd src-tauri
@@ -434,7 +434,7 @@ cargo test --test phase7_file_inspector file_inspector_
 
 Expected: compile failure because report models and `FileInspectorService` do not exist.
 
-- [ ] **Step 5: Add report models and error**
+- [x] **Step 5: Add report models and error**
 
 Add the exact serde camelCase types from spec 0011:
 
@@ -495,7 +495,7 @@ Add to `ChronaError`:
 RepositoryFileNotFound(String),
 ~~~
 
-- [ ] **Step 6: Implement history aggregation**
+- [x] **Step 6: Implement history aggregation**
 
 `FileInspectorService::inspect_repository_file` must:
 
@@ -530,7 +530,7 @@ fn same_file_content(left: &SnapshotFile, right: &SnapshotFile) -> bool {
 }
 ~~~
 
-- [ ] **Step 7: Run Task 2 and prior phase tests**
+- [x] **Step 7: Run Task 2 and prior phase tests**
 
 ~~~bash
 cd src-tauri
@@ -541,7 +541,7 @@ cargo test --test phase5_inventory
 
 Expected: all tests pass and content-first comparison remains unchanged.
 
-- [ ] **Step 8: Commit Task 2**
+- [x] **Step 8: Commit Task 2**
 
 ~~~bash
 git add src-tauri/src/models/file_inspector.rs src-tauri/src/core/file_inspector_service.rs \

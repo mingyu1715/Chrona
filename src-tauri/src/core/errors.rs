@@ -36,6 +36,8 @@ pub enum ChronaError {
     InvalidSnapshotId(String),
     #[error("SnapshotNotFound: {0}")]
     SnapshotNotFound(String),
+    #[error("RepositoryFileNotFound: {0}")]
+    RepositoryFileNotFound(String),
     #[error("UnsafeRestoreTarget: {0}")]
     UnsafeRestoreTarget(String),
     #[error("MissingBlock: {0}")]

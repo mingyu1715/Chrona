@@ -6,6 +6,7 @@ pub mod block_store;
 pub mod chunker;
 pub mod diff_service;
 pub mod errors;
+pub mod file_inspector_service;
 pub mod hasher;
 pub mod home_service;
 pub mod integrity_service;
