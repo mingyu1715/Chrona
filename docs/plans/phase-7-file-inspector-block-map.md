@@ -703,7 +703,7 @@ git commit -m "feat: expose file inspector API"
 - Create: `src/features/explorer/FileInspectorPanel.test.tsx`
 - Modify: `src/features/repository/RepositoryPage.css`
 
-- [ ] **Step 1: Write failing no-selection and report render tests**
+- [x] **Step 1: Write failing no-selection and report render tests**
 
 Create a report fixture with Added, Unchanged, and Deleted history plus raw/Zstd blocks. Assert:
 
@@ -725,7 +725,7 @@ expect(screen.getByText('deleted')).toBeInTheDocument();
 
 Render with `selectedPath={null}` and assert `Select a file to inspect`.
 
-- [ ] **Step 2: Write failing version-switch test**
+- [x] **Step 2: Write failing version-switch test**
 
 ~~~tsx
 const user = userEvent.setup();
@@ -736,7 +736,7 @@ expect(screen.getByText(/block 0/i)).toBeInTheDocument();
 expect(screen.queryByText(/block 1/i)).not.toBeInTheDocument();
 ~~~
 
-- [ ] **Step 3: Run panel tests and verify RED**
+- [x] **Step 3: Run panel tests and verify RED**
 
 ~~~bash
 npm test -- FileInspectorPanel.test.tsx
@@ -744,7 +744,7 @@ npm test -- FileInspectorPanel.test.tsx
 
 Expected: import failure because the component does not exist.
 
-- [ ] **Step 4: Implement `FileInspectorPanel`**
+- [x] **Step 4: Implement `FileInspectorPanel`**
 
 Props:
 
@@ -772,7 +772,7 @@ Behavior:
 
 Use existing `formatBytes` behavior locally or move the formatter to a shared utility only if both files need the exact implementation. Do not add a chart dependency.
 
-- [ ] **Step 5: Add stable responsive styles**
+- [x] **Step 5: Add stable responsive styles**
 
 Add classes:
 
@@ -789,7 +789,7 @@ Add classes:
 
 Use `grid-template-columns: repeat(auto-fill, minmax(132px, 1fr))` for the block map. Keep cards at 8px radius or less and ensure long hashes/paths truncate without changing grid dimensions.
 
-- [ ] **Step 6: Run panel tests**
+- [x] **Step 6: Run panel tests**
 
 ~~~bash
 npm test -- FileInspectorPanel.test.tsx
@@ -797,7 +797,7 @@ npm test -- FileInspectorPanel.test.tsx
 
 Expected: all focused component tests pass.
 
-- [ ] **Step 7: Commit Task 4**
+- [x] **Step 7: Commit Task 4**
 
 ~~~bash
 git add src/features/explorer/FileInspectorPanel.tsx \
