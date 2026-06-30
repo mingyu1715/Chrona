@@ -307,3 +307,5 @@
 - raw/Zstd/LZ4 encoding, logical/physical block 크기, history 내 block 재사용 횟수를 표시 범위에 포함했다.
 - block payload 미리보기, 파일/스냅샷 수정·삭제, 고급 graph library, 전체 UI 재설계는 제외했다.
 - 승인된 설계를 `docs/specs/0011-file-inspector-block-map.md`에 기록했다.
+- physical block 검사, content-based history service, Tauri API, Inspector panel, Explorer 연동, 문서/검증 순서의 구현 계획을 `docs/plans/phase-7-file-inspector-block-map.md`에 작성했다.
+- 각 기능은 실패 테스트 확인 후 최소 구현과 회귀 검증을 진행하도록 Task를 분리했다.

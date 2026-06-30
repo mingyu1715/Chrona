@@ -53,7 +53,7 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 
 ### 다음 구현 대상
 
-- 승인된 File Inspector / Block Map spec을 기준으로 세부 구현 계획 작성
+- 승인된 File Inspector / Block Map plan을 Task 1부터 실행
 - 특정 파일의 블록 구성과 스냅샷별 변경 이력을 확인하는 기능 구현
 
 ### 아직 세부 계획 없음
@@ -437,10 +437,11 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 완료된 설계 문서는 `docs/archive/specs/`에 보관한다.
 
-### 다음 구현 계획
+### 현재 구현 계획
 
-- File Inspector / Block Map spec은 승인되었고 Phase 7 구현 plan을 작성한다.
+- File Inspector / Block Map spec과 Phase 7 구현 plan이 완료되었다.
 - Spec: `docs/specs/0011-file-inspector-block-map.md`
+- Plan: `docs/plans/phase-7-file-inspector-block-map.md`
 
 ### 설계와 상세 계획이 모두 없는 후보
 
@@ -529,8 +530,9 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 ### Phase 7. File Inspector / Block Map
 
-- 상태: 설계 승인, 구현 plan 작성 전
+- 상태: 설계/구현 plan 완료, 구현 시작 전
 - Spec: `docs/specs/0011-file-inspector-block-map.md`
+- Plan: `docs/plans/phase-7-file-inspector-block-map.md`
 - 목표: 특정 파일의 block reference sequence와 snapshot별 변경 이력을 시각화
 - 범위: Explorer master-detail, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata
 - 제외: payload preview, 수정/삭제, 고급 graph library, 전체 UI 재설계

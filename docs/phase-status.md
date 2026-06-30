@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`에는 Phase 7 파일 검사기/블록 지도 설계가 있고, `docs/plans/`에는 아직 활성 구현 계획이 없다.
+현재 `docs/specs/`에는 Phase 7 파일 검사기/블록 지도 설계가 있고, `docs/plans/`에는 해당 활성 구현 계획이 있다.
 
 ## 현재 구현 상태
 
@@ -29,7 +29,7 @@
 | 무결성 검증 | 구현 완료, 원격 기능 브랜치 푸시 완료 | `docs/archive/specs/0008-integrity-verification.md` | `docs/archive/plans/phase-5-integrity-verification.md` | `docs/implemented/integrity-verification.md` | 누락 블록, 손상 블록, SHA-256 불일치를 읽기 전용으로 검증함. |
 | 저장소 인벤토리 탐색 | 구현 완료 | `docs/archive/specs/0009-repository-inventory-explorer.md` | `docs/archive/plans/phase-5-repository-inventory-explorer.md` | `docs/implemented/repository-inventory-explorer.md` | 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태, 현재 원본 파일 존재 여부, 검색/필터 UI 구현 완료. |
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
-| 파일 검사기 / 블록 지도 | 설계 승인, 구현 계획 작성 전 | `docs/specs/0011-file-inspector-block-map.md` | 없음 | 없음 | Explorer 파일 선택, ordered block map, snapshot별 변경 이력, physical encoding/크기 표시 범위 확정. |
+| 파일 검사기 / 블록 지도 | 구현 계획 완료, 구현 시작 전 | `docs/specs/0011-file-inspector-block-map.md` | `docs/plans/phase-7-file-inspector-block-map.md` | 없음 | Explorer 파일 선택, ordered block map, snapshot별 변경 이력, physical encoding/크기 표시 범위 확정. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
@@ -51,13 +51,13 @@
 
 ## 현재 진행 계획
 
-현재 활성 구현 계획은 없다.
+| 계획 | 상태 | 다음 단계 |
+| --- | --- | --- |
+| `docs/plans/phase-7-file-inspector-block-map.md` | 구현 시작 전 | 실행 방식 선택 후 Task 1부터 TDD 구현 |
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
-- 파일 검사기 / 파일 블록 지도
-  - Spec: `docs/specs/0011-file-inspector-block-map.md`
-  - 다음 단계: 사용자 문서 검토 후 Phase 7 구현 계획 작성
+현재 없음.
 
 ## 설계와 세부 구현 계획이 모두 없는 작업
 
@@ -91,8 +91,8 @@
 ### 현재 다음 작업: Phase 7
 
 - 파일 검사기 / 블록 지도
-  - 승인된 spec 검토
-  - 세부 구현 plan 작성
+  - 승인된 spec과 구현 plan 완료
+  - physical block metadata inspection부터 TDD 구현
   - 인벤토리 파일 선택
   - snapshot별 block reference sequence
   - 파일 변경 이력
@@ -117,7 +117,7 @@
 
 ## 즉시 다음 작업
 
-1. `0011` spec을 검토하고 Phase 7 구현 plan을 작성한다.
-2. `feature/file-inspector-block-map`에서 테스트 우선으로 구현한다.
+1. `feature/file-inspector-block-map`에서 Task 1부터 테스트 우선으로 구현한다.
+2. 파일 이력 service, Tauri API, Inspector UI, Explorer 연동 순서로 진행한다.
 3. 전체 검증 후 spec/plan을 archive하고 구현 기록을 추가한다.
 4. 핵심 기능 완료 뒤 전체 UI 사용성 개선 Phase를 진행한다.

@@ -10,7 +10,7 @@
 
 ## 현재 구현 계획
 
-- 없음
+- Phase 7 파일 검사기 / 파일 블록 지도: `docs/plans/phase-7-file-inspector-block-map.md`
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
@@ -18,7 +18,7 @@
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 
-- Phase 7 파일 검사기 / 파일 블록 지도
+- 없음
 
 ## 보관된 완료 계획
 
