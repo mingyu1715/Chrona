@@ -109,6 +109,7 @@ function apiMock(result: SnapshotComparison): ChronaApi {
       kindStats: [],
       files: [],
     })),
+    inspectRepositoryFile: vi.fn(),
     compareSnapshots: vi.fn(async () => result),
     selectRepositoryPath: vi.fn(async () => null),
     selectSourceFilePath: vi.fn(async () => null),

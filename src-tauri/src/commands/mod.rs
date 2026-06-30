@@ -1,4 +1,5 @@
 pub mod block_commands;
+pub mod file_inspector_commands;
 pub mod home_commands;
 pub mod integrity_commands;
 pub mod inventory_commands;

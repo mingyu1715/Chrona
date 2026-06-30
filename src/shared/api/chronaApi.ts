@@ -9,6 +9,7 @@ import type {
   BlockIngestProgress,
   BlockIngestSummary,
   CompressionMode,
+  FileInspectionReport,
   HomeSummary,
   IntegrityReport,
   RepositoryInventoryReport,
@@ -34,6 +35,10 @@ export interface ChronaApi {
   restoreSnapshot(repositoryPath: string, snapshotId: string, targetPath: string): Promise<RestoreReport>;
   verifyRepository(repositoryPath: string): Promise<IntegrityReport>;
   getRepositoryInventory(repositoryPath: string): Promise<RepositoryInventoryReport>;
+  inspectRepositoryFile(
+    repositoryPath: string,
+    relativePath: string,
+  ): Promise<FileInspectionReport>;
   recordAccessEvent(repositoryPath: string, event: AccessEvent): Promise<AccessNode>;
   getHomeSummary(repositoryPath: string): Promise<HomeSummary>;
   pinAccessItem(repositoryPath: string, key: string): Promise<AccessNode>;
@@ -92,6 +97,12 @@ export const chronaApi: ChronaApi = {
   },
   getRepositoryInventory(repositoryPath) {
     return invoke<RepositoryInventoryReport>('get_repository_inventory', { repositoryPath });
+  },
+  inspectRepositoryFile(repositoryPath, relativePath) {
+    return invoke<FileInspectionReport>('inspect_repository_file', {
+      repositoryPath,
+      relativePath,
+    });
   },
   recordAccessEvent(repositoryPath, event) {
     return invoke<AccessNode>('record_access_event', { repositoryPath, event });

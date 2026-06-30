@@ -140,6 +140,7 @@ function createApiMock() {
         },
       ],
     })),
+    inspectRepositoryFile: vi.fn(),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',

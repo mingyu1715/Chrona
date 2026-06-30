@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use chrona::commands::file_inspector_commands::inspect_repository_file;
 use chrona::core::block_store::BlockStore;
 use chrona::core::errors::ChronaError;
 use chrona::core::file_inspector_service::FileInspectorService;
@@ -218,6 +219,38 @@ fn file_inspector_keeps_report_when_a_block_is_missing() {
         report.versions[0].blocks[0].encoding,
         BlockStorageEncoding::Unknown
     );
+}
+
+#[test]
+fn file_inspector_command_returns_camel_case_report() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("repo");
+    RepositoryManager::create(&repository_path).unwrap();
+    let hash = sha256_hex(b"stored");
+    persist_snapshot(
+        &repository_path,
+        "snapshot-1",
+        "Command report",
+        "2026-06-30T00:00:00Z",
+        vec![snapshot_file(
+            "notes.txt",
+            "2026-06-30T00:00:00Z",
+            &[(&hash, 6)],
+        )],
+    );
+
+    let report = inspect_repository_file(
+        repository_path.display().to_string(),
+        "notes.txt".to_string(),
+    )
+    .unwrap();
+    let json = serde_json::to_value(report).unwrap();
+
+    assert_eq!(json["relativePath"], "notes.txt");
+    assert!(json["versions"][0].get("snapshotCreatedAt").is_some());
+    assert!(json["versions"][0]["blocks"][0]
+        .get("storageState")
+        .is_some());
 }
 
 struct HistoryFixture {

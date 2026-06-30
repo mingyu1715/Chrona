@@ -562,7 +562,7 @@ git commit -m "feat: add file inspection history service"
 - Modify: `src-tauri/tests/phase7_file_inspector.rs`
 - Modify: existing UI API mocks
 
-- [ ] **Step 1: Write a failing command serialization test**
+- [x] **Step 1: Write a failing command serialization test**
 
 ~~~rust
 #[test]
@@ -579,7 +579,7 @@ fn file_inspector_command_returns_camel_case_report() {
 }
 ~~~
 
-- [ ] **Step 2: Run command test and verify RED**
+- [x] **Step 2: Run command test and verify RED**
 
 ~~~bash
 cd src-tauri
@@ -588,7 +588,7 @@ cargo test --test phase7_file_inspector file_inspector_command
 
 Expected: compile failure because the command module does not exist.
 
-- [ ] **Step 3: Add command and Tauri registration**
+- [x] **Step 3: Add command and Tauri registration**
 
 Command:
 
@@ -606,7 +606,7 @@ pub fn inspect_repository_file(
 
 Export from `commands/mod.rs`, add the typed wrapper in `main.rs`, and register it in `tauri::generate_handler!`.
 
-- [ ] **Step 4: Add exact TypeScript report types**
+- [x] **Step 4: Add exact TypeScript report types**
 
 In `chrona.ts` add camelCase equivalents of all spec models:
 
@@ -654,7 +654,7 @@ export interface FileBlockInspection {
 }
 ~~~
 
-- [ ] **Step 5: Add API wrapper and mock method**
+- [x] **Step 5: Add API wrapper and mock method**
 
 ~~~ts
 inspectRepositoryFile(
@@ -674,7 +674,7 @@ return invoke<FileInspectionReport>('inspect_repository_file', {
 
 Add a `vi.fn` implementation to RepositoryPage, SnapshotPanel, and SnapshotComparePanel API mocks so structural typing remains complete.
 
-- [ ] **Step 6: Run Rust command test and TypeScript compile**
+- [x] **Step 6: Run Rust command test and TypeScript compile**
 
 ~~~bash
 cd src-tauri
@@ -683,7 +683,7 @@ cd ..
 npm run build
 ~~~
 
-- [ ] **Step 7: Commit Task 3**
+- [x] **Step 7: Commit Task 3**
 
 ~~~bash
 git add src-tauri/src/commands/file_inspector_commands.rs src-tauri/src/commands/mod.rs \

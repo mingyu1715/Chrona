@@ -249,6 +249,48 @@ export interface RepositoryInventoryReport {
   files: InventoryFileEntry[];
 }
 
+export type FileVersionState = 'added' | 'modified' | 'unchanged' | 'deleted';
+export type BlockStorageEncoding = 'raw' | 'zstd' | 'lz4' | 'unknown';
+export type BlockStorageState = 'available' | 'missing' | 'unreadable' | 'invalidHeader';
+
+export interface FileInspectionReport {
+  schemaVersion: number;
+  repositoryPath: string;
+  relativePath: string;
+  fileName: string;
+  versionCount: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  latestState: FileVersionState;
+  versions: FileInspectionVersion[];
+}
+
+export interface FileInspectionVersion {
+  snapshotId: string;
+  snapshotName: string;
+  snapshotCreatedAt: string;
+  state: FileVersionState;
+  sizeBytes: number | null;
+  modifiedAt: string | null;
+  totalBlockReferences: number;
+  uniqueBlockCount: number;
+  blocks: FileBlockInspection[];
+}
+
+export interface FileBlockInspection {
+  index: number;
+  offset: number;
+  sizeBytes: number;
+  hash: string;
+  wasNew: boolean;
+  encoding: BlockStorageEncoding;
+  storageState: BlockStorageState;
+  storedSizeBytes: number | null;
+  compressionSavedBytes: number | null;
+  seenInVersionCount: number;
+  issue: string | null;
+}
+
 export type AccessNodeKind = 'repository' | 'source' | 'folder' | 'file' | 'snapshot' | 'comparePair';
 
 export interface AccessEvent {
