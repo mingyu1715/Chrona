@@ -1,4 +1,4 @@
-import { type ComponentType, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ComponentType, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   Archive,
@@ -25,12 +25,14 @@ import {
 } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
+import { FileInspectorPanel } from '../explorer/FileInspectorPanel';
 import { SnapshotPanel } from '../snapshots/SnapshotPanel';
 import type {
   AccessNode,
   BlockIngestProgress,
   BlockIngestSummary,
   CompressionMode,
+  FileInspectionReport,
   FileKind,
   HomeSummary,
   IntegrityReport,
@@ -140,6 +142,11 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     useState<SnapshotPresenceState | 'all'>('all');
   const [inventorySourceFilter, setInventorySourceFilter] =
     useState<SourceExistenceState | 'all'>('all');
+  const [selectedInventoryPath, setSelectedInventoryPath] = useState<string | null>(null);
+  const [fileInspection, setFileInspection] = useState<FileInspectionReport | null>(null);
+  const [fileInspectionLoading, setFileInspectionLoading] = useState(false);
+  const [fileInspectionError, setFileInspectionError] = useState<string | null>(null);
+  const fileInspectionRequestId = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>('light');
@@ -282,9 +289,41 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   }
 
   async function refreshInventory() {
+    resetFileInspection();
     await runAction(async () => {
       setInventoryReport(await api.getRepositoryInventory(repositoryPath));
     });
+  }
+
+  function resetFileInspection() {
+    fileInspectionRequestId.current += 1;
+    setSelectedInventoryPath(null);
+    setFileInspection(null);
+    setFileInspectionLoading(false);
+    setFileInspectionError(null);
+  }
+
+  async function inspectInventoryFile(relativePath: string) {
+    if (!manifest) return;
+    const requestId = ++fileInspectionRequestId.current;
+    setSelectedInventoryPath(relativePath);
+    setFileInspection(null);
+    setFileInspectionError(null);
+    setFileInspectionLoading(true);
+    try {
+      const report = await api.inspectRepositoryFile(repositoryPath, relativePath);
+      if (requestId === fileInspectionRequestId.current) {
+        setFileInspection(report);
+      }
+    } catch (caught) {
+      if (requestId === fileInspectionRequestId.current) {
+        setFileInspectionError(caught instanceof Error ? caught.message : String(caught));
+      }
+    } finally {
+      if (requestId === fileInspectionRequestId.current) {
+        setFileInspectionLoading(false);
+      }
+    }
   }
 
   function togglePanel(panel: PanelKey) {
@@ -521,6 +560,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                       setInventoryKindFilter('all');
                       setInventorySnapshotFilter('all');
                       setInventorySourceFilter('all');
+                      resetFileInspection();
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_created');
                       setActiveChapter('source');
                     })}
@@ -542,6 +582,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                       setInventoryKindFilter('all');
                       setInventorySnapshotFilter('all');
                       setInventorySourceFilter('all');
+                      resetFileInspection();
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_opened');
                       setActiveChapter('source');
                     })}
@@ -734,10 +775,15 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                   kindFilter={inventoryKindFilter}
                   snapshotFilter={inventorySnapshotFilter}
                   sourceFilter={inventorySourceFilter}
+                  selectedPath={selectedInventoryPath}
+                  inspectionReport={fileInspection}
+                  inspectionLoading={fileInspectionLoading}
+                  inspectionError={fileInspectionError}
                   onQueryChange={setInventoryQuery}
                   onKindFilterChange={setInventoryKindFilter}
                   onSnapshotFilterChange={setInventorySnapshotFilter}
                   onSourceFilterChange={setInventorySourceFilter}
+                  onInspect={inspectInventoryFile}
                 />
               </DropPanel>
             )}
@@ -1073,10 +1119,15 @@ function InventoryContent({
   kindFilter,
   snapshotFilter,
   sourceFilter,
+  selectedPath,
+  inspectionReport,
+  inspectionLoading,
+  inspectionError,
   onQueryChange,
   onKindFilterChange,
   onSnapshotFilterChange,
   onSourceFilterChange,
+  onInspect,
 }: {
   report: RepositoryInventoryReport | null;
   repositoryOpen: boolean;
@@ -1084,10 +1135,15 @@ function InventoryContent({
   kindFilter: FileKind | 'all';
   snapshotFilter: SnapshotPresenceState | 'all';
   sourceFilter: SourceExistenceState | 'all';
+  selectedPath: string | null;
+  inspectionReport: FileInspectionReport | null;
+  inspectionLoading: boolean;
+  inspectionError: string | null;
   onQueryChange: (value: string) => void;
   onKindFilterChange: (value: FileKind | 'all') => void;
   onSnapshotFilterChange: (value: SnapshotPresenceState | 'all') => void;
   onSourceFilterChange: (value: SourceExistenceState | 'all') => void;
+  onInspect: (relativePath: string) => void;
 }) {
   if (!repositoryOpen) {
     return (
@@ -1216,44 +1272,66 @@ function InventoryContent({
         {filteredFiles.length.toLocaleString()} of {report.files.length.toLocaleString()} files
       </p>
 
-      <div className="inventory-table-wrap">
-        <table className="inventory-table">
-          <thead>
-            <tr>
-              <th scope="col">Path</th>
-              <th scope="col">Kind</th>
-              <th scope="col">Latest size</th>
-              <th scope="col">Snapshot state</th>
-              <th scope="col">Source state</th>
-              <th scope="col">Last seen</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredFiles.map((file) => (
-              <tr key={file.relativePath}>
-                <td className="inventory-path" title={file.relativePath}>{file.relativePath}</td>
-                <td><span className="inventory-kind">{file.kind}</span></td>
-                <td>{file.latestSizeBytes === null ? '—' : formatBytes(file.latestSizeBytes)}</td>
-                <td>
-                  <span className={`inventory-state inventory-state-${file.snapshotState}`}>
-                    {file.snapshotState}
-                  </span>
-                </td>
-                <td>
-                  <span className={`inventory-state inventory-state-${file.sourceState}`}>
-                    {file.sourceState}
-                  </span>
-                </td>
-                <td title={file.lastSeenAt}>{file.lastSeenSnapshotId}</td>
-              </tr>
-            ))}
-            {filteredFiles.length === 0 && (
-              <tr>
-                <td className="inventory-no-results" colSpan={6}>No matching files</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="inventory-browser">
+        <div className="inventory-list-pane">
+          <div className="inventory-table-wrap">
+            <table className="inventory-table">
+              <thead>
+                <tr>
+                  <th scope="col">Path</th>
+                  <th scope="col">Kind</th>
+                  <th scope="col">Latest size</th>
+                  <th scope="col">Snapshot state</th>
+                  <th scope="col">Source state</th>
+                  <th scope="col">Last seen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFiles.map((file) => (
+                  <tr key={file.relativePath}>
+                    <td className="inventory-path">
+                      <button
+                        type="button"
+                        className="inventory-file-button"
+                        aria-label={`Inspect ${file.relativePath}`}
+                        aria-current={selectedPath === file.relativePath ? 'true' : undefined}
+                        title={file.relativePath}
+                        onClick={() => onInspect(file.relativePath)}
+                      >
+                        {file.relativePath}
+                      </button>
+                    </td>
+                    <td><span className="inventory-kind">{file.kind}</span></td>
+                    <td>{file.latestSizeBytes === null ? '—' : formatBytes(file.latestSizeBytes)}</td>
+                    <td>
+                      <span className={`inventory-state inventory-state-${file.snapshotState}`}>
+                        {file.snapshotState}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`inventory-state inventory-state-${file.sourceState}`}>
+                        {file.sourceState}
+                      </span>
+                    </td>
+                    <td title={file.lastSeenAt}>{file.lastSeenSnapshotId}</td>
+                  </tr>
+                ))}
+                {filteredFiles.length === 0 && (
+                  <tr>
+                    <td className="inventory-no-results" colSpan={6}>No matching files</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <FileInspectorPanel
+          key={selectedPath ?? 'no-selection'}
+          selectedPath={selectedPath}
+          report={inspectionReport}
+          loading={inspectionLoading}
+          error={inspectionError}
+        />
       </div>
     </div>
   );

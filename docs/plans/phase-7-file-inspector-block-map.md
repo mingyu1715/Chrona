@@ -814,7 +814,7 @@ git commit -m "feat: add file inspector panel"
 - Modify: `src/features/repository/RepositoryPage.css`
 - Modify: `src/features/repository/RepositoryPage.test.tsx`
 
-- [ ] **Step 1: Add failing Explorer selection test**
+- [x] **Step 1: Add failing Explorer selection test**
 
 Extend `createApiMock` with this report. Open a repository, open Explorer, load inventory, click `notes.md`, and assert:
 
@@ -867,7 +867,7 @@ expect(screen.getByRole('button', { name: /inspect notes.md/i })).toHaveAttribut
 
 Also assert a rejected API call renders the error without removing the inventory list.
 
-- [ ] **Step 2: Run integration test and verify RED**
+- [x] **Step 2: Run integration test and verify RED**
 
 ~~~bash
 npm test -- RepositoryPage.test.tsx -t "inspects a selected inventory file"
@@ -875,7 +875,7 @@ npm test -- RepositoryPage.test.tsx -t "inspects a selected inventory file"
 
 Expected: failure because inventory rows are not selectable and the API is not called.
 
-- [ ] **Step 3: Add request state with stale-response protection**
+- [x] **Step 3: Add request state with stale-response protection**
 
 In `RepositoryPage` add:
 
@@ -910,7 +910,7 @@ async function inspectInventoryFile(relativePath: string) {
 
 Increment the request ID and clear inspection state when repository path/open state or inventory report resets.
 
-- [ ] **Step 4: Make inventory paths accessible selection buttons**
+- [x] **Step 4: Make inventory paths accessible selection buttons**
 
 Extend `InventoryView` props with selected path and callback. In the path cell render:
 
@@ -929,7 +929,7 @@ Extend `InventoryView` props with selected path and callback. In the path cell r
 
 Do not attach click behavior to the `<tr>` itself.
 
-- [ ] **Step 5: Add master-detail layout**
+- [x] **Step 5: Add master-detail layout**
 
 Keep summary and filters full width. Assign the current `inventory-table-wrap` JSX, after applying the Step 4 path button change, to `const inventoryTable`. Wrap that value and `FileInspectorPanel` in:
 
@@ -948,7 +948,7 @@ Keep summary and filters full width. Assign the current `inventory-table-wrap` J
 
 Desktop uses `minmax(360px, 0.9fr) minmax(420px, 1.1fr)`. At the existing responsive breakpoint, switch to one column with Inspector below the list. Each pane owns its vertical scroll so the app shell does not gain an incoherent horizontal scrollbar.
 
-- [ ] **Step 6: Run UI regression tests and build**
+- [x] **Step 6: Run UI regression tests and build**
 
 ~~~bash
 npm test -- --run
@@ -957,7 +957,7 @@ npm run build
 
 Expected: RepositoryPage, SnapshotPanel, SnapshotComparePanel, and FileInspectorPanel tests pass; TypeScript build succeeds.
 
-- [ ] **Step 7: Commit Task 5**
+- [x] **Step 7: Commit Task 5**
 
 ~~~bash
 git add src/features/repository/RepositoryPage.tsx \

@@ -1380,6 +1380,18 @@ progress {
   text-align: right;
 }
 
+.inventory-browser {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.inventory-list-pane {
+  min-width: 0;
+}
+
 .inventory-table-wrap {
   max-height: min(52vh, 540px);
   overflow: auto;
@@ -1431,6 +1443,35 @@ progress {
   font-weight: 720;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.inventory-file-button {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 5px;
+  padding: 4px 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inventory-file-button:hover,
+.inventory-file-button:focus-visible {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.inventory-file-button[aria-current='true'] {
+  background: var(--blue-soft);
+  color: var(--blue);
+  box-shadow: inset 3px 0 0 var(--blue);
 }
 
 .inventory-kind,
@@ -2070,6 +2111,10 @@ progress {
 }
 
 @media (max-width: 860px) {
+  .inventory-browser {
+    grid-template-columns: 1fr;
+  }
+
   .home-toolbar,
   .continue-card {
     align-items: flex-start;

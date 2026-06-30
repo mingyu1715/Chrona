@@ -140,7 +140,43 @@ function createApiMock() {
         },
       ],
     })),
-    inspectRepositoryFile: vi.fn(),
+    inspectRepositoryFile: vi.fn(async () => ({
+      schemaVersion: 1,
+      repositoryPath: '/tmp/chrona-repo',
+      relativePath: 'notes.md',
+      fileName: 'notes.md',
+      versionCount: 1,
+      firstSeenAt: '2026-06-27T00:00:00Z',
+      lastSeenAt: '2026-06-27T00:00:00Z',
+      latestState: 'added' as const,
+      versions: [
+        {
+          snapshotId: 'latest',
+          snapshotName: 'Latest',
+          snapshotCreatedAt: '2026-06-27T00:00:00Z',
+          state: 'added' as const,
+          sizeBytes: 5,
+          modifiedAt: '2026-06-27T00:00:00Z',
+          totalBlockReferences: 1,
+          uniqueBlockCount: 1,
+          blocks: [
+            {
+              index: 0,
+              offset: 0,
+              sizeBytes: 5,
+              hash: 'a'.repeat(64),
+              wasNew: true,
+              encoding: 'zstd' as const,
+              storageState: 'available' as const,
+              storedSizeBytes: 4,
+              compressionSavedBytes: 1,
+              seenInVersionCount: 1,
+              issue: null,
+            },
+          ],
+        },
+      ],
+    })),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -370,6 +406,45 @@ describe('RepositoryPage', () => {
     );
     expect(screen.getByText('old.txt')).toBeInTheDocument();
     expect(screen.queryByText('notes.md')).not.toBeInTheDocument();
+  });
+
+  test('inspects a selected inventory file', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+    const inspectButton = await screen.findByRole('button', { name: /inspect notes.md/i });
+
+    await user.click(inspectButton);
+
+    await waitFor(() => {
+      expect(api.inspectRepositoryFile).toHaveBeenCalledWith(
+        '/tmp/chrona-repo',
+        'notes.md',
+      );
+    });
+    expect(await screen.findByRole('heading', { name: 'notes.md' })).toBeInTheDocument();
+    expect(inspectButton).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('keeps inventory visible when file inspection fails', async () => {
+    const { api } = createApiMock();
+    vi.mocked(api.inspectRepositoryFile).mockRejectedValueOnce(new Error('inspect failed'));
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+    await user.click(await screen.findByRole('button', { name: /inspect notes.md/i }));
+
+    expect(await screen.findByText('inspect failed')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /inspect old.txt/i })).toBeInTheDocument();
   });
 
   test('updates the repository compression mode', async () => {
