@@ -55,7 +55,7 @@ Modify:
 
 **Files:** models, service, module exports, `phase8_statistics.rs`.
 
-- [ ] **Step 1: Write failing overview tests**
+- [x] **Step 1: Write failing overview tests**
 
 ```rust
 #[test]
@@ -81,7 +81,7 @@ fn statistics_overview_uses_only_the_latest_snapshot() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```bash
 cd src-tauri
@@ -90,13 +90,13 @@ cargo test --test phase8_statistics statistics_overview
 
 Expected: compile failure because statistics models and service do not exist.
 
-- [ ] **Step 3: Add serialized models**
+- [x] **Step 3: Add serialized models**
 
 Define camelCase `RepositoryStatisticsOverview` with repository/generated fields, optional latest snapshot identity, latest file/byte/unique-block counts, and `Vec<FileKindStat>`.
 
 Also define the exact detailed contracts from spec: `RepositoryStatisticsReport`, `RepositoryStorageSummary`, `SnapshotStatisticsPoint`, `EncodingStatistics`, `StatisticsIssue`, `StatisticsIssueKind`, and `RepositoryStatisticsProgress`. Enums use camelCase serde names; the report uses `PartialEq` rather than `Eq` because efficiency is `Option<f64>`.
 
-- [ ] **Step 4: Implement latest-snapshot fast path**
+- [x] **Step 4: Implement latest-snapshot fast path**
 
 ```rust
 pub fn get_overview(&self, repository_path: &Path) -> ChronaResult<RepositoryStatisticsOverview> {
@@ -112,7 +112,7 @@ pub fn get_overview(&self, repository_path: &Path) -> ChronaResult<RepositorySta
 
 Sum latest file sizes, collect unique hashes in `BTreeSet`, and aggregate file kinds with `inventory_service::classify_file_kind` into stable `FileKindStat` ordering.
 
-- [ ] **Step 5: Verify GREEN and regression**
+- [x] **Step 5: Verify GREEN and regression**
 
 ```bash
 cd src-tauri
@@ -120,7 +120,7 @@ cargo test --test phase8_statistics statistics_overview
 cargo test --test phase5_inventory
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/src/models/statistics.rs src-tauri/src/models/mod.rs src-tauri/src/core/statistics_service.rs src-tauri/src/core/mod.rs src-tauri/tests/phase8_statistics.rs
