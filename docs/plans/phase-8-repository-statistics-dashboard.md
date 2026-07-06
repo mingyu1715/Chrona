@@ -131,36 +131,36 @@ git commit -m "feat: add repository statistics overview"
 
 **Files:** statistics models/service/tests.
 
-- [ ] **Step 1: Write failing logical and trend tests**
+- [x] **Step 1: Write failing logical and trend tests**
 
 Persist two snapshots sharing one hash and adding another. Assert exact totals:
 
 ```rust
 let report = StatisticsService::new().analyze_repository(&repo, |_| {}).unwrap();
 assert_eq!(report.storage.snapshot_count, 2);
-assert_eq!(report.storage.retained_logical_bytes, 30);
+assert_eq!(report.storage.retained_logical_bytes, 24);
 assert_eq!(report.storage.total_block_references, 4);
 assert_eq!(report.storage.referenced_unique_block_count, 2);
 assert_eq!(report.storage.referenced_unique_raw_bytes, 12);
-assert_eq!(report.storage.dedup_saved_bytes, 18);
+assert_eq!(report.storage.dedup_saved_bytes, 12);
 assert_eq!(report.snapshot_trend[0].snapshot_id, "snapshot-1");
 assert_eq!(report.snapshot_trend[1].snapshot_id, "snapshot-2");
 ```
 
 Add a conflicting hash-size case and require a `ConflictingRawSize` issue without failing the report.
 
-- [ ] **Step 2: Write failing physical storage tests**
+- [x] **Step 2: Write failing physical storage tests**
 
 Store raw, Zstd, and LZ4 referenced blocks; add an unreferenced valid `.blk`, invalid-name `.blk`, `.tmp-*`, and missing reference. Assert all/referenced/unreferenced/missing counts, encoding counts, compression savings, issues, and `storage_efficiency_percent == None` with a missing block. `.tmp-*` must not affect totals.
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 ```bash
 cd src-tauri
 cargo test --test phase8_statistics full_statistics
 ```
 
-- [ ] **Step 4: Aggregate snapshots and emit progress**
+- [x] **Step 4: Aggregate snapshots and emit progress**
 
 Implement:
 
@@ -172,11 +172,11 @@ where
 
 Iterate `list_snapshots()?.iter().rev()` for oldest-first trend. Keep first raw size in `BTreeMap<String, u64>`; append `ConflictingRawSize` when the same hash has another size. Emit `snapshots` after each snapshot.
 
-- [ ] **Step 5: Enumerate final physical blocks**
+- [x] **Step 5: Enumerate final physical blocks**
 
 Use a std-only recursive helper that returns sorted files whose extension is exactly `blk`. Add every final file's metadata length to all-physical totals. A 64-hex stem identifies a block; invalid names are unreferenced plus `InvalidBlockFileName`. Ignore `.tmp-*`.
 
-- [ ] **Step 6: Inspect referenced blocks and calculate metrics**
+- [x] **Step 6: Inspect referenced blocks and calculate metrics**
 
 Call `BlockStore::inspect_block(hash, raw_size)` once per referenced hash. Available valid blocks contribute comparison bytes and encoding distribution; missing/unreadable/invalid blocks become issues.
 
@@ -189,7 +189,7 @@ storage_efficiency_percent = (missing_referenced_block_count == 0 && retained_lo
 
 Emit `blocks` while inspecting and exactly one `completed` event before return.
 
-- [ ] **Step 7: Verify and commit**
+- [x] **Step 7: Verify and commit**
 
 ```bash
 cd src-tauri
