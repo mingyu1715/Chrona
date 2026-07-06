@@ -282,7 +282,7 @@ git commit -m "feat: show repository overview on home"
 
 **Files:** `StatisticsDashboard` component/test and RepositoryPage TSX/CSS/test.
 
-- [ ] **Step 1: Write failing dashboard tests**
+- [x] **Step 1: Write failing dashboard tests**
 
 Cover not-run, progress, error, separated Dedup/Compression values, all/referenced/unreferenced/missing blocks, oldest-first trend, labeled raw/Zstd/LZ4 distribution, and issue list.
 
@@ -293,15 +293,15 @@ expect(screen.getByText('Unreferenced blocks')).toBeInTheDocument();
 expect(screen.getByRole('list', { name: /snapshot trend/i })).toBeInTheDocument();
 ```
 
-- [ ] **Step 2: Implement `StatisticsDashboard`**
+- [x] **Step 2: Implement `StatisticsDashboard`**
 
 Props are repository-open, report, progress, loading, error, and `onAnalyze`. Render metric grid, savings bars, physical status, semantic snapshot trend list, encoding distribution, and issues. Use CSS only; all colors have text labels.
 
-- [ ] **Step 3: Add Statistics chapter and progress listener**
+- [x] **Step 3: Add Statistics chapter and progress listener**
 
 Add `'statistics'` to `ChapterId`, a Lucide chart icon sidebar item, and a DropPanel. Opening does not auto-scan. Subscribe/unsubscribe with the existing effect pattern. During refresh keep the previous report visible and show progress.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 ```bash
 npm test -- --run

@@ -29,6 +29,7 @@ import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
 import { FileInspectorPanel } from '../explorer/FileInspectorPanel';
 import { SnapshotPanel } from '../snapshots/SnapshotPanel';
 import { RepositoryOverview } from '../statistics/RepositoryOverview';
+import { StatisticsDashboard } from '../statistics/StatisticsDashboard';
 import type {
   AccessNode,
   BlockIngestProgress,
@@ -41,6 +42,8 @@ import type {
   RepositoryInventoryReport,
   RepositoryManifest,
   RepositoryStatisticsOverview,
+  RepositoryStatisticsProgress,
+  RepositoryStatisticsReport,
   SnapshotPresenceState,
   SourceExistenceState,
 } from '../../shared/types/chrona';
@@ -150,6 +153,12 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     useState<RepositoryStatisticsOverview | null>(null);
   const [statisticsOverviewLoading, setStatisticsOverviewLoading] = useState(false);
   const [statisticsOverviewError, setStatisticsOverviewError] = useState<string | null>(null);
+  const [statisticsReport, setStatisticsReport] =
+    useState<RepositoryStatisticsReport | null>(null);
+  const [statisticsProgress, setStatisticsProgress] =
+    useState<RepositoryStatisticsProgress | null>(null);
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [statisticsError, setStatisticsError] = useState<string | null>(null);
   const [integrityReport, setIntegrityReport] = useState<IntegrityReport | null>(null);
   const [inventoryReport, setInventoryReport] = useState<RepositoryInventoryReport | null>(null);
   const [inventoryQuery, setInventoryQuery] = useState('');
@@ -185,6 +194,23 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     api.onBlockIngestProgress((event) => {
       if (mounted) {
         setProgress(event);
+      }
+    }).then((unlisten) => {
+      cleanup = unlisten;
+    }).catch(() => undefined);
+
+    return () => {
+      mounted = false;
+      cleanup?.();
+    };
+  }, [api]);
+
+  useEffect(() => {
+    let mounted = true;
+    let cleanup: (() => void) | undefined;
+    api.onRepositoryStatisticsProgress((event) => {
+      if (mounted) {
+        setStatisticsProgress(event);
       }
     }).then((unlisten) => {
       cleanup = unlisten;
@@ -254,6 +280,21 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
       refreshHomeSummary(path),
       refreshStatisticsOverview(path),
     ]);
+  }
+
+  async function analyzeStatistics() {
+    setStatisticsLoading(true);
+    setStatisticsError(null);
+    setStatisticsProgress(null);
+    try {
+      const report = await api.analyzeRepositoryStatistics(repositoryPath);
+      setStatisticsReport(report);
+      setStatisticsOverview(report.overview);
+    } catch (caught) {
+      setStatisticsError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setStatisticsLoading(false);
+    }
   }
 
   async function recordRepositoryAccess(nextManifest: RepositoryManifest, path: string, action: string) {
@@ -840,18 +881,19 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
               <DropPanel
                 title="Repository statistics"
                 kicker="Statistics"
-                status={manifest ? 'Ready' : 'Waiting'}
+                status={statisticsReport ? 'Loaded' : manifest ? 'Ready' : 'Waiting'}
                 icon={BarChart3}
                 open={openPanels.statistics}
                 onToggle={() => togglePanel('statistics')}
               >
-                <div className="empty-state compact-empty">
-                  <span><BarChart3 size={20} /></span>
-                  <div>
-                    <strong>Detailed analysis</strong>
-                    <p>Run a repository scan to calculate logical and physical storage.</p>
-                  </div>
-                </div>
+                <StatisticsDashboard
+                  repositoryOpen={Boolean(manifest)}
+                  report={statisticsReport}
+                  progress={statisticsProgress}
+                  loading={statisticsLoading}
+                  error={statisticsError}
+                  onAnalyze={analyzeStatistics}
+                />
               </DropPanel>
             )}
 

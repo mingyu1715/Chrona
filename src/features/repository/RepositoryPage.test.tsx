@@ -9,6 +9,8 @@ import type {
   BlockIngestProgress,
   RepositoryManifest,
   RepositoryStatisticsOverview,
+  RepositoryStatisticsProgress,
+  RepositoryStatisticsReport,
 } from '../../shared/types/chrona';
 
 afterEach(() => cleanup());
@@ -50,6 +52,47 @@ function statisticsOverview(
   };
 }
 
+function statisticsReport(): RepositoryStatisticsReport {
+  return {
+    schemaVersion: 1,
+    repositoryPath: '/tmp/chrona-repo',
+    generatedAt: '2026-07-07T00:00:00Z',
+    overview: statisticsOverview({ hasSnapshot: true }),
+    storage: {
+      snapshotCount: 2,
+      retainedLogicalBytes: 100,
+      totalBlockReferences: 10,
+      referencedUniqueBlockCount: 4,
+      referencedUniqueRawBytes: 40,
+      dedupSavedBytes: 60,
+      referencedPhysicalBlockCount: 4,
+      referencedPhysicalBytes: 24,
+      allPhysicalBlockCount: 5,
+      allPhysicalBytes: 26,
+      unreferencedBlockCount: 1,
+      unreferencedBytes: 2,
+      missingReferencedBlockCount: 0,
+      invalidReferencedBlockCount: 0,
+      compressionComparedRawBytes: 40,
+      compressionComparedPhysicalBytes: 24,
+      compressionSavedBytes: 16,
+      storageEfficiencyPercent: 74,
+    },
+    encodings: {
+      rawBlockCount: 1,
+      rawPhysicalBytes: 6,
+      zstdBlockCount: 2,
+      zstdPhysicalBytes: 12,
+      lz4BlockCount: 1,
+      lz4PhysicalBytes: 6,
+      unknownBlockCount: 0,
+      unknownPhysicalBytes: 0,
+    },
+    snapshotTrend: [],
+    issues: [],
+  };
+}
+
 function createApiMock() {
   const manifest: RepositoryManifest = {
     schemaVersion: 1,
@@ -65,6 +108,8 @@ function createApiMock() {
     },
   };
   let progressHandler: ((event: BlockIngestProgress) => void) | undefined;
+  let statisticsProgressHandler:
+    ((event: RepositoryStatisticsProgress) => void) | undefined;
   const api: ChronaApi & {
     setRepositoryCompressionMode(
       repositoryPath: string,
@@ -202,9 +247,7 @@ function createApiMock() {
       ],
     })),
     getRepositoryStatisticsOverview: vi.fn(async () => statisticsOverview()),
-    analyzeRepositoryStatistics: vi.fn(async () => {
-      throw new Error('statistics analysis not used');
-    }),
+    analyzeRepositoryStatistics: vi.fn(async () => statisticsReport()),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -251,9 +294,17 @@ function createApiMock() {
       progressHandler = handler;
       return () => undefined;
     }),
-    onRepositoryStatisticsProgress: vi.fn(async () => () => undefined),
+    onRepositoryStatisticsProgress: vi.fn(async (handler) => {
+      statisticsProgressHandler = handler;
+      return () => undefined;
+    }),
   };
-  return { api, emitProgress: (event: BlockIngestProgress) => progressHandler?.(event) };
+  return {
+    api,
+    emitProgress: (event: BlockIngestProgress) => progressHandler?.(event),
+    emitStatisticsProgress: (event: RepositoryStatisticsProgress) =>
+      statisticsProgressHandler?.(event),
+  };
 }
 
 describe('RepositoryPage', () => {
@@ -420,6 +471,37 @@ describe('RepositoryPage', () => {
 
     expect(await screen.findByText('overview failed')).toBeInTheDocument();
     expect(screen.getAllByText('still-visible').length).toBeGreaterThan(0);
+  });
+
+  test('runs detailed statistics and forwards progress events', async () => {
+    const { api, emitStatisticsProgress } = createApiMock();
+    const user = userEvent.setup();
+    let resolveAnalysis: ((report: RepositoryStatisticsReport) => void) | undefined;
+    vi.mocked(api.analyzeRepositoryStatistics).mockImplementation(
+      () => new Promise((resolve) => {
+        resolveAnalysis = resolve;
+      }),
+    );
+
+    render(<RepositoryPage api={api} />);
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /statistics/i }));
+    await user.click(screen.getByRole('button', { name: /analyze repository/i }));
+
+    emitStatisticsProgress({
+      phase: 'blocks',
+      processedSnapshots: 2,
+      totalSnapshots: 2,
+      processedBlocks: 4,
+      totalBlocks: 10,
+    });
+    expect(await screen.findByText(/blocks 4 \/ 10/i)).toBeInTheDocument();
+    expect(api.analyzeRepositoryStatistics).toHaveBeenCalledWith('/tmp/chrona-repo');
+
+    resolveAnalysis?.(statisticsReport());
+    expect(await screen.findByText('Dedup saved')).toBeInTheDocument();
+    expect(screen.getByText('Unreferenced blocks')).toBeInTheDocument();
   });
 
   test('verifies repository integrity and renders the report', async () => {
