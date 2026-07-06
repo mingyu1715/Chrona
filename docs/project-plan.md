@@ -54,7 +54,7 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 
 ### 다음 구현 대상
 
-- 승인된 Repository Statistics Dashboard spec을 기준으로 Phase 8 구현 plan 작성
+- 승인된 Repository Statistics Dashboard plan을 Task 1부터 실행
 - Home lightweight overview와 상세 live scan 구현
 
 ### 아직 세부 계획 없음
@@ -445,8 +445,9 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 ### 현재 구현 계획
 
-- Repository Statistics Dashboard spec 완료, 구현 plan 작성 전
+- Repository Statistics Dashboard spec과 Phase 8 구현 plan 완료
 - Spec: `docs/specs/0010-repository-statistics-dashboard.md`
+- Plan: `docs/plans/phase-8-repository-statistics-dashboard.md`
 
 ### 설계와 상세 계획이 모두 없는 후보
 
@@ -528,9 +529,10 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 ### Phase 5c. Repository Statistics Dashboard
 
-- 상태: Phase 8 설계 완료, 구현 plan 작성 전
+- 상태: Phase 8 설계/구현 plan 완료, 구현 시작 전
 - 목표: 저장량, 절약량, reuse ratio, snapshot별 변화량을 dashboard로 표시
 - Spec: `docs/specs/0010-repository-statistics-dashboard.md`
+- Plan: `docs/plans/phase-8-repository-statistics-dashboard.md`
 - 범위: Home 최신 Snapshot 요약, 상세 live scan, 전체/참조/미참조 physical block, dedup/compression 분리
 
 ### Phase 7. File Inspector / Block Map

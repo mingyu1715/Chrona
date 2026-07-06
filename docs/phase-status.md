@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`에는 Phase 8 저장소 통계 대시보드 설계가 있고, 구현 plan은 아직 작성 전이다. Phase 7 완료 문서는 archive와 implemented 영역에 보관한다.
+현재 `docs/specs/`와 `docs/plans/`에는 Phase 8 저장소 통계 대시보드의 승인 설계와 활성 구현 plan이 있다. Phase 7 완료 문서는 archive와 implemented 영역에 보관한다.
 
 ## 현재 구현 상태
 
@@ -30,7 +30,7 @@
 | 저장소 인벤토리 탐색 | 구현 완료 | `docs/archive/specs/0009-repository-inventory-explorer.md` | `docs/archive/plans/phase-5-repository-inventory-explorer.md` | `docs/implemented/repository-inventory-explorer.md` | 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태, 현재 원본 파일 존재 여부, 검색/필터 UI 구현 완료. |
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
-| 저장소 통계 대시보드 | 설계 완료, 구현 plan 작성 전 | `docs/specs/0010-repository-statistics-dashboard.md` | 없음 | 없음 | Home lightweight overview와 상세 live scan, 참조/미참조 physical block, dedup/compression 분리 범위 승인. |
+| 저장소 통계 대시보드 | 구현 계획 완료, 구현 시작 전 | `docs/specs/0010-repository-statistics-dashboard.md` | `docs/plans/phase-8-repository-statistics-dashboard.md` | 없음 | Home lightweight overview와 상세 live scan, 참조/미참조 physical block, dedup/compression 분리 범위 승인. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
@@ -53,13 +53,13 @@
 
 ## 현재 진행 계획
 
-현재 진행 중인 세부 구현 계획은 없다.
+| 계획 | 상태 | 다음 단계 |
+| --- | --- | --- |
+| `docs/plans/phase-8-repository-statistics-dashboard.md` | 구현 시작 전 | Task 1부터 테스트 우선 구현 |
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
-| 설계 문서 | 상태 | 다음 단계 |
-| --- | --- | --- |
-| `docs/specs/0010-repository-statistics-dashboard.md` | 설계 승인 | Phase 8 구현 plan 작성 |
+현재 없음.
 
 ## 설계와 세부 구현 계획이 모두 없는 작업
 
@@ -95,7 +95,7 @@
 - 저장소 통계 대시보드
   - Home lightweight overview 설계 완료
   - 상세 live scan과 통계 정의 설계 완료
-  - 구현 plan 작성 후 테스트 우선 구현
+  - 구현 plan 완료, Task 1부터 테스트 우선 구현
 
 ### 다음 계획 후보
 
@@ -116,6 +116,6 @@
 
 ## 즉시 다음 작업
 
-1. `0010` spec을 기준으로 Phase 8 구현 plan을 작성한다.
-2. overview, detailed statistics service, Tauri API, Home/Statistics UI 순서로 구현한다.
+1. Phase 8 plan의 Task 1부터 테스트 우선으로 구현한다.
+2. overview, detailed statistics service, Tauri API, Home/Statistics UI 순서로 진행한다.
 3. 핵심 기능 완료 뒤 전체 UI 사용성 개선 Phase를 진행한다.

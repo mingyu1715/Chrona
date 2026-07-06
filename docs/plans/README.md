@@ -10,7 +10,7 @@
 
 ## 현재 구현 계획
 
-- 없음
+- Phase 8 저장소 통계 대시보드: `docs/plans/phase-8-repository-statistics-dashboard.md`
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
@@ -18,7 +18,7 @@
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 
-- 저장소 통계 대시보드
+- 없음
 
 ## 보관된 완료 계획
 

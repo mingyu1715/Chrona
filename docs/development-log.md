@@ -349,3 +349,4 @@
 - 중복 제거 절감량과 압축 절감량은 서로 다른 단계의 지표로 분리한다.
 - 통계 index/cache, garbage collection, 자동 scan, chart library와 전체 UI 재설계는 이번 범위에서 제외했다.
 - 승인된 설계를 `docs/specs/0010-repository-statistics-dashboard.md`에 기록했다.
+- overview, 상세 집계, Tauri API, Home 요약, Statistics 화면, 문서/검증 순서의 구현 계획을 `docs/plans/phase-8-repository-statistics-dashboard.md`에 작성했다.
