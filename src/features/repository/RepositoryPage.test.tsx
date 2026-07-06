@@ -4,7 +4,12 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { RepositoryPage } from './RepositoryPage';
 import type { ChronaApi } from '../../shared/api/chronaApi';
-import type { AccessNode, BlockIngestProgress, RepositoryManifest } from '../../shared/types/chrona';
+import type {
+  AccessNode,
+  BlockIngestProgress,
+  RepositoryManifest,
+  RepositoryStatisticsOverview,
+} from '../../shared/types/chrona';
 
 afterEach(() => cleanup());
 
@@ -22,6 +27,25 @@ function accessNode(overrides: Partial<AccessNode> = {}): AccessNode {
     lastAccessedAt: '2026-06-26T00:00:00Z',
     lastAction: 'ingest_completed',
     pinned: false,
+    ...overrides,
+  };
+}
+
+function statisticsOverview(
+  overrides: Partial<RepositoryStatisticsOverview> = {},
+): RepositoryStatisticsOverview {
+  return {
+    schemaVersion: 1,
+    repositoryPath: '/tmp/chrona-repo',
+    generatedAt: '2026-07-07T00:00:00Z',
+    hasSnapshot: false,
+    latestSnapshotId: null,
+    latestSnapshotName: null,
+    latestSnapshotCreatedAt: null,
+    latestFileCount: 0,
+    latestLogicalBytes: 0,
+    latestUniqueBlockCount: 0,
+    fileKindStats: [],
     ...overrides,
   };
 }
@@ -177,9 +201,7 @@ function createApiMock() {
         },
       ],
     })),
-    getRepositoryStatisticsOverview: vi.fn(async () => {
-      throw new Error('statistics overview not used');
-    }),
+    getRepositoryStatisticsOverview: vi.fn(async () => statisticsOverview()),
     analyzeRepositoryStatistics: vi.fn(async () => {
       throw new Error('statistics analysis not used');
     }),
@@ -343,6 +365,61 @@ describe('RepositoryPage', () => {
     expect(screen.getAllByText('demo-source').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/recent repositories/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText('chrona-repo').length).toBeGreaterThan(0);
+  });
+
+  test('renders the latest repository overview on Home', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    vi.mocked(api.getRepositoryStatisticsOverview).mockResolvedValue(statisticsOverview({
+      hasSnapshot: true,
+      latestSnapshotId: 'latest',
+      latestSnapshotName: 'Latest',
+      latestSnapshotCreatedAt: '2026-07-07T00:00:00Z',
+      latestFileCount: 12,
+      latestLogicalBytes: 2 * 1024 * 1024,
+      latestUniqueBlockCount: 7,
+      fileKindStats: [
+        { kind: 'document', fileCount: 8, totalBytesLatest: 1024 },
+      ],
+    }));
+
+    render(<RepositoryPage api={api} />);
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /home/i }));
+
+    await waitFor(() => {
+      expect(api.getRepositoryStatisticsOverview).toHaveBeenCalledWith('/tmp/chrona-repo');
+    });
+    expect(screen.getByText('Repository overview')).toBeInTheDocument();
+    expect(screen.getByText('2.0 MiB')).toBeInTheDocument();
+    expect(screen.getByText('Document')).toBeInTheDocument();
+  });
+
+  test('keeps Home access content visible when overview loading fails', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    const recentSource = accessNode({ label: 'still-visible' });
+    vi.mocked(api.getHomeSummary).mockResolvedValue({
+      continueWorking: recentSource,
+      pinned: [],
+      recentRepositories: [],
+      recentSources: [recentSource],
+      recentFiles: [],
+      recentSnapshots: [],
+      recentComparePairs: [],
+    });
+    vi.mocked(api.getRepositoryStatisticsOverview).mockRejectedValue(
+      new Error('overview failed'),
+    );
+
+    render(<RepositoryPage api={api} />);
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /home/i }));
+
+    expect(await screen.findByText('overview failed')).toBeInTheDocument();
+    expect(screen.getAllByText('still-visible').length).toBeGreaterThan(0);
   });
 
   test('verifies repository integrity and renders the report', async () => {

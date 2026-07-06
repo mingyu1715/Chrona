@@ -251,7 +251,7 @@ git commit -m "feat: expose repository statistics API"
 
 **Files:** `RepositoryOverview` component/test and RepositoryPage TSX/CSS/test.
 
-- [ ] **Step 1: Write failing component tests**
+- [x] **Step 1: Write failing component tests**
 
 Test latest files, formatted bytes, unique blocks, file kind labels, no-snapshot state, loading, error, and `Detailed analysis` callback. The error test must keep existing Continue Working content visible in RepositoryPage.
 
@@ -260,15 +260,15 @@ await userEvent.click(screen.getByRole('button', { name: /detailed analysis/i })
 expect(onOpenDetails).toHaveBeenCalledOnce();
 ```
 
-- [ ] **Step 2: Implement compact overview**
+- [x] **Step 2: Implement compact overview**
 
 Render stable cells for Files, Data size, Unique blocks; one compact file-kind band; and an icon/text detailed-analysis button. Do not show physical storage or savings on Home.
 
-- [ ] **Step 3: Connect state and refresh behavior**
+- [x] **Step 3: Connect state and refresh behavior**
 
 RepositoryPage owns overview/loading/error independently from access history. Refresh after repository create/open and Home refresh; reset on repository change. `onOpenDetails` sets chapter to `statistics`.
 
-- [ ] **Step 4: Style, verify, and commit**
+- [x] **Step 4: Style, verify, and commit**
 
 Use three columns on desktop and one at the existing narrow breakpoint. Run:
 

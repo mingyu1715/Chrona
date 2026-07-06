@@ -2,6 +2,7 @@ import { type ComponentType, type ReactNode, useEffect, useMemo, useRef, useStat
 import {
   Activity,
   Archive,
+  BarChart3,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -27,6 +28,7 @@ import {
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
 import { FileInspectorPanel } from '../explorer/FileInspectorPanel';
 import { SnapshotPanel } from '../snapshots/SnapshotPanel';
+import { RepositoryOverview } from '../statistics/RepositoryOverview';
 import type {
   AccessNode,
   BlockIngestProgress,
@@ -38,6 +40,7 @@ import type {
   IntegrityReport,
   RepositoryInventoryReport,
   RepositoryManifest,
+  RepositoryStatisticsOverview,
   SnapshotPresenceState,
   SourceExistenceState,
 } from '../../shared/types/chrona';
@@ -53,6 +56,7 @@ type ChapterId =
   | 'source'
   | 'snapshots'
   | 'explorer'
+  | 'statistics'
   | 'integrity'
   | 'review';
 type PanelKey =
@@ -62,6 +66,7 @@ type PanelKey =
   | 'store'
   | 'snapshots'
   | 'explorer'
+  | 'statistics'
   | 'integrity'
   | 'review';
 type Tone = 'ready' | 'waiting' | 'done';
@@ -110,6 +115,13 @@ const chapters: Array<{
     icon: Files,
   },
   {
+    id: 'statistics',
+    label: 'Statistics',
+    shortLabel: 'Statistics',
+    description: 'Analyze logical history and physical block storage.',
+    icon: BarChart3,
+  },
+  {
     id: 'integrity',
     label: 'Integrity',
     shortLabel: 'Integrity',
@@ -134,6 +146,10 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   const [progress, setProgress] = useState<BlockIngestProgress | null>(null);
   const [summary, setSummary] = useState<BlockIngestSummary | null>(null);
   const [homeSummary, setHomeSummary] = useState<HomeSummary | null>(null);
+  const [statisticsOverview, setStatisticsOverview] =
+    useState<RepositoryStatisticsOverview | null>(null);
+  const [statisticsOverviewLoading, setStatisticsOverviewLoading] = useState(false);
+  const [statisticsOverviewError, setStatisticsOverviewError] = useState<string | null>(null);
   const [integrityReport, setIntegrityReport] = useState<IntegrityReport | null>(null);
   const [inventoryReport, setInventoryReport] = useState<RepositoryInventoryReport | null>(null);
   const [inventoryQuery, setInventoryQuery] = useState('');
@@ -158,6 +174,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     store: true,
     snapshots: true,
     explorer: true,
+    statistics: true,
     integrity: true,
     review: true,
   });
@@ -215,6 +232,30 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     setHomeSummary(await api.getHomeSummary(path));
   }
 
+  async function refreshStatisticsOverview(path = repositoryPath) {
+    if (path.trim().length === 0) {
+      setStatisticsOverview(null);
+      setStatisticsOverviewError(null);
+      return;
+    }
+    setStatisticsOverviewLoading(true);
+    setStatisticsOverviewError(null);
+    try {
+      setStatisticsOverview(await api.getRepositoryStatisticsOverview(path));
+    } catch (caught) {
+      setStatisticsOverviewError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setStatisticsOverviewLoading(false);
+    }
+  }
+
+  async function refreshHome(path = repositoryPath) {
+    await Promise.all([
+      refreshHomeSummary(path),
+      refreshStatisticsOverview(path),
+    ]);
+  }
+
   async function recordRepositoryAccess(nextManifest: RepositoryManifest, path: string, action: string) {
     await api.recordAccessEvent(path, {
       key: `repository:${nextManifest.repositoryId}`,
@@ -228,7 +269,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
       action,
       accessedAt: new Date().toISOString(),
     });
-    await refreshHomeSummary(path);
+    await refreshHome(path);
   }
 
   async function recordSourceAccess(action: string) {
@@ -353,6 +394,9 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     }
     if (chapter === 'explorer') {
       return inventoryReport ? 'done' : manifest ? 'ready' : 'waiting';
+    }
+    if (chapter === 'statistics') {
+      return manifest ? 'ready' : 'waiting';
     }
     if (chapter === 'integrity') {
       return integrityReport ? 'done' : manifest ? 'ready' : 'waiting';
@@ -508,10 +552,14 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
               >
                 <HomeContent
                   summary={homeSummary}
+                  overview={statisticsOverview}
+                  overviewLoading={statisticsOverviewLoading}
+                  overviewError={statisticsOverviewError}
                   repositoryOpen={Boolean(manifest)}
                   repositoryPath={repositoryPath}
                   onOpenRepository={() => setActiveChapter('repository')}
-                  onRefresh={() => runAction(async () => refreshHomeSummary())}
+                  onRefresh={() => runAction(async () => refreshHome())}
+                  onOpenStatistics={() => setActiveChapter('statistics')}
                   onClear={clearHomeHistory}
                   onPin={pinHomeItem}
                   onUnpin={unpinHomeItem}
@@ -788,6 +836,25 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
               </DropPanel>
             )}
 
+            {activeChapter === 'statistics' && (
+              <DropPanel
+                title="Repository statistics"
+                kicker="Statistics"
+                status={manifest ? 'Ready' : 'Waiting'}
+                icon={BarChart3}
+                open={openPanels.statistics}
+                onToggle={() => togglePanel('statistics')}
+              >
+                <div className="empty-state compact-empty">
+                  <span><BarChart3 size={20} /></span>
+                  <div>
+                    <strong>Detailed analysis</strong>
+                    <p>Run a repository scan to calculate logical and physical storage.</p>
+                  </div>
+                </div>
+              </DropPanel>
+            )}
+
             {activeChapter === 'integrity' && (
               <DropPanel
                 title="Repository integrity"
@@ -882,20 +949,28 @@ function DropPanel({ title, kicker, status, icon: Icon, open, onToggle, children
 
 function HomeContent({
   summary,
+  overview,
+  overviewLoading,
+  overviewError,
   repositoryOpen,
   repositoryPath,
   onOpenRepository,
   onRefresh,
+  onOpenStatistics,
   onClear,
   onPin,
   onUnpin,
   busy,
 }: {
   summary: HomeSummary | null;
+  overview: RepositoryStatisticsOverview | null;
+  overviewLoading: boolean;
+  overviewError: string | null;
   repositoryOpen: boolean;
   repositoryPath: string;
   onOpenRepository: () => void;
   onRefresh: () => void;
+  onOpenStatistics: () => void;
   onClear: () => void;
   onPin: (key: string) => void;
   onUnpin: (key: string) => void;
@@ -960,6 +1035,13 @@ function HomeContent({
           </div>
         </div>
       )}
+
+      <RepositoryOverview
+        overview={overview}
+        loading={overviewLoading}
+        error={overviewError}
+        onOpenDetails={onOpenStatistics}
+      />
 
       <div className="home-grid">
         <AccessList title="Pinned" items={summary?.pinned ?? []} onPin={onPin} onUnpin={onUnpin} />

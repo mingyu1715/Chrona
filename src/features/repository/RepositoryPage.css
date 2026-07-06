@@ -2053,6 +2053,113 @@ progress {
   gap: 12px;
 }
 
+.statistics-overview {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  padding: 13px;
+}
+
+.statistics-overview-header,
+.statistics-kind-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.statistics-overview-header span,
+.statistics-kind-heading span {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.statistics-overview-header h3 {
+  margin: 2px 0 0;
+  font-size: 0.94rem;
+}
+
+.statistics-overview-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.statistics-overview-metrics div {
+  min-width: 0;
+  border-left: 3px solid var(--primary);
+  background: var(--surface);
+  padding: 10px 11px;
+}
+
+.statistics-overview-metrics dt {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.statistics-overview-metrics dd {
+  margin: 4px 0 0;
+  overflow: hidden;
+  font-size: 1.12rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statistics-kind-summary {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.statistics-kind-summary ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  gap: 7px;
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.statistics-kind-summary li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding: 5px 2px;
+  font-size: 0.78rem;
+}
+
+.statistics-overview-state,
+.statistics-overview-empty {
+  min-height: 82px;
+}
+
+.statistics-overview-state {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.statistics-overview-empty {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  padding: 13px;
+}
+
+.statistics-overview-empty p {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
 .access-list {
   min-width: 0;
   border: 1px solid var(--border);
@@ -2127,6 +2234,20 @@ progress {
   }
 
   .home-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .statistics-overview-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .statistics-overview-header .button-secondary,
+  .statistics-overview-metrics {
+    width: 100%;
+  }
+
+  .statistics-overview-metrics {
     grid-template-columns: 1fr;
   }
 }
