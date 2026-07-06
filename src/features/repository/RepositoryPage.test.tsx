@@ -177,6 +177,12 @@ function createApiMock() {
         },
       ],
     })),
+    getRepositoryStatisticsOverview: vi.fn(async () => {
+      throw new Error('statistics overview not used');
+    }),
+    analyzeRepositoryStatistics: vi.fn(async () => {
+      throw new Error('statistics analysis not used');
+    }),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -223,6 +229,7 @@ function createApiMock() {
       progressHandler = handler;
       return () => undefined;
     }),
+    onRepositoryStatisticsProgress: vi.fn(async () => () => undefined),
   };
   return { api, emitProgress: (event: BlockIngestProgress) => progressHandler?.(event) };
 }

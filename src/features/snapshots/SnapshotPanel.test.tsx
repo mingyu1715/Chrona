@@ -31,6 +31,7 @@ function apiMock(): ChronaApi {
       remainingCount: 0,
     })),
     onBlockIngestProgress: vi.fn(async () => () => undefined),
+    onRepositoryStatisticsProgress: vi.fn(async () => () => undefined),
     createSnapshot: vi.fn(async () => ({
       schemaVersion: 1,
       id: '20260619T103000Z_8f31c2',
@@ -99,6 +100,12 @@ function apiMock(): ChronaApi {
       files: [],
     })),
     inspectRepositoryFile: vi.fn(),
+    getRepositoryStatisticsOverview: vi.fn(async () => {
+      throw new Error('statistics overview not used');
+    }),
+    analyzeRepositoryStatistics: vi.fn(async () => {
+      throw new Error('statistics analysis not used');
+    }),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',

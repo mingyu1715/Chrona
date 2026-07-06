@@ -205,7 +205,7 @@ git commit -m "feat: analyze repository storage statistics"
 
 **Files:** command module, module exports, main, Rust test, shared types/API, existing API mocks.
 
-- [ ] **Step 1: Write failing camelCase command test**
+- [x] **Step 1: Write failing camelCase command test**
 
 ```rust
 let overview = get_repository_statistics_overview(repo.display().to_string()).unwrap();
@@ -215,7 +215,7 @@ assert!(json.get("latestUniqueBlockCount").is_some());
 assert!(json.get("fileKindStats").is_some());
 ```
 
-- [ ] **Step 2: Add sync overview and async analysis commands**
+- [x] **Step 2: Add sync overview and async analysis commands**
 
 ```rust
 pub fn get_repository_statistics_overview(repository_path: String) -> Result<RepositoryStatisticsOverview, String>;
@@ -224,7 +224,7 @@ pub async fn analyze_repository_statistics(app: tauri::AppHandle, repository_pat
 
 Run detailed analysis inside `tauri::async_runtime::spawn_blocking`. Emit `repository-statistics-progress` with `Emitter`; convert service and join errors to strings. Add matching `main.rs` wrappers and handler registrations.
 
-- [ ] **Step 3: Add exact TS contracts and API**
+- [x] **Step 3: Add exact TS contracts and API**
 
 Mirror every Rust camelCase field. Extend `ChronaApi` with:
 
@@ -236,7 +236,7 @@ onRepositoryStatisticsProgress(handler: (event: RepositoryStatisticsProgress) =>
 
 Invoke `get_repository_statistics_overview` and `analyze_repository_statistics`; listen to `repository-statistics-progress`. Update every test double satisfying `ChronaApi`.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 ```bash
 cd src-tauri

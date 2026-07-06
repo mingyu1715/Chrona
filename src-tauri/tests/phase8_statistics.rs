@@ -13,6 +13,8 @@ use chrona::models::snapshot::{Snapshot, SnapshotFile, SnapshotSummary};
 use chrona::models::statistics::{RepositoryStatisticsOverview, StatisticsIssueKind};
 use tempfile::TempDir;
 
+use chrona::commands::statistics_commands::get_repository_statistics_overview;
+
 #[test]
 fn statistics_overview_is_empty_without_snapshots() {
     let temp = TempDir::new().unwrap();
@@ -46,6 +48,21 @@ fn statistics_overview_uses_only_the_latest_snapshot() {
     assert_eq!(kind_count(&report, FileKind::Document), 1);
     assert_eq!(kind_count(&report, FileKind::Code), 1);
     assert_eq!(kind_count(&report, FileKind::Folderless), 1);
+}
+
+#[test]
+fn statistics_command_returns_camel_case_overview() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("repo");
+    RepositoryManager::create(&repository_path).unwrap();
+
+    let overview =
+        get_repository_statistics_overview(repository_path.display().to_string()).unwrap();
+    let json = serde_json::to_value(overview).unwrap();
+
+    assert!(json.get("latestFileCount").is_some());
+    assert!(json.get("latestUniqueBlockCount").is_some());
+    assert!(json.get("fileKindStats").is_some());
 }
 
 #[test]

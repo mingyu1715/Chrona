@@ -249,6 +249,100 @@ export interface RepositoryInventoryReport {
   files: InventoryFileEntry[];
 }
 
+export interface RepositoryStatisticsOverview {
+  schemaVersion: number;
+  repositoryPath: string;
+  generatedAt: string;
+  hasSnapshot: boolean;
+  latestSnapshotId: string | null;
+  latestSnapshotName: string | null;
+  latestSnapshotCreatedAt: string | null;
+  latestFileCount: number;
+  latestLogicalBytes: number;
+  latestUniqueBlockCount: number;
+  fileKindStats: FileKindStat[];
+}
+
+export interface RepositoryStatisticsReport {
+  schemaVersion: number;
+  repositoryPath: string;
+  generatedAt: string;
+  overview: RepositoryStatisticsOverview;
+  storage: RepositoryStorageSummary;
+  encodings: EncodingStatistics;
+  snapshotTrend: SnapshotStatisticsPoint[];
+  issues: StatisticsIssue[];
+}
+
+export interface RepositoryStorageSummary {
+  snapshotCount: number;
+  retainedLogicalBytes: number;
+  totalBlockReferences: number;
+  referencedUniqueBlockCount: number;
+  referencedUniqueRawBytes: number;
+  dedupSavedBytes: number;
+  referencedPhysicalBlockCount: number;
+  referencedPhysicalBytes: number;
+  allPhysicalBlockCount: number;
+  allPhysicalBytes: number;
+  unreferencedBlockCount: number;
+  unreferencedBytes: number;
+  missingReferencedBlockCount: number;
+  invalidReferencedBlockCount: number;
+  compressionComparedRawBytes: number;
+  compressionComparedPhysicalBytes: number;
+  compressionSavedBytes: number;
+  storageEfficiencyPercent: number | null;
+}
+
+export interface SnapshotStatisticsPoint {
+  snapshotId: string;
+  snapshotName: string;
+  createdAt: string;
+  fileCount: number;
+  logicalBytes: number;
+  totalBlockReferences: number;
+  uniqueBlockCount: number;
+  newBlockCount: number;
+  reusedBlockCount: number;
+  newLogicalBytes: number;
+  newStoredBytes: number;
+  compressionSavedBytes: number;
+}
+
+export interface EncodingStatistics {
+  rawBlockCount: number;
+  rawPhysicalBytes: number;
+  zstdBlockCount: number;
+  zstdPhysicalBytes: number;
+  lz4BlockCount: number;
+  lz4PhysicalBytes: number;
+  unknownBlockCount: number;
+  unknownPhysicalBytes: number;
+}
+
+export type StatisticsIssueKind =
+  | 'missingBlock'
+  | 'unreadableBlock'
+  | 'invalidHeader'
+  | 'invalidBlockFileName'
+  | 'conflictingRawSize';
+
+export interface StatisticsIssue {
+  kind: StatisticsIssueKind;
+  hash: string | null;
+  path: string | null;
+  message: string;
+}
+
+export interface RepositoryStatisticsProgress {
+  phase: 'snapshots' | 'blocks' | 'completed';
+  processedSnapshots: number;
+  totalSnapshots: number;
+  processedBlocks: number;
+  totalBlocks: number;
+}
+
 export type FileVersionState = 'added' | 'modified' | 'unchanged' | 'deleted';
 export type BlockStorageEncoding = 'raw' | 'zstd' | 'lz4' | 'unknown';
 export type BlockStorageState = 'available' | 'missing' | 'unreadable' | 'invalidHeader';

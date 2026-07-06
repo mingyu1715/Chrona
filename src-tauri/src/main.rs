@@ -7,6 +7,7 @@ use chrona::models::inventory::RepositoryInventoryReport;
 use chrona::models::repository::{CompressionMode, RepositoryManifest};
 use chrona::models::restore::RestoreReport;
 use chrona::models::snapshot::{Snapshot, SnapshotIndexItem};
+use chrona::models::statistics::{RepositoryStatisticsOverview, RepositoryStatisticsReport};
 
 #[tauri::command]
 fn create_repository(repository_path: String) -> Result<RepositoryManifest, String> {
@@ -126,6 +127,21 @@ fn inspect_repository_file(
     )
 }
 
+#[tauri::command]
+fn get_repository_statistics_overview(
+    repository_path: String,
+) -> Result<RepositoryStatisticsOverview, String> {
+    chrona::commands::statistics_commands::get_repository_statistics_overview(repository_path)
+}
+
+#[tauri::command]
+async fn analyze_repository_statistics(
+    app: tauri::AppHandle,
+    repository_path: String,
+) -> Result<RepositoryStatisticsReport, String> {
+    chrona::commands::statistics_commands::analyze_repository_statistics(app, repository_path).await
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -146,7 +162,9 @@ fn main() {
             restore_snapshot,
             verify_repository,
             get_repository_inventory,
-            inspect_repository_file
+            inspect_repository_file,
+            get_repository_statistics_overview,
+            analyze_repository_statistics
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Chrona application");

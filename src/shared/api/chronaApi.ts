@@ -14,6 +14,9 @@ import type {
   IntegrityReport,
   RepositoryInventoryReport,
   RepositoryManifest,
+  RepositoryStatisticsOverview,
+  RepositoryStatisticsProgress,
+  RepositoryStatisticsReport,
   RestoreReport,
   Snapshot,
   SnapshotComparison,
@@ -39,6 +42,12 @@ export interface ChronaApi {
     repositoryPath: string,
     relativePath: string,
   ): Promise<FileInspectionReport>;
+  getRepositoryStatisticsOverview(
+    repositoryPath: string,
+  ): Promise<RepositoryStatisticsOverview>;
+  analyzeRepositoryStatistics(
+    repositoryPath: string,
+  ): Promise<RepositoryStatisticsReport>;
   recordAccessEvent(repositoryPath: string, event: AccessEvent): Promise<AccessNode>;
   getHomeSummary(repositoryPath: string): Promise<HomeSummary>;
   pinAccessItem(repositoryPath: string, key: string): Promise<AccessNode>;
@@ -50,6 +59,9 @@ export interface ChronaApi {
   selectRestoreTargetPath(): Promise<string | null>;
   onBlockIngestProgress(
     handler: (event: BlockIngestProgress) => void,
+  ): Promise<() => void>;
+  onRepositoryStatisticsProgress(
+    handler: (event: RepositoryStatisticsProgress) => void,
   ): Promise<() => void>;
 }
 
@@ -104,6 +116,16 @@ export const chronaApi: ChronaApi = {
       relativePath,
     });
   },
+  getRepositoryStatisticsOverview(repositoryPath) {
+    return invoke<RepositoryStatisticsOverview>('get_repository_statistics_overview', {
+      repositoryPath,
+    });
+  },
+  analyzeRepositoryStatistics(repositoryPath) {
+    return invoke<RepositoryStatisticsReport>('analyze_repository_statistics', {
+      repositoryPath,
+    });
+  },
   recordAccessEvent(repositoryPath, event) {
     return invoke<AccessNode>('record_access_event', { repositoryPath, event });
   },
@@ -148,6 +170,11 @@ export const chronaApi: ChronaApi = {
   },
   onBlockIngestProgress(handler) {
     return listen<BlockIngestProgress>('block-ingest-progress', (event) => {
+      handler(event.payload);
+    });
+  },
+  onRepositoryStatisticsProgress(handler) {
+    return listen<RepositoryStatisticsProgress>('repository-statistics-progress', (event) => {
       handler(event.payload);
     });
   },
