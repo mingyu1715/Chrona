@@ -52,9 +52,10 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - File Inspector / Block Map
 - README, 개발 로그, 구현 기록 문서
 
-### 다음 구현 후보
+### 다음 구현 대상
 
-- Repository Statistics Dashboard의 집계 범위와 UI를 현재 Phase 기준으로 상세화
+- 승인된 Repository Statistics Dashboard spec을 기준으로 Phase 8 구현 plan 작성
+- Home lightweight overview와 상세 live scan 구현
 
 ### 아직 세부 계획 없음
 
@@ -388,9 +389,9 @@ src/
 
 현재 구현된 시각화는 summary cards, status panels, list/table 중심이다. 고급 block visualization은 아직 없다.
 
-Repository Inventory Explorer와 파일 단위 ordered block map까지 metadata 기반 가시화가 구현됐다. 다음 시각화는 statistics dashboard를 별도 spec/plan으로 설계한 뒤 구현한다.
+Repository Inventory Explorer와 파일 단위 ordered block map까지 metadata 기반 가시화가 구현됐다. Statistics dashboard spec이 승인됐으며 구현 plan 작성 뒤 개발한다.
 
-MVP에서는 전체 저장소의 거대한 block graph를 만들지 않는다. snapshot별 통계 시각화는 아직 세부 계획이 없다.
+MVP에서는 전체 저장소의 거대한 block graph를 만들지 않는다. snapshot별 통계는 chart library 없이 CSS bar와 목록으로 표시한다.
 
 ## 11. 테스트 구조
 
@@ -444,12 +445,11 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 ### 현재 구현 계획
 
-- 활성 구현 계획 없음
-- 다음 후보: Repository Statistics Dashboard spec과 구현 plan 작성
+- Repository Statistics Dashboard spec 완료, 구현 plan 작성 전
+- Spec: `docs/specs/0010-repository-statistics-dashboard.md`
 
 ### 설계와 상세 계획이 모두 없는 후보
 
-- Repository Statistics Dashboard
 - Packaged `.app` release/signing
 - Snapshot delete and garbage collection
 - Watcher/automatic snapshots
@@ -528,9 +528,10 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 ### Phase 5c. Repository Statistics Dashboard
 
-- 상태: 후보, 세부 spec/plan 없음
+- 상태: Phase 8 설계 완료, 구현 plan 작성 전
 - 목표: 저장량, 절약량, reuse ratio, snapshot별 변화량을 dashboard로 표시
-- 다음 문서 후보: `docs/specs/0010-repository-statistics-dashboard.md`
+- Spec: `docs/specs/0010-repository-statistics-dashboard.md`
+- 범위: Home 최신 Snapshot 요약, 상세 live scan, 전체/참조/미참조 physical block, dedup/compression 분리
 
 ### Phase 7. File Inspector / Block Map
 

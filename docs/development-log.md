@@ -339,3 +339,13 @@
 - `npm test -- --run`: UI 테스트 파일 4개, 테스트 17개 통과.
 - `npm run build`: TypeScript 검사와 Vite 프로덕션 빌드 통과.
 - 완료된 설계와 계획을 archive하고 README, 단계 상태표, 프로젝트 계획, 구현 기록을 현재 코드 상태에 맞게 갱신했다.
+
+### Phase 8 저장소 통계 대시보드 설계
+
+- `feature/repository-statistics-dashboard` 브랜치를 Phase 7 완료 커밋에서 분기했다.
+- Home에는 최신 Snapshot 기준 파일 수, 데이터 크기, 고유 block 수, 파일 종류만 간략히 표시하기로 했다.
+- 별도 Statistics 화면은 전체 snapshot과 physical block을 진입 시 실시간 scan하는 혼합형으로 정했다.
+- 상세 화면에서 전체 physical 저장량과 snapshot 참조/미참조 block 용량을 함께 표시하기로 했다.
+- 중복 제거 절감량과 압축 절감량은 서로 다른 단계의 지표로 분리한다.
+- 통계 index/cache, garbage collection, 자동 scan, chart library와 전체 UI 재설계는 이번 범위에서 제외했다.
+- 승인된 설계를 `docs/specs/0010-repository-statistics-dashboard.md`에 기록했다.
