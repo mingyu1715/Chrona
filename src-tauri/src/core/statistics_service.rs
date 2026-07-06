@@ -131,7 +131,18 @@ impl StatisticsService {
         let mut unreferenced_block_count = 0_u64;
         let mut unreferenced_bytes = 0_u64;
         for path in &block_files {
-            let size = fs::metadata(path)?.len();
+            let size = match fs::metadata(path) {
+                Ok(metadata) => metadata.len(),
+                Err(error) => {
+                    issues.push(StatisticsIssue {
+                        kind: StatisticsIssueKind::UnreadableBlock,
+                        hash: block_hash_from_path(path),
+                        path: Some(path.display().to_string()),
+                        message: error.to_string(),
+                    });
+                    continue;
+                }
+            };
             all_physical_bytes += size;
             let hash = block_hash_from_path(path);
             let is_referenced = hash

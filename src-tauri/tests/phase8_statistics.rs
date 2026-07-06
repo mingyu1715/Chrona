@@ -13,6 +13,9 @@ use chrona::models::snapshot::{Snapshot, SnapshotFile, SnapshotSummary};
 use chrona::models::statistics::{RepositoryStatisticsOverview, StatisticsIssueKind};
 use tempfile::TempDir;
 
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
+
 use chrona::commands::statistics_commands::get_repository_statistics_overview;
 
 #[test]
@@ -208,6 +211,30 @@ fn full_statistics_separates_physical_encodings_and_unreferenced_blocks() {
         .issues
         .iter()
         .any(|issue| issue.kind == StatisticsIssueKind::MissingBlock));
+}
+
+#[cfg(unix)]
+#[test]
+fn full_statistics_keeps_report_when_block_metadata_is_unreadable() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("repo");
+    RepositoryManager::create(&repository_path).unwrap();
+    let broken_dir = repository_path.join("blocks/broken");
+    fs::create_dir_all(&broken_dir).unwrap();
+    symlink(
+        repository_path.join("missing-target"),
+        broken_dir.join("broken.blk"),
+    )
+    .unwrap();
+
+    let report = StatisticsService::new()
+        .analyze_repository(&repository_path, |_| {})
+        .unwrap();
+
+    assert!(report
+        .issues
+        .iter()
+        .any(|issue| issue.kind == StatisticsIssueKind::UnreadableBlock));
 }
 
 fn kind_count(report: &RepositoryStatisticsOverview, kind: FileKind) -> u64 {

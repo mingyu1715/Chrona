@@ -504,6 +504,29 @@ describe('RepositoryPage', () => {
     expect(screen.getByText('Unreferenced blocks')).toBeInTheDocument();
   });
 
+  test('clears a detailed statistics report when another repository opens', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+
+    render(<RepositoryPage api={api} />);
+    const repositoryInput = screen.getByLabelText(/repository path/i);
+    await user.type(repositoryInput, '/tmp/repo-a');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /statistics/i }));
+    await user.click(screen.getByRole('button', { name: /analyze repository/i }));
+    expect(await screen.findByText('Dedup saved')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^repository/i }));
+    const nextRepositoryInput = screen.getByLabelText(/repository path/i);
+    await user.clear(nextRepositoryInput);
+    await user.type(nextRepositoryInput, '/tmp/repo-b');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /statistics/i }));
+
+    expect(screen.queryByText('Dedup saved')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /analyze repository/i })).toBeInTheDocument();
+  });
+
   test('verifies repository integrity and renders the report', async () => {
     const { api } = createApiMock();
     const user = userEvent.setup();

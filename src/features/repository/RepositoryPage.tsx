@@ -385,6 +385,16 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     setFileInspectionError(null);
   }
 
+  function resetStatistics() {
+    setStatisticsOverview(null);
+    setStatisticsOverviewLoading(false);
+    setStatisticsOverviewError(null);
+    setStatisticsReport(null);
+    setStatisticsProgress(null);
+    setStatisticsLoading(false);
+    setStatisticsError(null);
+  }
+
   async function inspectInventoryFile(relativePath: string) {
     if (!manifest) return;
     const requestId = ++fileInspectionRequestId.current;
@@ -650,6 +660,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                       setInventorySnapshotFilter('all');
                       setInventorySourceFilter('all');
                       resetFileInspection();
+                      resetStatistics();
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_created');
                       setActiveChapter('source');
                     })}
@@ -672,6 +683,7 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                       setInventorySnapshotFilter('all');
                       setInventorySourceFilter('all');
                       resetFileInspection();
+                      resetStatistics();
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_opened');
                       setActiveChapter('source');
                     })}
