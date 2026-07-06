@@ -10,11 +10,11 @@
 
 ## 현재 구현 계획
 
-- Phase 7 파일 검사기 / 파일 블록 지도: `docs/plans/phase-7-file-inspector-block-map.md`
+- 없음
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
-- 파일 검사기 / 파일 블록 지도: `docs/specs/0011-file-inspector-block-map.md`
+- 없음
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 
@@ -30,6 +30,7 @@
 - Phase 5a 무결성 검증: `docs/archive/plans/phase-5-integrity-verification.md`
 - Phase 5b 저장소 인벤토리 탐색: `docs/archive/plans/phase-5-repository-inventory-explorer.md`
 - Phase 6 블록 압축: `docs/archive/plans/phase-6-block-compression.md`
+- Phase 7 파일 검사기 / 파일 블록 지도: `docs/archive/plans/phase-7-file-inspector-block-map.md`
 
 ## 보관된 완료 설계
 
@@ -42,6 +43,7 @@
 - 스냅샷 복원: `docs/archive/specs/0007-snapshot-restore.md`
 - 무결성 검증: `docs/archive/specs/0008-integrity-verification.md`
 - 저장소 인벤토리 탐색: `docs/archive/specs/0009-repository-inventory-explorer.md`
+- 파일 검사기 / 파일 블록 지도: `docs/archive/specs/0011-file-inspector-block-map.md`
 
 ## 설계와 상세 계획이 모두 없는 후보
 

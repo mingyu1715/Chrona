@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed the Phase 4 snapshot restore core flow, the Home/adaptive navigation MVP, Phase 5 integrity verification, and the repository inventory explorer.
+Chrona has completed Phase 6 block compression and the Phase 7 file inspector/block map.
 
 Implemented:
 
@@ -40,6 +40,10 @@ Implemented:
 - Schema 2 raw/off, Zstd level 3 standard, and LZ4 fast compression modes
 - 3% raw fallback and schema 1 legacy raw block compatibility
 - Compressed-block restore and decoded raw SHA-256 integrity verification
+- Explorer file selection with a read-only File Inspector
+- Content-based snapshot history (`added`, `modified`, `unchanged`, `deleted`)
+- Per-version ordered block maps with raw/Zstd/LZ4 physical metadata
+- Partial missing or invalid block states without failing the complete report
 
 Not implemented yet:
 
@@ -253,6 +257,20 @@ raw_chunk
 
 Compressed storage is selected only when the complete envelope is at least 3% smaller than raw bytes. Existing schema 1 raw blocks remain readable without rewriting.
 
+### 8. Content-based file history and ordered block maps
+
+File history follows the same normalized relative path through snapshot creation order. It compares file size and the ordered `(hash, size)` block sequence against the previous available version.
+
+```text
+missing -> present               = added
+present + same block sequence    = unchanged
+present + changed block sequence = modified
+present -> missing               = deleted
+deleted -> present               = added
+```
+
+The selected version preserves the exact block-reference order. Physical metadata is inspected once per unique block hash; normal compressed blocks expose raw/Zstd/LZ4 encoding and stored size from the header without fully decompressing the payload.
+
 ### Complexity
 
 Let:
@@ -262,6 +280,8 @@ Let:
 - `K` = number of block references
 - `P` = number of snapshot file paths being compared
 - `U` = total bytes of newly unique blocks
+- `S` = number of snapshots for the selected file
+- `R` = number of block references in the selected file history
 
 Then:
 
@@ -272,6 +292,7 @@ Then:
 - Snapshot comparison path matching: `O(P log P)` for stable sorted output
 - Snapshot comparison block multiset counting: `O(K)`
 - New physical storage growth: `O(U)`
+- File history traversal: `O(S + R)`
 
 ### Current algorithmic trade-offs
 

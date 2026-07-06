@@ -309,3 +309,33 @@
 - 승인된 설계를 `docs/specs/0011-file-inspector-block-map.md`에 기록했다.
 - physical block 검사, content-based history service, Tauri API, Inspector panel, Explorer 연동, 문서/검증 순서의 구현 계획을 `docs/plans/phase-7-file-inspector-block-map.md`에 작성했다.
 - 각 기능은 실패 테스트 확인 후 최소 구현과 회귀 검증을 진행하도록 Task를 분리했다.
+
+### Phase 7 파일 검사기 / 블록 지도 구현
+
+- raw/Zstd/LZ4 block의 physical encoding과 저장 크기를 payload 전체 압축 해제 없이 확인하는 header 검사 경로를 추가했다.
+- envelope magic으로 시작하는 기존 raw block은 streaming SHA-256으로 먼저 판별해 compressed block으로 오인하지 않도록 했다.
+- 누락, 읽기 실패, 잘못된 header는 전체 파일 검사를 중단하지 않고 해당 block의 부분 상태로 반환하도록 했다.
+- 같은 normalized relative path를 snapshot 순서대로 추적하고 ordered `(hash, size)` sequence를 비교해 `added`, `modified`, `unchanged`, `deleted` 이력을 계산했다.
+- 삭제 뒤 다시 나타나는 파일은 `added`로 판정하며, 수정 시각만 바뀐 경우에는 내용 변경으로 판정하지 않는다.
+- `inspect_repository_file` Tauri command와 TypeScript API를 추가했다.
+- Explorer 파일 경로를 선택하면 같은 화면의 Inspector에서 snapshot 버전별 ordered block map과 변경 이력을 확인하도록 연결했다.
+- 연속 선택 시 늦게 도착한 이전 요청이 최신 선택을 덮어쓰지 않도록 request id 보호를 추가했다.
+- 검사 실패 시 인벤토리 목록은 유지하고 Inspector에만 오류를 표시한다.
+
+### Phase 7 제한 사항과 문서 정리
+
+- 파일 identity는 repository 전체의 normalized relative path 기준이므로 서로 다른 source root의 같은 relative path가 하나의 이력으로 집계될 수 있다.
+- block payload 미리보기, 파일·snapshot 수정/삭제, 고급 graph 시각화와 전체 UI 재설계는 이번 범위에서 제외했다.
+- `docs/implemented/file-inspector-block-map.md`에 구현 구조와 제한 사항을 기록했다.
+- 완료된 `0011` spec과 Phase 7 계획을 각각 `docs/archive/specs/`, `docs/archive/plans/`로 이동했다.
+- 다음 기능 후보를 Repository Statistics Dashboard로 정리했다.
+
+## 2026-07-06
+
+### Phase 7 최종 검증 및 마무리
+
+- `cargo fmt --all -- --check`: Rust 포맷 검사 통과.
+- `cargo test`: Phase 7 파일 검사기 테스트 8개를 포함해 Rust 테스트 65개 통과.
+- `npm test -- --run`: UI 테스트 파일 4개, 테스트 17개 통과.
+- `npm run build`: TypeScript 검사와 Vite 프로덕션 빌드 통과.
+- 완료된 설계와 계획을 archive하고 README, 단계 상태표, 프로젝트 계획, 구현 기록을 현재 코드 상태에 맞게 갱신했다.

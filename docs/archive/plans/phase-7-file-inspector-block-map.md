@@ -980,7 +980,7 @@ git commit -m "feat: connect explorer file inspection"
 - Move: `docs/specs/0011-file-inspector-block-map.md` to `docs/archive/specs/0011-file-inspector-block-map.md`
 - Move: `docs/plans/phase-7-file-inspector-block-map.md` to `docs/archive/plans/phase-7-file-inspector-block-map.md`
 
-- [ ] **Step 1: Write implementation record**
+- [x] **Step 1: Write implementation record**
 
 Document:
 
@@ -991,11 +991,11 @@ Document:
 - source-root identity limitation
 - excluded payload preview and mutation behavior
 
-- [ ] **Step 2: Update user-visible status documents**
+- [x] **Step 2: Update user-visible status documents**
 
 In Korean development log, record implementation, tests, limits, and final command results. Move File Inspector from planned to implemented in phase status and project plan. Update README feature lists without claiming payload preview or repair.
 
-- [ ] **Step 3: Archive completed spec and plan**
+- [x] **Step 3: Archive completed spec and plan**
 
 Move both documents, update `docs/archive/specs/README.md`, `docs/plans/README.md`, and every current link found by:
 
@@ -1003,7 +1003,7 @@ Move both documents, update `docs/archive/specs/README.md`, `docs/plans/README.m
 rg -n "0011-file-inspector|phase-7-file-inspector" README.md README.ko.md docs
 ~~~
 
-- [ ] **Step 4: Run final Rust verification**
+- [x] **Step 4: Run final Rust verification**
 
 ~~~bash
 cd src-tauri
@@ -1013,7 +1013,7 @@ cargo test
 
 Expected: all prior tests and Phase 7 tests pass with zero failures.
 
-- [ ] **Step 5: Run final UI and repository verification**
+- [x] **Step 5: Run final UI and repository verification**
 
 ~~~bash
 cd ..
@@ -1025,7 +1025,7 @@ git status --short --branch
 
 Expected: all UI tests pass, production build succeeds, no whitespace errors, and only intended Phase 7 changes remain.
 
-- [ ] **Step 6: Commit documentation**
+- [x] **Step 6: Commit documentation**
 
 ~~~bash
 git add README.md README.ko.md docs

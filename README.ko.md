@@ -6,7 +6,7 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 
 ## 현재 상태
 
-현재는 Phase 4 스냅샷 복원 core flow, Home/adaptive navigation MVP, Phase 5 무결성 검증과 저장소 인벤토리 탐색까지 완료된 상태입니다.
+현재는 Phase 6 블록 압축과 Phase 7 파일 검사기/블록 지도까지 완료된 상태입니다.
 
 구현됨:
 
@@ -40,6 +40,10 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 - schema 2 repository의 raw/off, Zstd level 3 표준, LZ4 빠른 압축 모드
 - 3% 미만 절감 시 raw fallback과 schema 1 legacy raw block 호환
 - 압축 block 복원 및 decoded raw SHA-256 무결성 검증
+- Explorer 파일 선택 기반 File Inspector
+- 내용 기반 snapshot 변경 이력(`added`, `modified`, `unchanged`, `deleted`)
+- 파일 버전별 ordered block map과 raw/Zstd/LZ4 physical metadata
+- 누락되거나 잘못된 block을 전체 조회 실패 없이 부분 상태로 표시
 
 아직 구현되지 않음:
 
@@ -253,6 +257,20 @@ raw_chunk
 
 envelope 전체가 raw보다 3% 이상 작을 때만 압축본을 저장합니다. 기존 schema 1 raw block은 재작성하지 않고 그대로 읽습니다.
 
+### 8. Content-based file history와 ordered block map
+
+파일 이력은 같은 normalized relative path를 snapshot 생성 순서대로 찾고, 파일 크기와 ordered `(hash, size)` block sequence를 이전 존재 버전과 비교해 판정합니다.
+
+```text
+missing -> present               = added
+present + same block sequence    = unchanged
+present + changed block sequence = modified
+present -> missing               = deleted
+deleted -> present               = added
+```
+
+선택한 버전은 block reference의 실제 순서를 유지해 표시합니다. Physical metadata는 unique block hash마다 검사하며, 정상 compressed block은 payload 전체를 압축 해제하지 않고 header에서 raw/Zstd/LZ4 encoding과 저장 크기를 읽습니다.
+
 ### Complexity
 
 정의:
@@ -262,6 +280,8 @@ envelope 전체가 raw보다 3% 이상 작을 때만 압축본을 저장합니�
 - `K` = block reference 개수
 - `P` = 비교 대상 snapshot file path 개수
 - `U` = 새로 저장되는 unique block byte 수
+- `S` = 선택 파일의 snapshot 수
+- `R` = 선택 파일 이력의 block reference 수
 
 복잡도:
 
@@ -272,6 +292,7 @@ envelope 전체가 raw보다 3% 이상 작을 때만 압축본을 저장합니�
 - Snapshot comparison path matching: 안정적인 정렬 출력 기준 `O(P log P)`
 - Snapshot comparison block multiset counting: `O(K)`
 - Physical storage growth: `O(U)`
+- File history traversal: `O(S + R)`
 
 ### 현재 알고리즘 trade-off
 
