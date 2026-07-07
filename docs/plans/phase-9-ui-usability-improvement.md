@@ -126,23 +126,28 @@ fn registry_rejects_duplicate_canonical_path() {
 
 ```
 
-Add the write-failure test inside `repository_registry_store.rs` so its injected failure hook remains test-only:
+Use a real filesystem failure for the atomic write test. Do not add production fields or methods used only by tests:
 
 ```rust
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[cfg(unix)]
     #[test]
     fn failed_registry_write_keeps_previous_json_readable() {
+        use std::os::unix::fs::PermissionsExt;
+
         let temp = tempfile::tempdir().unwrap();
         let store = RepositoryRegistryStore::new(temp.path().to_path_buf());
         store.register(registered_repository("repo-a", "/tmp/a")).unwrap();
 
         let registry_path = temp.path().join("repository-registry.json");
         let before = std::fs::read(&registry_path).unwrap();
-        store.fail_next_write_for_test();
+        let original_permissions = std::fs::metadata(temp.path()).unwrap().permissions();
+        std::fs::set_permissions(temp.path(), std::fs::Permissions::from_mode(0o555)).unwrap();
         assert!(store.register(registered_repository("repo-b", "/tmp/b")).is_err());
+        std::fs::set_permissions(temp.path(), original_permissions).unwrap();
         assert_eq!(std::fs::read(registry_path).unwrap(), before);
     }
 }
@@ -195,8 +200,6 @@ impl Default for RepositoryRegistry {
 ```rust
 pub struct RepositoryRegistryStore {
     app_data_dir: PathBuf,
-    #[cfg(test)]
-    fail_write: Cell<bool>,
 }
 
 impl RepositoryRegistryStore {
