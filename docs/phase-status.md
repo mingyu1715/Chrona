@@ -31,6 +31,7 @@
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
 | 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
+| 전체 UI 사용성 개선 | 감사 완료, 설계 승인 대기 | 없음 | 없음 | `docs/audits/ui-usability-2026-07/audit.md` | 기존 기능은 유지하며 앱 셸, 탐색, 스크롤, 정보 위계와 반응형 구조를 개선할 예정. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
@@ -92,7 +93,7 @@
 
 ### 현재 활성 작업
 
-현재 활성 구현 Phase는 없다.
+Phase 9 전체 UI 사용성 개선의 감사와 설계 검토를 진행 중이다. 구현은 아직 시작하지 않았다.
 
 ### 현재 다음 작업 후보: UI 사용성 개선
 
@@ -118,6 +119,6 @@
 
 ## 즉시 다음 작업
 
-1. Phase 8 브랜치를 최종 검증하고 원격에 푸시한다.
-2. 전체 UI 사용성 개선 Phase의 현재 문제와 범위를 별도 spec으로 정리한다.
+1. `docs/audits/ui-usability-2026-07/audit.md`를 기준으로 UI 개선 방식을 승인한다.
+2. 승인된 범위만 `docs/specs/0012-ui-usability-improvement.md`와 Phase 9 구현 계획으로 구체화한다.
 3. Snapshot 삭제/GC와 release packaging은 이후 독립 Phase로 유지한다.
