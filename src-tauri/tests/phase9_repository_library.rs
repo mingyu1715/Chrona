@@ -145,6 +145,34 @@ fn missing_external_repository_remains_registered_as_disconnected() {
 }
 
 #[test]
+fn listing_a_partial_registered_repository_does_not_repair_snapshot_layout() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("partial");
+    create_repository(&repository_path);
+    let service = RepositoryLibraryService::new(temp.path().join("app-data"));
+    let opened = service
+        .register_existing(&repository_path, Some("Partial"))
+        .unwrap();
+
+    fs::remove_dir_all(repository_path.join("snapshots")).unwrap();
+    fs::remove_file(repository_path.join("indexes/snapshot-index.json")).unwrap();
+
+    let library = service.list().unwrap();
+    let item = library
+        .repositories
+        .iter()
+        .find(|item| item.repository_id == opened.registration.repository_id)
+        .unwrap();
+
+    assert_eq!(
+        item.connection_state,
+        RepositoryConnectionState::Disconnected
+    );
+    assert!(!repository_path.join("snapshots").exists());
+    assert!(!repository_path.join("indexes/snapshot-index.json").exists());
+}
+
+#[test]
 fn relinking_a_registered_repository_restores_it_without_moving_files() {
     let temp = TempDir::new().unwrap();
     let external = temp.path().join("external");

@@ -132,7 +132,7 @@ impl RepositoryLibraryService {
         &self,
         registration: &RegisteredRepository,
     ) -> ChronaResult<RepositoryLibraryItem> {
-        let connection_state = if RepositoryManager::open(&registration.path).is_ok() {
+        let connection_state = if RepositoryManager::probe(&registration.path).is_ok() {
             RepositoryConnectionState::Connected
         } else {
             RepositoryConnectionState::Disconnected
