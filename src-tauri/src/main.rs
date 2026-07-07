@@ -5,6 +5,7 @@ use chrona::models::ingest::BlockIngestSummary;
 use chrona::models::integrity::IntegrityReport;
 use chrona::models::inventory::RepositoryInventoryReport;
 use chrona::models::repository::{CompressionMode, RepositoryManifest};
+use chrona::models::repository_registry::{OpenedRepository, RepositoryLibrary};
 use chrona::models::restore::RestoreReport;
 use chrona::models::snapshot::{Snapshot, SnapshotIndexItem};
 use chrona::models::statistics::{RepositoryStatisticsOverview, RepositoryStatisticsReport};
@@ -17,6 +18,80 @@ fn create_repository(repository_path: String) -> Result<RepositoryManifest, Stri
 #[tauri::command]
 fn open_repository(repository_path: String) -> Result<RepositoryManifest, String> {
     chrona::commands::repository_commands::open_repository(repository_path)
+}
+
+#[tauri::command]
+fn get_repository_library(app: tauri::AppHandle) -> Result<RepositoryLibrary, String> {
+    chrona::commands::repository_library_commands::get_repository_library(app)
+}
+
+#[tauri::command]
+fn create_managed_repository(
+    app: tauri::AppHandle,
+    display_name: String,
+) -> Result<OpenedRepository, String> {
+    chrona::commands::repository_library_commands::create_managed_repository(app, display_name)
+}
+
+#[tauri::command]
+fn create_repository_at(
+    app: tauri::AppHandle,
+    display_name: String,
+    parent_path: String,
+) -> Result<OpenedRepository, String> {
+    chrona::commands::repository_library_commands::create_repository_at(
+        app,
+        display_name,
+        parent_path,
+    )
+}
+
+#[tauri::command]
+fn register_existing_repository(
+    app: tauri::AppHandle,
+    path: String,
+    display_name: Option<String>,
+) -> Result<OpenedRepository, String> {
+    chrona::commands::repository_library_commands::register_existing_repository(
+        app,
+        path,
+        display_name,
+    )
+}
+
+#[tauri::command]
+fn activate_registered_repository(
+    app: tauri::AppHandle,
+    repository_id: String,
+) -> Result<OpenedRepository, String> {
+    chrona::commands::repository_library_commands::activate_registered_repository(
+        app,
+        repository_id,
+    )
+}
+
+#[tauri::command]
+fn remove_repository_registration(
+    app: tauri::AppHandle,
+    repository_id: String,
+) -> Result<RepositoryLibrary, String> {
+    chrona::commands::repository_library_commands::remove_repository_registration(
+        app,
+        repository_id,
+    )
+}
+
+#[tauri::command]
+fn relink_registered_repository(
+    app: tauri::AppHandle,
+    repository_id: String,
+    path: String,
+) -> Result<OpenedRepository, String> {
+    chrona::commands::repository_library_commands::relink_registered_repository(
+        app,
+        repository_id,
+        path,
+    )
 }
 
 #[tauri::command]
@@ -148,6 +223,13 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             create_repository,
             open_repository,
+            get_repository_library,
+            create_managed_repository,
+            create_repository_at,
+            register_existing_repository,
+            activate_registered_repository,
+            remove_repository_registration,
+            relink_registered_repository,
             set_repository_compression_mode,
             ingest_blocks,
             create_snapshot,
