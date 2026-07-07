@@ -12,4 +12,4 @@ src-tauri/logs/
 src-tauri/snapshots/
 
 # Local manual test repositories
-test/
+/test/
