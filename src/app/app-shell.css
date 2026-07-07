@@ -84,6 +84,106 @@
   white-space: nowrap;
 }
 
+.repository-library-menu {
+  position: relative;
+  width: min(420px, 100%);
+}
+
+.repository-library-menu__trigger {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.repository-library-menu__trigger:hover,
+.repository-library-menu__trigger[aria-expanded='true'] {
+  border-color: var(--app-border);
+  background: var(--app-page);
+}
+
+.repository-library-menu__trigger span {
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repository-library-menu__popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 7px);
+  left: 0;
+  width: min(380px, calc(100vw - 40px));
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
+  box-shadow: 0 16px 40px rgba(20, 33, 28, 0.18);
+}
+
+.repository-library-menu__list,
+.repository-library-menu__commands {
+  display: grid;
+  padding: 6px;
+}
+
+.repository-library-menu__commands {
+  border-top: 1px solid var(--app-border);
+}
+
+.repository-library-menu__popover button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--app-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.repository-library-menu__popover button:hover {
+  background: var(--app-sidebar-active);
+}
+
+.repository-library-menu__popover button > span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.repository-library-menu__popover strong,
+.repository-library-menu__popover small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repository-library-menu__popover small {
+  color: var(--app-muted);
+  font-size: 11px;
+}
+
+.repository-library-menu__remove {
+  color: #b33a3a !important;
+}
+
 .app-topbar__actions {
   display: flex;
   align-items: center;
@@ -189,6 +289,159 @@
   min-height: 0;
   overflow: auto;
   background: var(--app-page);
+}
+
+.app-shell__bootstrap {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  color: var(--app-muted);
+  font-size: 13px;
+}
+
+.repository-setup-layer {
+  position: absolute;
+  z-index: 40;
+  inset: 56px 0 0 var(--sidebar-width);
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: color-mix(in srgb, var(--app-page) 92%, transparent);
+}
+
+.app-shell__content > .repository-setup-layer {
+  position: static;
+  min-height: 100%;
+  padding: 32px;
+}
+
+.repository-setup-dialog {
+  width: min(520px, 100%);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
+  box-shadow: 0 18px 46px rgba(20, 33, 28, 0.14);
+}
+
+.repository-setup-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.repository-setup-dialog__header > div {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.repository-setup-dialog__header h1 {
+  font-size: 18px;
+}
+
+.repository-setup-dialog__icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--app-sidebar-active);
+  color: var(--app-primary);
+}
+
+.repository-setup-dialog__close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+}
+
+.repository-setup-dialog__close:hover {
+  border-color: var(--app-border);
+  color: var(--app-text);
+}
+
+.repository-setup-dialog__field {
+  display: grid;
+  gap: 7px;
+  padding: 20px 22px 12px;
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.repository-setup-dialog__field input {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  outline: none;
+  background: var(--app-page);
+  color: var(--app-text);
+  font: inherit;
+}
+
+.repository-setup-dialog__field input:focus {
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-primary) 16%, transparent);
+}
+
+.repository-setup-dialog__error {
+  margin: 0;
+  padding: 0 22px 4px;
+  color: #b33a3a;
+  font-size: 12px;
+}
+
+.repository-setup-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 22px 22px;
+}
+
+.repository-setup-dialog__actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.repository-setup-dialog__actions button:hover:not(:disabled) {
+  background: var(--app-page);
+}
+
+.repository-setup-dialog__actions .repository-setup-dialog__primary {
+  border-color: var(--app-primary);
+  background: var(--app-primary);
+  color: #ffffff;
+}
+
+.repository-setup-dialog__actions .repository-setup-dialog__primary:hover:not(:disabled) {
+  background: var(--app-primary-hover);
+}
+
+.repository-setup-dialog__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .operation-bar {
