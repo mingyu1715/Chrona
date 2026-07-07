@@ -82,7 +82,7 @@ src/
 - Produces: `RepositoryRegistryStore::{load, save, register, set_active, remove, relink}`
 - Persists: `{appLocalDataDir}/repository-registry.json`
 
-- [ ] **Step 1: Write failing registry store tests**
+- [x] **Step 1: Write failing registry store tests**
 
 ```rust
 fn registered_repository(repository_id: &str, path: impl AsRef<Path>) -> RegisteredRepository {
@@ -153,13 +153,13 @@ mod tests {
 }
 ```
 
-- [ ] **Step 2: Run the registry tests and confirm failure**
+- [x] **Step 2: Run the registry tests and confirm failure**
 
 Run: `cargo test --test phase9_repository_registry`
 
 Expected: compilation fails because `repository_registry` and `RepositoryRegistryStore` do not exist.
 
-- [ ] **Step 3: Add registry models**
+- [x] **Step 3: Add registry models**
 
 ```rust
 pub const REPOSITORY_REGISTRY_SCHEMA_VERSION: u32 = 1;
@@ -193,7 +193,7 @@ impl Default for RepositoryRegistry {
 }
 ```
 
-- [ ] **Step 4: Implement atomic registry storage**
+- [x] **Step 4: Implement atomic registry storage**
 
 `save` must create the app data directory, serialize pretty JSON, write `repository-registry.json.tmp-{uuid}`, call `sync_all`, and rename it to `repository-registry.json`. Every mutation must load, validate, mutate, then save.
 
@@ -217,13 +217,13 @@ Add `ChronaError::RepositoryAlreadyRegistered(String)` and `ChronaError::Reposit
 
 `register` must reject both an existing manifest `repository_id` and an existing canonical path. The store never validates `manifest.json`; that responsibility belongs to Task 2's service.
 
-- [ ] **Step 5: Run registry tests**
+- [x] **Step 5: Run registry tests**
 
 Run: `cargo test --test phase9_repository_registry`
 
 Expected: all registry round-trip, duplicate, active removal, relink, and write-failure tests pass.
 
-- [ ] **Step 6: Commit Task 1**
+- [x] **Step 6: Commit Task 1**
 
 ```bash
 git add src-tauri/src/models/repository_registry.rs src-tauri/src/models/mod.rs src-tauri/src/core/repository_registry_store.rs src-tauri/src/core/mod.rs src-tauri/src/core/errors.rs src-tauri/tests/phase9_repository_registry.rs
@@ -249,7 +249,7 @@ git commit -m "feat: add repository registry store"
 - Produces: `RepositoryLibrary`, `RepositoryLibraryItem`, `OpenedRepository`
 - Produces commands: `get_repository_library`, `create_managed_repository`, `create_repository_at`, `register_existing_repository`, `activate_registered_repository`, `remove_repository_registration`, `relink_registered_repository`
 
-- [ ] **Step 1: Write failing service integration tests**
+- [x] **Step 1: Write failing service integration tests**
 
 ```rust
 #[test]
@@ -295,13 +295,13 @@ fn missing_external_repository_remains_registered_as_disconnected() {
 }
 ```
 
-- [ ] **Step 2: Run service tests and confirm failure**
+- [x] **Step 2: Run service tests and confirm failure**
 
 Run: `cargo test --test phase9_repository_library`
 
 Expected: compilation fails because `RepositoryLibraryService` is missing.
 
-- [ ] **Step 3: Add service response models**
+- [x] **Step 3: Add service response models**
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -337,7 +337,7 @@ pub struct OpenedRepository {
 }
 ```
 
-- [ ] **Step 4: Implement library service**
+- [x] **Step 4: Implement library service**
 
 ```rust
 impl RepositoryLibraryService {
@@ -357,7 +357,7 @@ Directory naming rule: normalize ASCII letters and digits to lowercase, replace 
 
 `create_at` treats the selected path as a parent and creates one new repository directory below it. `register_existing` calls `RepositoryManager::open` before registration. `remove_registration` never calls `remove_dir_all`.
 
-- [ ] **Step 5: Add Tauri commands and native window minimum**
+- [x] **Step 5: Add Tauri commands and native window minimum**
 
 Each command resolves the platform directory through `app.path().app_local_data_dir()` and constructs `RepositoryLibraryService`. Add wrappers to `main.rs` and register all seven commands in `generate_handler!`.
 
@@ -379,7 +379,7 @@ Set the Tauri window values:
 }
 ```
 
-- [ ] **Step 6: Run focused and full Rust tests**
+- [x] **Step 6: Run focused and full Rust tests**
 
 Run: `cargo test --test phase9_repository_library`
 
@@ -389,7 +389,7 @@ Run: `cargo test`
 
 Expected: all existing Phase 1~8 and new Phase 9 Rust tests pass.
 
-- [ ] **Step 7: Commit Task 2**
+- [x] **Step 7: Commit Task 2**
 
 ```bash
 git add src-tauri/src/core/repository_library_service.rs src-tauri/src/core/mod.rs src-tauri/src/commands/repository_library_commands.rs src-tauri/src/commands/mod.rs src-tauri/src/models/repository_registry.rs src-tauri/src/main.rs src-tauri/tauri.conf.json src-tauri/tests/phase9_repository_library.rs

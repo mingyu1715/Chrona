@@ -419,3 +419,32 @@
 - 각 작업에 실패 테스트, 최소 구현 인터페이스, 검증 명령, 권장 커밋 단위를 기록했다.
 - 모바일 UI는 계획에서 제외하고 macOS/Windows의 `960×640`, `1100×800`, `1440×900` 창 검증을 포함했다.
 - Windows native 검증 환경을 사용할 수 없는 경우 검증 공백을 문서화하고 통과했다고 주장하지 않도록 했다.
+
+### Phase 9 Task 1 저장소 Registry 완료
+
+- `feature/phase-9-ui-implementation` 브랜치에서 앱 수준 저장소 등록 모델과 atomic JSON store를 구현했다.
+- registry는 manifest의 `repository_id`를 단일 등록 키로 사용한다.
+- 등록 목록은 앱 로컬 데이터 디렉터리의 `repository-registry.json`에 저장하고 `.tmp-{uuid}` 작성, `sync_all`, rename 순서를 사용한다.
+- 중복 repository ID, 중복 canonical path, 존재하지 않는 활성 ID와 손상된 registry 상태를 거부한다.
+- 등록, 활성 저장소 변경, 등록 해제, 경로 relink를 구현했다.
+- 리뷰에서 발견된 load 무결성 검증과 stable ID 우선 오류 순서를 회귀 테스트와 함께 수정했다.
+- Task 1 리뷰 승인을 완료하고 Task 2 저장소 library service 구현으로 진행한다.
+
+### Phase 9 Task 1 검증
+
+- `cargo test --test phase9_repository_registry`: 11개 통과.
+- `cargo test`: 기존 기능과 Phase 9 Task 1을 포함한 Rust 통합 테스트 83개 통과.
+
+### Phase 9 Task 2 저장소 Library 완료
+
+- 플랫폼 앱 로컬 데이터 디렉터리 아래 `Repositories/`에 기본 저장소를 만드는 library service를 구현했다.
+- 사용자 지정 부모 폴더에 새 저장소를 만들고 기존 저장소를 이동 없이 등록하도록 구현했다.
+- 저장소 활성화, 연결 끊김 판정, 경로 relink, 실제 파일을 삭제하지 않는 등록 해제를 추가했다.
+- Tauri command 7개와 `1180×800`, 최소 `960×640` native window 설정을 추가했다.
+- 목록 조회가 저장소 레이아웃을 생성하는 리뷰 지적을 수정해 read-only `RepositoryManager::probe` 경로로 분리했다.
+- Task 2 리뷰 승인을 완료하고 Task 3 TypeScript 계약으로 진행한다.
+
+### Phase 9 Task 2 검증
+
+- `cargo test --test phase9_repository_library`: 10개 통과.
+- `cargo test`: Task 1~2와 기존 기능을 포함한 Rust 전체 테스트 통과.

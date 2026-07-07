@@ -453,7 +453,9 @@ Repository Inventory Explorer는 다음을 검증한다.
 ### 현재 구현 계획
 
 - `docs/plans/phase-9-ui-usability-improvement.md`
-- 다음 작업: Task 1 저장소 registry/store 구현
+- Task 1 저장소 registry/store 완료
+- Task 2 저장소 library service와 Tauri command 완료
+- 현재 작업: Task 3 TypeScript 저장소 library 계약 구현
 
 ### 설계와 상세 계획이 모두 없는 후보
 
