@@ -448,3 +448,9 @@
 
 - `cargo test --test phase9_repository_library`: 10개 통과.
 - `cargo test`: Task 1~2와 기존 기능을 포함한 Rust 전체 테스트 통과.
+
+### 프로젝트 보고서 자료 정리
+
+- 실제 Rust 구현에서 보고서에 사용하기 좋은 핵심 코드를 `docs/report-key-code.md`에 정리했다.
+- 스트리밍 블록 분할, SHA-256 중복 제거, atomic 저장, Zstd/LZ4 압축, 스냅샷, 멀티셋 비교, 복원, 무결성, 경로 안전성을 포함했다.
+- 각 코드에 동작 설명, 알고리즘 효과, 복잡도, 보고서용 설명 문장과 추천 조합을 추가했다.
