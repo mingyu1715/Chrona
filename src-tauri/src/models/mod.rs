@@ -9,3 +9,4 @@ pub mod progress;
 pub mod repository;
 pub mod restore;
 pub mod snapshot;
+pub mod statistics;

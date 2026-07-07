@@ -6,7 +6,7 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 
 ## 현재 상태
 
-현재는 Phase 6 블록 압축과 Phase 7 파일 검사기/블록 지도까지 완료된 상태입니다.
+현재는 Phase 8 저장소 통계 대시보드까지 완료된 상태입니다.
 
 구현됨:
 
@@ -44,6 +44,11 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 - 내용 기반 snapshot 변경 이력(`added`, `modified`, `unchanged`, `deleted`)
 - 파일 버전별 ordered block map과 raw/Zstd/LZ4 physical metadata
 - 누락되거나 잘못된 block을 전체 조회 실패 없이 부분 상태로 표시
+- Home의 최신 Snapshot 파일·용량·고유 block·파일 종류 요약
+- 전체 Snapshot과 physical block을 on-demand로 분석하는 Statistics 화면
+- 전체·참조·미참조·누락 block 저장량 구분
+- 중복 제거 절감량과 압축 절감량의 분리 계산
+- raw/Zstd/LZ4 분포, Snapshot 변화 추이, 분석 progress
 
 아직 구현되지 않음:
 
@@ -271,6 +276,22 @@ deleted -> present               = added
 
 선택한 버전은 block reference의 실제 순서를 유지해 표시합니다. Physical metadata는 unique block hash마다 검사하며, 정상 compressed block은 payload 전체를 압축 해제하지 않고 header에서 raw/Zstd/LZ4 encoding과 저장 크기를 읽습니다.
 
+### 9. Repository storage statistics
+
+Statistics는 Snapshot이 표현하는 논리적 보관량과 실제 block 파일 저장량을 분리합니다.
+
+```text
+L = 모든 Snapshot의 file size 합계
+U = referenced unique raw block size 합계
+P = 전체 physical .blk size 합계
+
+dedup saved       = max(0, L - U)
+compression saved = max(0, compared raw bytes - compared physical bytes)
+unreferenced      = physical blocks not referenced by snapshots
+```
+
+누락 block이 있으면 physical 저장량이 실제보다 작아 보일 수 있으므로 전체 절감 비율은 표시하지 않습니다. Home은 최신 Snapshot 하나만 읽고, 전체 scan은 Statistics 상세 분석을 실행할 때만 수행합니다.
+
 ### Complexity
 
 정의:
@@ -293,6 +314,7 @@ deleted -> present               = added
 - Snapshot comparison block multiset counting: `O(K)`
 - Physical storage growth: `O(U)`
 - File history traversal: `O(S + R)`
+- Repository statistics scan: Snapshot reference 수와 physical block 파일 수를 각각 `K`, `Q`라 할 때 `O(S + K + Q)`
 
 ### 현재 알고리즘 trade-off
 

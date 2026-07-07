@@ -31,6 +31,7 @@
 - Phase 5b 저장소 인벤토리 탐색: `docs/archive/plans/phase-5-repository-inventory-explorer.md`
 - Phase 6 블록 압축: `docs/archive/plans/phase-6-block-compression.md`
 - Phase 7 파일 검사기 / 파일 블록 지도: `docs/archive/plans/phase-7-file-inspector-block-map.md`
+- Phase 8 저장소 통계 대시보드: `docs/archive/plans/phase-8-repository-statistics-dashboard.md`
 
 ## 보관된 완료 설계
 
@@ -43,11 +44,11 @@
 - 스냅샷 복원: `docs/archive/specs/0007-snapshot-restore.md`
 - 무결성 검증: `docs/archive/specs/0008-integrity-verification.md`
 - 저장소 인벤토리 탐색: `docs/archive/specs/0009-repository-inventory-explorer.md`
+- 저장소 통계 대시보드: `docs/archive/specs/0010-repository-statistics-dashboard.md`
 - 파일 검사기 / 파일 블록 지도: `docs/archive/specs/0011-file-inspector-block-map.md`
 
 ## 설계와 상세 계획이 모두 없는 후보
 
-- 저장소 통계 대시보드
 - 패키징된 `.app` 릴리스 / 서명
 - 스냅샷 삭제와 블록 정리
 - 파일 감시 / 자동 스냅샷

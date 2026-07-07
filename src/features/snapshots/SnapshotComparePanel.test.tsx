@@ -110,6 +110,12 @@ function apiMock(result: SnapshotComparison): ChronaApi {
       files: [],
     })),
     inspectRepositoryFile: vi.fn(),
+    getRepositoryStatisticsOverview: vi.fn(async () => {
+      throw new Error('statistics overview not used');
+    }),
+    analyzeRepositoryStatistics: vi.fn(async () => {
+      throw new Error('statistics analysis not used');
+    }),
     compareSnapshots: vi.fn(async () => result),
     selectRepositoryPath: vi.fn(async () => null),
     selectSourceFilePath: vi.fn(async () => null),
@@ -133,6 +139,7 @@ function apiMock(result: SnapshotComparison): ChronaApi {
       remainingCount: 0,
     })),
     onBlockIngestProgress: vi.fn(async () => () => undefined),
+    onRepositoryStatisticsProgress: vi.fn(async () => () => undefined),
   };
 }
 

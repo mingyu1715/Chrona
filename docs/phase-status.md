@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`와 `docs/plans/`에는 활성 문서가 없다. Phase 7 완료 문서는 archive와 implemented 영역에 보관한다.
+현재 `docs/specs/`와 `docs/plans/`에는 활성 문서가 없다. Phase 8 완료 문서는 archive와 implemented 영역에 보관한다.
 
 ## 현재 구현 상태
 
@@ -30,6 +30,7 @@
 | 저장소 인벤토리 탐색 | 구현 완료 | `docs/archive/specs/0009-repository-inventory-explorer.md` | `docs/archive/plans/phase-5-repository-inventory-explorer.md` | `docs/implemented/repository-inventory-explorer.md` | 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태, 현재 원본 파일 존재 여부, 검색/필터 UI 구현 완료. |
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
+| 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
@@ -48,6 +49,7 @@
 | `docs/archive/specs/0007-snapshot-restore.md` | 구현 완료 | 빈 대상 폴더 복원 MVP 완료 | Phase 4 계획 보관 완료 |
 | `docs/archive/specs/0008-integrity-verification.md` | 구현 완료 | 원격 기능 브랜치 푸시 완료 | Phase 5 무결성 검증 계획 보관 완료 |
 | `docs/archive/specs/0009-repository-inventory-explorer.md` | 구현 완료 | 메타데이터 기반 저장소 탐색과 UI 완료 | Phase 5 인벤토리 계획 보관 완료 |
+| `docs/archive/specs/0010-repository-statistics-dashboard.md` | 구현 완료 | Home 요약과 상세 저장소 분석 완료 | Phase 8 계획 보관 완료 |
 | `docs/archive/specs/0011-file-inspector-block-map.md` | 구현 완료 | 파일 이력, ordered block map, physical metadata 조회 완료 | Phase 7 계획 보관 완료 |
 
 ## 현재 진행 계획
@@ -64,7 +66,6 @@
 
 | 영역 | 현재 상세 수준 | 다음 문서 후보 |
 | --- | --- | --- |
-| 통계 대시보드 | `project-plan`에만 언급됨 | `docs/specs/0010-repository-statistics-dashboard.md` |
 | 패키징된 `.app` 릴리스 / 서명 | 릴리스 준비 후보로만 언급됨 | `docs/plans/phase-release-packaging.md` |
 | 스냅샷 삭제 / 블록 정리 | 향후 작업 | `docs/specs/00xx-snapshot-delete-gc.md` |
 | 파일 감시 / 자동 스냅샷 | 향후 작업 | `docs/specs/00xx-watched-sources.md` |
@@ -87,18 +88,22 @@
 - Phase 5b: 저장소 인벤토리 탐색
 - Phase 6: 블록 압축
 - Phase 7: 파일 검사기 / 블록 지도
+- Phase 8: 저장소 통계 대시보드
 
-### 현재 다음 작업 후보
+### 현재 활성 작업
 
-- 저장소 통계 대시보드
-  - 저장량, 압축 절감량, block reuse와 snapshot 변화량을 기존 metadata로 집계
-  - 구현 전 `0010` spec과 별도 Phase 계획을 작성
+현재 활성 구현 Phase는 없다.
+
+### 현재 다음 작업 후보: UI 사용성 개선
+
+- 현재 기능을 유지한 채 Home, sidebar, chapter, panel 흐름을 실제 반복 사용 기준으로 정리
+- 별도 spec/plan 승인 후 진행
 
 ### 다음 계획 후보
 
 아래 중 하나를 선택해 현재 Phase만 상세화한다.
 
-1. 저장소 통계 대시보드
+1. 전체 UI 사용성 개선
 2. 릴리스 패키징 및 기본 실행 테스트 강화
 3. 스냅샷 삭제 / 블록 정리
 
@@ -113,6 +118,6 @@
 
 ## 즉시 다음 작업
 
-1. Phase 7 브랜치를 최종 검증하고 원격에 푸시한다.
-2. 저장소 통계 대시보드의 범위와 계산 기준을 spec으로 상세화한다.
-3. 핵심 기능 완료 뒤 전체 UI 사용성 개선 Phase를 진행한다.
+1. Phase 8 브랜치를 최종 검증하고 원격에 푸시한다.
+2. 전체 UI 사용성 개선 Phase의 현재 문제와 범위를 별도 spec으로 정리한다.
+3. Snapshot 삭제/GC와 release packaging은 이후 독립 Phase로 유지한다.

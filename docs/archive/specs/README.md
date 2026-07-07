@@ -13,6 +13,7 @@
 - `0007-snapshot-restore.md`: 스냅샷 복원
 - `0008-integrity-verification.md`: 무결성 검증
 - `0009-repository-inventory-explorer.md`: 저장소 인벤토리 탐색
+- `0010-repository-statistics-dashboard.md`: 저장소 통계 대시보드
 - `0011-file-inspector-block-map.md`: 파일 검사기 / 블록 지도
 
 `docs/specs/`에는 아직 구현하지 않았거나 다음에 구현할 설계만 남긴다.

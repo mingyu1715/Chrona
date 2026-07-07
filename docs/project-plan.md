@@ -50,15 +50,15 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - Repository Inventory Explorer
 - 블록 압축(`off` raw, `standard` Zstd level 3, `fast` LZ4 frame)
 - File Inspector / Block Map
+- Repository Statistics Dashboard
 - README, 개발 로그, 구현 기록 문서
 
 ### 다음 구현 후보
 
-- Repository Statistics Dashboard의 집계 범위와 UI를 현재 Phase 기준으로 상세화
+- 전체 UI 사용성 개선 spec과 plan 수립
 
 ### 아직 세부 계획 없음
 
-- 저장 공간 분석 대시보드
 - 패키징된 `.app` 릴리스와 signing
 
 ### MVP에서 제외하거나 Future로 유지
@@ -273,6 +273,7 @@ src-tauri/src/
     integrity_commands.rs
     inventory_commands.rs
     file_inspector_commands.rs
+    statistics_commands.rs
     repository_commands.rs
     restore_commands.rs
     snapshot_commands.rs
@@ -290,6 +291,7 @@ src-tauri/src/
     integrity_service.rs
     inventory_service.rs
     file_inspector_service.rs
+    statistics_service.rs
     path_safety.rs
     repository.rs
     restore_service.rs
@@ -304,6 +306,7 @@ src-tauri/src/
     integrity.rs
     inventory.rs
     file_inspector.rs
+    statistics.rs
     progress.rs
     repository.rs
     restore.rs
@@ -326,6 +329,10 @@ src/
       SnapshotPanel.tsx
       SnapshotComparePanel.tsx
       *.test.tsx
+    statistics/
+      RepositoryOverview.tsx
+      StatisticsDashboard.tsx
+      *.test.tsx
   shared/
     api/chronaApi.ts
     types/chrona.ts
@@ -333,8 +340,6 @@ src/
 
 아직 없는 modules:
 
-- `statistics_service.rs`
-- dashboard feature module
 - garbage collection module
 - watcher module
 
@@ -354,6 +359,7 @@ src/
 - `IntegrityService`: 저장된 block 존재/size/hash 검증
 - `InventoryService`: repository에 기록된 파일, 종류, 상태를 metadata-only로 집계
 - `FileInspectorService`: 특정 relative path의 content-based snapshot 이력과 ordered block metadata 집계
+- `StatisticsService`: 최신 Snapshot overview와 전체 snapshot/physical block 저장 통계 집계
 - `AccessIndex`, `AccessStore`, `HomeService`: Home/adaptive access 기록
 
 ### 아직 없음
@@ -376,11 +382,11 @@ src/
 - Integrity verification report
 - Repository Explorer / Inventory summary, kind breakdown, filters, file table
 - Explorer master-detail File Inspector와 ordered block map
+- Home repository overview와 on-demand Repository Statistics Dashboard
 - Light/dark theme과 Docker Desktop 참고 sidebar layout
 
 ### 아직 없음
 
-- Repository Statistics Dashboard
 - Advanced visualization charts
 - Release/About screen
 
@@ -388,9 +394,9 @@ src/
 
 현재 구현된 시각화는 summary cards, status panels, list/table 중심이다. 고급 block visualization은 아직 없다.
 
-Repository Inventory Explorer와 파일 단위 ordered block map까지 metadata 기반 가시화가 구현됐다. 다음 시각화는 statistics dashboard를 별도 spec/plan으로 설계한 뒤 구현한다.
+Repository Inventory Explorer, 파일 단위 ordered block map, 저장소 통계 대시보드까지 metadata 기반 가시화가 구현됐다.
 
-MVP에서는 전체 저장소의 거대한 block graph를 만들지 않는다. snapshot별 통계 시각화는 아직 세부 계획이 없다.
+MVP에서는 전체 저장소의 거대한 block graph를 만들지 않는다. snapshot별 통계는 chart library 없이 CSS bar와 목록으로 표시한다.
 
 ## 11. 테스트 구조
 
@@ -439,17 +445,17 @@ Repository Inventory Explorer는 다음을 검증한다.
 - Phase 5b: Repository Inventory Explorer
 - Phase 6: 블록 압축
 - Phase 7: File Inspector / Block Map
+- Phase 8: Repository Statistics Dashboard
 
 완료된 설계 문서는 `docs/archive/specs/`에 보관한다.
 
 ### 현재 구현 계획
 
 - 활성 구현 계획 없음
-- 다음 후보: Repository Statistics Dashboard spec과 구현 plan 작성
+- 다음 후보: 전체 UI 사용성 개선 spec과 plan 작성
 
 ### 설계와 상세 계획이 모두 없는 후보
 
-- Repository Statistics Dashboard
 - Packaged `.app` release/signing
 - Snapshot delete and garbage collection
 - Watcher/automatic snapshots
@@ -528,9 +534,12 @@ Repository Inventory Explorer는 다음을 검증한다.
 
 ### Phase 5c. Repository Statistics Dashboard
 
-- 상태: 후보, 세부 spec/plan 없음
+- 상태: Phase 8 구현 완료
 - 목표: 저장량, 절약량, reuse ratio, snapshot별 변화량을 dashboard로 표시
-- 다음 문서 후보: `docs/specs/0010-repository-statistics-dashboard.md`
+- Spec: `docs/archive/specs/0010-repository-statistics-dashboard.md`
+- Plan: `docs/archive/plans/phase-8-repository-statistics-dashboard.md`
+- Implemented: `docs/implemented/repository-statistics-dashboard.md`
+- 범위: Home 최신 Snapshot 요약, 상세 live scan, 전체/참조/미참조 physical block, dedup/compression 분리
 
 ### Phase 7. File Inspector / Block Map
 
@@ -643,6 +652,7 @@ docs/
     repository-inventory-explorer.md
     block-compression.md
     file-inspector-block-map.md
+    repository-statistics-dashboard.md
   specs/
   plans/
     README.md
@@ -659,6 +669,7 @@ docs/
       0007-snapshot-restore.md
       0008-integrity-verification.md
       0009-repository-inventory-explorer.md
+      0010-repository-statistics-dashboard.md
       0011-file-inspector-block-map.md
     plans/
       phase-1-block-engine.md
@@ -669,6 +680,7 @@ docs/
       phase-5-repository-inventory-explorer.md
       phase-6-block-compression.md
       phase-7-file-inspector-block-map.md
+      phase-8-repository-statistics-dashboard.md
       phase-next-home-adaptive-navigation.md
 ```
 

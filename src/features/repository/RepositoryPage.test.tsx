@@ -4,7 +4,14 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { RepositoryPage } from './RepositoryPage';
 import type { ChronaApi } from '../../shared/api/chronaApi';
-import type { AccessNode, BlockIngestProgress, RepositoryManifest } from '../../shared/types/chrona';
+import type {
+  AccessNode,
+  BlockIngestProgress,
+  RepositoryManifest,
+  RepositoryStatisticsOverview,
+  RepositoryStatisticsProgress,
+  RepositoryStatisticsReport,
+} from '../../shared/types/chrona';
 
 afterEach(() => cleanup());
 
@@ -26,6 +33,66 @@ function accessNode(overrides: Partial<AccessNode> = {}): AccessNode {
   };
 }
 
+function statisticsOverview(
+  overrides: Partial<RepositoryStatisticsOverview> = {},
+): RepositoryStatisticsOverview {
+  return {
+    schemaVersion: 1,
+    repositoryPath: '/tmp/chrona-repo',
+    generatedAt: '2026-07-07T00:00:00Z',
+    hasSnapshot: false,
+    latestSnapshotId: null,
+    latestSnapshotName: null,
+    latestSnapshotCreatedAt: null,
+    latestFileCount: 0,
+    latestLogicalBytes: 0,
+    latestUniqueBlockCount: 0,
+    fileKindStats: [],
+    ...overrides,
+  };
+}
+
+function statisticsReport(): RepositoryStatisticsReport {
+  return {
+    schemaVersion: 1,
+    repositoryPath: '/tmp/chrona-repo',
+    generatedAt: '2026-07-07T00:00:00Z',
+    overview: statisticsOverview({ hasSnapshot: true }),
+    storage: {
+      snapshotCount: 2,
+      retainedLogicalBytes: 100,
+      totalBlockReferences: 10,
+      referencedUniqueBlockCount: 4,
+      referencedUniqueRawBytes: 40,
+      dedupSavedBytes: 60,
+      referencedPhysicalBlockCount: 4,
+      referencedPhysicalBytes: 24,
+      allPhysicalBlockCount: 5,
+      allPhysicalBytes: 26,
+      unreferencedBlockCount: 1,
+      unreferencedBytes: 2,
+      missingReferencedBlockCount: 0,
+      invalidReferencedBlockCount: 0,
+      compressionComparedRawBytes: 40,
+      compressionComparedPhysicalBytes: 24,
+      compressionSavedBytes: 16,
+      storageEfficiencyPercent: 74,
+    },
+    encodings: {
+      rawBlockCount: 1,
+      rawPhysicalBytes: 6,
+      zstdBlockCount: 2,
+      zstdPhysicalBytes: 12,
+      lz4BlockCount: 1,
+      lz4PhysicalBytes: 6,
+      unknownBlockCount: 0,
+      unknownPhysicalBytes: 0,
+    },
+    snapshotTrend: [],
+    issues: [],
+  };
+}
+
 function createApiMock() {
   const manifest: RepositoryManifest = {
     schemaVersion: 1,
@@ -41,6 +108,8 @@ function createApiMock() {
     },
   };
   let progressHandler: ((event: BlockIngestProgress) => void) | undefined;
+  let statisticsProgressHandler:
+    ((event: RepositoryStatisticsProgress) => void) | undefined;
   const api: ChronaApi & {
     setRepositoryCompressionMode(
       repositoryPath: string,
@@ -177,6 +246,8 @@ function createApiMock() {
         },
       ],
     })),
+    getRepositoryStatisticsOverview: vi.fn(async () => statisticsOverview()),
+    analyzeRepositoryStatistics: vi.fn(async () => statisticsReport()),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -223,8 +294,17 @@ function createApiMock() {
       progressHandler = handler;
       return () => undefined;
     }),
+    onRepositoryStatisticsProgress: vi.fn(async (handler) => {
+      statisticsProgressHandler = handler;
+      return () => undefined;
+    }),
   };
-  return { api, emitProgress: (event: BlockIngestProgress) => progressHandler?.(event) };
+  return {
+    api,
+    emitProgress: (event: BlockIngestProgress) => progressHandler?.(event),
+    emitStatisticsProgress: (event: RepositoryStatisticsProgress) =>
+      statisticsProgressHandler?.(event),
+  };
 }
 
 describe('RepositoryPage', () => {
@@ -336,6 +416,115 @@ describe('RepositoryPage', () => {
     expect(screen.getAllByText('demo-source').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/recent repositories/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText('chrona-repo').length).toBeGreaterThan(0);
+  });
+
+  test('renders the latest repository overview on Home', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    vi.mocked(api.getRepositoryStatisticsOverview).mockResolvedValue(statisticsOverview({
+      hasSnapshot: true,
+      latestSnapshotId: 'latest',
+      latestSnapshotName: 'Latest',
+      latestSnapshotCreatedAt: '2026-07-07T00:00:00Z',
+      latestFileCount: 12,
+      latestLogicalBytes: 2 * 1024 * 1024,
+      latestUniqueBlockCount: 7,
+      fileKindStats: [
+        { kind: 'document', fileCount: 8, totalBytesLatest: 1024 },
+      ],
+    }));
+
+    render(<RepositoryPage api={api} />);
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /home/i }));
+
+    await waitFor(() => {
+      expect(api.getRepositoryStatisticsOverview).toHaveBeenCalledWith('/tmp/chrona-repo');
+    });
+    expect(screen.getByText('Repository overview')).toBeInTheDocument();
+    expect(screen.getByText('2.0 MiB')).toBeInTheDocument();
+    expect(screen.getByText('Document')).toBeInTheDocument();
+  });
+
+  test('keeps Home access content visible when overview loading fails', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    const recentSource = accessNode({ label: 'still-visible' });
+    vi.mocked(api.getHomeSummary).mockResolvedValue({
+      continueWorking: recentSource,
+      pinned: [],
+      recentRepositories: [],
+      recentSources: [recentSource],
+      recentFiles: [],
+      recentSnapshots: [],
+      recentComparePairs: [],
+    });
+    vi.mocked(api.getRepositoryStatisticsOverview).mockRejectedValue(
+      new Error('overview failed'),
+    );
+
+    render(<RepositoryPage api={api} />);
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /home/i }));
+
+    expect(await screen.findByText('overview failed')).toBeInTheDocument();
+    expect(screen.getAllByText('still-visible').length).toBeGreaterThan(0);
+  });
+
+  test('runs detailed statistics and forwards progress events', async () => {
+    const { api, emitStatisticsProgress } = createApiMock();
+    const user = userEvent.setup();
+    let resolveAnalysis: ((report: RepositoryStatisticsReport) => void) | undefined;
+    vi.mocked(api.analyzeRepositoryStatistics).mockImplementation(
+      () => new Promise((resolve) => {
+        resolveAnalysis = resolve;
+      }),
+    );
+
+    render(<RepositoryPage api={api} />);
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /statistics/i }));
+    await user.click(screen.getByRole('button', { name: /analyze repository/i }));
+
+    emitStatisticsProgress({
+      phase: 'blocks',
+      processedSnapshots: 2,
+      totalSnapshots: 2,
+      processedBlocks: 4,
+      totalBlocks: 10,
+    });
+    expect(await screen.findByText(/blocks 4 \/ 10/i)).toBeInTheDocument();
+    expect(api.analyzeRepositoryStatistics).toHaveBeenCalledWith('/tmp/chrona-repo');
+
+    resolveAnalysis?.(statisticsReport());
+    expect(await screen.findByText('Dedup saved')).toBeInTheDocument();
+    expect(screen.getByText('Unreferenced blocks')).toBeInTheDocument();
+  });
+
+  test('clears a detailed statistics report when another repository opens', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+
+    render(<RepositoryPage api={api} />);
+    const repositoryInput = screen.getByLabelText(/repository path/i);
+    await user.type(repositoryInput, '/tmp/repo-a');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /statistics/i }));
+    await user.click(screen.getByRole('button', { name: /analyze repository/i }));
+    expect(await screen.findByText('Dedup saved')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^repository/i }));
+    const nextRepositoryInput = screen.getByLabelText(/repository path/i);
+    await user.clear(nextRepositoryInput);
+    await user.type(nextRepositoryInput, '/tmp/repo-b');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /statistics/i }));
+
+    expect(screen.queryByText('Dedup saved')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /analyze repository/i })).toBeInTheDocument();
   });
 
   test('verifies repository integrity and renders the report', async () => {

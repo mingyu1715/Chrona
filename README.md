@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed Phase 6 block compression and the Phase 7 file inspector/block map.
+Chrona has completed the Phase 8 repository statistics dashboard.
 
 Implemented:
 
@@ -44,6 +44,11 @@ Implemented:
 - Content-based snapshot history (`added`, `modified`, `unchanged`, `deleted`)
 - Per-version ordered block maps with raw/Zstd/LZ4 physical metadata
 - Partial missing or invalid block states without failing the complete report
+- Latest-snapshot Home overview for files, logical size, unique blocks, and file kinds
+- On-demand Statistics analysis across snapshots and physical block files
+- Separate all, referenced, unreferenced, and missing block storage values
+- Separate dedup and compression savings calculations
+- Raw/Zstd/LZ4 distribution, snapshot trend, and scan progress
 
 Not implemented yet:
 
@@ -271,6 +276,22 @@ deleted -> present               = added
 
 The selected version preserves the exact block-reference order. Physical metadata is inspected once per unique block hash; normal compressed blocks expose raw/Zstd/LZ4 encoding and stored size from the header without fully decompressing the payload.
 
+### 9. Repository storage statistics
+
+Statistics separates logical retained history from physical block-file storage.
+
+```text
+L = sum of file sizes across every snapshot
+U = sum of referenced unique raw block sizes
+P = total physical .blk bytes
+
+dedup saved       = max(0, L - U)
+compression saved = max(0, compared raw bytes - compared physical bytes)
+unreferenced      = physical blocks not referenced by snapshots
+```
+
+When referenced blocks are missing, Chrona withholds the overall reduction percentage because physical storage would look artificially small. Home reads only the latest snapshot; the complete scan runs only when detailed Statistics analysis is requested.
+
 ### Complexity
 
 Let:
@@ -293,6 +314,7 @@ Then:
 - Snapshot comparison block multiset counting: `O(K)`
 - New physical storage growth: `O(U)`
 - File history traversal: `O(S + R)`
+- Repository statistics scan: `O(S + K + Q)` for snapshots, block references, and physical block files
 
 ### Current algorithmic trade-offs
 
