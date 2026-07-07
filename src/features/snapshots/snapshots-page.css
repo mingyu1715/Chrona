@@ -1,0 +1,79 @@
+.snapshots-page {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 26px 28px 0;
+}
+
+.snapshots-page__header { margin-bottom: 20px; }
+.snapshots-page__header-actions { display: flex; gap: 8px; }
+.snapshots-page__header-actions button,
+.snapshot-detail-view header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 35px;
+  padding: 0 11px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.snapshots-page__header-actions .workspace-primary-action { background: var(--app-primary); color: #fff; border-color: var(--app-primary); }
+
+.snapshots-workspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.32fr) minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--app-border);
+}
+.snapshots-list { border-right: 1px solid var(--app-border); background: var(--app-surface); }
+.snapshots-list__heading { display: flex; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--app-border); font-size: 12px; }
+.snapshots-list__heading span { color: var(--app-muted); }
+.snapshots-list ul { margin: 0; padding: 0; list-style: none; }
+.snapshots-list li { border-bottom: 1px solid var(--app-border); }
+.snapshots-list li button { display: grid; width: 100%; gap: 4px; padding: 12px 14px; border: 0; background: transparent; color: var(--app-text); font: inherit; text-align: left; cursor: pointer; }
+.snapshots-list li button[aria-current='true'] { background: var(--app-sidebar-active); }
+.snapshots-list li span, .snapshots-list li small { color: var(--app-muted); font-size: 11px; }
+.snapshots-list > p { padding: 14px; color: var(--app-muted); font-size: 12px; }
+.snapshots-detail { padding: 22px; }
+.snapshots-detail__empty { display: grid; min-height: 100%; place-items: center; color: var(--app-muted); font-size: 12px; }
+
+.snapshot-detail-view > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--app-border); }
+.snapshot-detail-view > header span, .snapshot-detail-view > header p { color: var(--app-muted); font-size: 11px; }
+.snapshot-detail-view > header h2 { margin: 4px 0; font-size: 20px; }
+.snapshot-detail-view > header p { margin: 0; }
+.snapshot-detail-view > header > div:last-child { display: flex; gap: 7px; }
+.snapshot-detail-view > dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 18px 0 24px; border-top: 1px solid var(--app-border); border-bottom: 1px solid var(--app-border); }
+.snapshot-detail-view > dl div { padding: 14px; border-right: 1px solid var(--app-border); }
+.snapshot-detail-view > dl div:last-child { border-right: 0; }
+.snapshot-detail-view dt { color: var(--app-muted); font-size: 10px; }
+.snapshot-detail-view dd { margin: 5px 0 0; font-size: 17px; font-weight: 700; }
+.snapshot-detail-view section h3 { font-size: 14px; }
+.snapshot-detail-view section ul { margin: 0; padding: 0; list-style: none; }
+.snapshot-detail-view section li { display: flex; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid var(--app-border); font-size: 12px; }
+.snapshot-detail-view section small, .snapshot-detail-view section p { color: var(--app-muted); }
+
+.snapshot-dialog-layer { position: absolute; z-index: 55; inset: 56px 0 0 var(--sidebar-width); display: grid; place-items: center; padding: 30px; background: color-mix(in srgb, var(--app-page) 88%, transparent); }
+.snapshot-restore-dialog { width: min(520px, 100%); border: 1px solid var(--app-border); border-radius: 8px; background: var(--app-surface); box-shadow: 0 20px 52px rgba(20,33,28,.2); }
+.snapshot-restore-dialog > header, .snapshot-restore-dialog > footer { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
+.snapshot-restore-dialog > header { border-bottom: 1px solid var(--app-border); }
+.snapshot-restore-dialog > header h1 { margin: 0; font-size: 17px; }
+.snapshot-restore-dialog button { min-height: 34px; padding: 0 10px; border: 1px solid var(--app-border); border-radius: 6px; background: var(--app-surface); color: var(--app-text); font: inherit; font-size: 12px; cursor: pointer; }
+.snapshot-restore-dialog > header button { width: 32px; padding: 0; border-color: transparent; }
+.snapshot-restore-dialog__body { display: grid; gap: 10px; padding: 20px; }
+.snapshot-restore-dialog__body label { display: grid; gap: 6px; color: var(--app-muted); font-size: 11px; }
+.snapshot-restore-dialog__body input { height: 38px; padding: 0 10px; border: 1px solid var(--app-border); border-radius: 6px; background: var(--app-page); color: var(--app-text); font: inherit; }
+.snapshot-restore-dialog__body > button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; justify-self: start; }
+.snapshot-restore-dialog__body dl { display: grid; grid-template-columns: repeat(3, 1fr); margin: 8px 0 0; }
+.snapshot-restore-dialog__body dl div { padding: 10px; border: 1px solid var(--app-border); }
+.snapshot-restore-dialog__body dd { margin: 4px 0 0; font-weight: 700; }
+.snapshot-restore-dialog > footer { justify-content: flex-end; gap: 8px; border-top: 1px solid var(--app-border); }
+.snapshot-restore-dialog > footer .snapshot-restore-dialog__confirm { border-color: var(--app-primary); background: var(--app-primary); color: #fff; }

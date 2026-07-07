@@ -7,6 +7,7 @@ import { ExplorerPage } from '../features/explorer/ExplorerPage';
 import { HomePage } from '../features/home/HomePage';
 import { RepositoryLibraryMenu } from '../features/repository-library/RepositoryLibraryMenu';
 import { RepositorySetupDialog } from '../features/repository-library/RepositorySetupDialog';
+import { SnapshotsPage } from '../features/snapshots/SnapshotsPage';
 import { AppSidebar, type AppView } from './AppSidebar';
 import { AppTopBar, type ThemeMode } from './AppTopBar';
 import { OperationBar, type ActiveOperation } from './OperationBar';
@@ -87,6 +88,14 @@ export function AppShell({
       <ExplorerPage
         api={api}
         repositoryPath={repositoryLibrary.activeRepository.registration.path}
+      />
+    );
+  } else if (api && repositoryLibrary.activeRepository && activeView === 'snapshots') {
+    mainContent = (
+      <SnapshotsPage
+        api={api}
+        repositoryPath={repositoryLibrary.activeRepository.registration.path}
+        onNewBackup={() => setBackupOpen(true)}
       />
     );
   }
