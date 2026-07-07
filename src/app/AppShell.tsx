@@ -3,6 +3,7 @@ import { type ReactNode, useState } from 'react';
 import type { ChronaApi } from '../shared/api/chronaApi';
 import type { Snapshot } from '../shared/types/chrona';
 import { NewBackupDialog } from '../features/backup/NewBackupDialog';
+import { ExplorerPage } from '../features/explorer/ExplorerPage';
 import { HomePage } from '../features/home/HomePage';
 import { RepositoryLibraryMenu } from '../features/repository-library/RepositoryLibraryMenu';
 import { RepositorySetupDialog } from '../features/repository-library/RepositorySetupDialog';
@@ -79,6 +80,13 @@ export function AppShell({
         refreshKey={homeRefreshKey}
         onNewBackup={() => setBackupOpen(true)}
         onOpenStatistics={() => setActiveView('statistics')}
+      />
+    );
+  } else if (api && repositoryLibrary.activeRepository && activeView === 'files') {
+    mainContent = (
+      <ExplorerPage
+        api={api}
+        repositoryPath={repositoryLibrary.activeRepository.registration.path}
       />
     );
   }
