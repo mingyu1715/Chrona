@@ -7,6 +7,7 @@ pub mod integrity;
 pub mod inventory;
 pub mod progress;
 pub mod repository;
+pub mod repository_registry;
 pub mod restore;
 pub mod snapshot;
 pub mod statistics;
