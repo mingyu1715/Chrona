@@ -1,6 +1,9 @@
 import { type ReactNode, useState } from 'react';
 
 import type { ChronaApi } from '../shared/api/chronaApi';
+import type { Snapshot } from '../shared/types/chrona';
+import { NewBackupDialog } from '../features/backup/NewBackupDialog';
+import { HomePage } from '../features/home/HomePage';
 import { RepositoryLibraryMenu } from '../features/repository-library/RepositoryLibraryMenu';
 import { RepositorySetupDialog } from '../features/repository-library/RepositorySetupDialog';
 import { AppSidebar, type AppView } from './AppSidebar';
@@ -30,6 +33,10 @@ export function AppShell({
   const [theme, setTheme] = useState<ThemeMode>('light');
   const [repositoryMenuOpen, setRepositoryMenuOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
+  const [backupOpen, setBackupOpen] = useState(false);
+  const [internalOperation, setInternalOperation] = useState<ActiveOperation | null>(null);
+  const [completedSnapshot, setCompletedSnapshot] = useState<Snapshot | null>(null);
+  const [homeRefreshKey, setHomeRefreshKey] = useState(0);
   const repositoryLibrary = useRepositoryLibrary(api);
   const content = typeof children === 'function' ? children(activeView) : children;
   const repositorySwitcher = api ? (
@@ -55,10 +62,26 @@ export function AppShell({
   );
   const newBackupAction = api
     ? () => {
-        if (hasRepository) onNewBackup?.();
+        if (hasRepository) {
+          setBackupOpen(true);
+          onNewBackup?.();
+        }
         else setSetupOpen(true);
       }
     : onNewBackup;
+
+  let mainContent = content;
+  if (api && repositoryLibrary.activeRepository && activeView === 'home') {
+    mainContent = (
+      <HomePage
+        api={api}
+        repositoryPath={repositoryLibrary.activeRepository.registration.path}
+        refreshKey={homeRefreshKey}
+        onNewBackup={() => setBackupOpen(true)}
+        onOpenStatistics={() => setActiveView('statistics')}
+      />
+    );
+  }
 
   return (
     <div className="app-shell" data-theme={theme} data-testid="app-shell">
@@ -75,9 +98,9 @@ export function AppShell({
           <div className="app-shell__bootstrap" role="status">Opening repository...</div>
         ) : api && showInitialSetup ? (
           <RepositorySetupDialog api={api} controller={repositoryLibrary} />
-        ) : content}
+        ) : mainContent}
       </main>
-      <OperationBar operation={activeOperation} />
+      <OperationBar operation={activeOperation ?? internalOperation} />
       {api && setupOpen && !showInitialSetup && (
         <RepositorySetupDialog
           api={api}
@@ -85,6 +108,40 @@ export function AppShell({
           canDismiss
           onDismiss={() => setSetupOpen(false)}
         />
+      )}
+      {api && backupOpen && repositoryLibrary.activeRepository && (
+        <NewBackupDialog
+          api={api}
+          repositoryPath={repositoryLibrary.activeRepository.registration.path}
+          onClose={() => setBackupOpen(false)}
+          onOperationChange={setInternalOperation}
+          onCompleted={(snapshot) => {
+            setCompletedSnapshot(snapshot);
+            setHomeRefreshKey((current) => current + 1);
+          }}
+        />
+      )}
+      {completedSnapshot && (
+        <div className="app-shell__notice" role="status">
+          <span>Backup complete: <strong>{completedSnapshot.name}</strong></span>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveView('snapshots');
+              setCompletedSnapshot(null);
+            }}
+          >
+            View snapshot
+          </button>
+          <button
+            className="app-shell__notice-close"
+            type="button"
+            aria-label="Dismiss backup result"
+            onClick={() => setCompletedSnapshot(null)}
+          >
+            Close
+          </button>
+        </div>
       )}
     </div>
   );

@@ -50,7 +50,7 @@ describe('repository library workspace', () => {
     await waitFor(() => {
       expect(api.createManagedRepository).toHaveBeenCalledWith('Project Archive');
     });
-    expect(screen.getByText('Workspace')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
   });
 
   test('opens native pickers only after choosing custom or existing storage', async () => {

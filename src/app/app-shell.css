@@ -507,6 +507,47 @@
   transition: width 160ms ease;
 }
 
+.app-shell__notice {
+  position: absolute;
+  z-index: 45;
+  right: 20px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 520px;
+  padding: 11px 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+  background: var(--app-surface);
+  box-shadow: 0 12px 32px rgba(20, 33, 28, 0.18);
+  font-size: 12px;
+}
+
+.app-shell__notice > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell__notice button {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--app-border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--app-text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.app-shell__notice .app-shell__notice-close {
+  border-color: transparent;
+  color: var(--app-muted);
+}
+
 @keyframes operation-spin {
   to { transform: rotate(360deg); }
 }
