@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
@@ -27,23 +28,28 @@ impl RepositoryRegistryStore {
             return Ok(RepositoryRegistry::default());
         }
 
-        let registry: RepositoryRegistry = serde_json::from_str(&fs::read_to_string(path)?)?;
-        if registry.schema_version != REPOSITORY_REGISTRY_SCHEMA_VERSION {
-            return Err(ChronaError::InvalidRepository(format!(
-                "unsupported repository registry schema version {}",
-                registry.schema_version
-            )));
-        }
+        let registry: RepositoryRegistry = serde_json::from_str(&fs::read_to_string(path)?)
+            .map_err(|error| {
+                ChronaError::InvalidRepositoryRegistry(format!(
+                    "failed to parse repository registry JSON: {error}"
+                ))
+            })?;
+        validate_registry(&registry)?;
         Ok(registry)
     }
 
     pub fn save(&self, registry: &RepositoryRegistry) -> ChronaResult<()> {
+        validate_registry(registry)?;
         fs::create_dir_all(&self.app_data_dir)?;
         let final_path = self.registry_path();
         let tmp_path = self
             .app_data_dir
             .join(format!("{REPOSITORY_REGISTRY_FILE}.tmp-{}", Uuid::new_v4()));
-        let bytes = serde_json::to_vec_pretty(registry)?;
+        let bytes = serde_json::to_vec_pretty(registry).map_err(|error| {
+            ChronaError::InvalidRepositoryRegistry(format!(
+                "failed to serialize repository registry JSON: {error}"
+            ))
+        })?;
 
         let write_result = (|| {
             let mut file = OpenOptions::new()
@@ -67,7 +73,6 @@ impl RepositoryRegistryStore {
 
     pub fn register(&self, item: RegisteredRepository) -> ChronaResult<RepositoryRegistry> {
         let mut registry = self.load()?;
-        let canonical_path = canonicalize_existing(&item.path)?;
 
         if registry
             .repositories
@@ -79,6 +84,7 @@ impl RepositoryRegistryStore {
             ));
         }
 
+        let canonical_path = canonicalize_existing(&item.path)?;
         if registry
             .repositories
             .iter()
@@ -141,7 +147,6 @@ impl RepositoryRegistryStore {
 
     pub fn relink(&self, repository_id: &str, path: PathBuf) -> ChronaResult<RepositoryRegistry> {
         let mut registry = self.load()?;
-        let canonical_path = canonicalize_existing(&path)?;
         let Some(target_index) = registry
             .repositories
             .iter()
@@ -152,6 +157,7 @@ impl RepositoryRegistryStore {
             ));
         };
 
+        let canonical_path = canonicalize_existing(&path)?;
         if let Some(existing) = registry.repositories.iter().find(|existing| {
             existing.repository_id != repository_id && existing.path == canonical_path
         }) {
@@ -168,4 +174,42 @@ impl RepositoryRegistryStore {
     fn registry_path(&self) -> PathBuf {
         self.app_data_dir.join(REPOSITORY_REGISTRY_FILE)
     }
+}
+
+fn validate_registry(registry: &RepositoryRegistry) -> ChronaResult<()> {
+    if registry.schema_version != REPOSITORY_REGISTRY_SCHEMA_VERSION {
+        return Err(ChronaError::InvalidRepositoryRegistry(format!(
+            "unsupported repository registry schema version {}",
+            registry.schema_version
+        )));
+    }
+
+    let mut repository_ids = HashSet::new();
+    let mut repository_paths = HashSet::new();
+
+    for repository in &registry.repositories {
+        if !repository_ids.insert(repository.repository_id.clone()) {
+            return Err(ChronaError::InvalidRepositoryRegistry(format!(
+                "duplicate repository_id in repository registry: {}",
+                repository.repository_id
+            )));
+        }
+
+        if !repository_paths.insert(repository.path.clone()) {
+            return Err(ChronaError::InvalidRepositoryRegistry(format!(
+                "duplicate repository path in repository registry: {}",
+                repository.path.display()
+            )));
+        }
+    }
+
+    if let Some(active_repository_id) = &registry.active_repository_id {
+        if !repository_ids.contains(active_repository_id) {
+            return Err(ChronaError::InvalidRepositoryRegistry(format!(
+                "active repository `{active_repository_id}` is not registered"
+            )));
+        }
+    }
+
+    Ok(())
 }

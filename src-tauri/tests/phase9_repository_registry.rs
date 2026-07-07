@@ -4,6 +4,7 @@ use std::path::Path;
 use chrona::core::errors::ChronaError;
 use chrona::core::repository_registry_store::RepositoryRegistryStore;
 use chrona::models::repository_registry::RegisteredRepository;
+use serde_json::json;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
@@ -15,6 +16,15 @@ fn registered_repository(repository_id: &str, path: impl AsRef<Path>) -> Registe
         added_at: "2026-07-07T00:00:00Z".to_string(),
         last_opened_at: "2026-07-07T00:00:00Z".to_string(),
     }
+}
+
+fn write_registry_json(app_data_dir: &Path, value: serde_json::Value) {
+    fs::create_dir_all(app_data_dir).unwrap();
+    fs::write(
+        app_data_dir.join("repository-registry.json"),
+        serde_json::to_vec_pretty(&value).unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -62,6 +72,125 @@ fn registry_rejects_duplicate_registration_keys() {
         duplicate_path,
         ChronaError::RepositoryAlreadyRegistered(value)
             if value == repository_a.canonicalize().unwrap().display().to_string()
+    ));
+}
+
+#[test]
+fn load_rejects_duplicate_repository_ids_in_persisted_json() {
+    let temp = tempfile::tempdir().unwrap();
+    let repository = temp.path().join("repo-a");
+    fs::create_dir_all(&repository).unwrap();
+    let canonical = repository.canonicalize().unwrap();
+    let app_data_dir = temp.path().join("app-data");
+    write_registry_json(
+        &app_data_dir,
+        json!({
+            "schemaVersion": 1,
+            "activeRepositoryId": "repo-a",
+            "repositories": [
+                {
+                    "repositoryId": "repo-a",
+                    "displayName": "repo-a",
+                    "path": canonical,
+                    "addedAt": "2026-07-07T00:00:00Z",
+                    "lastOpenedAt": "2026-07-07T00:00:00Z"
+                },
+                {
+                    "repositoryId": "repo-a",
+                    "displayName": "repo-a-duplicate",
+                    "path": temp.path().join("repo-b"),
+                    "addedAt": "2026-07-07T00:00:00Z",
+                    "lastOpenedAt": "2026-07-07T00:00:00Z"
+                }
+            ]
+        }),
+    );
+
+    let error = RepositoryRegistryStore::new(app_data_dir)
+        .load()
+        .unwrap_err();
+
+    assert!(matches!(
+        error,
+        ChronaError::InvalidRepositoryRegistry(message)
+            if message.contains("duplicate repository_id") && message.contains("repo-a")
+    ));
+}
+
+#[test]
+fn load_rejects_duplicate_paths_in_persisted_json() {
+    let temp = tempfile::tempdir().unwrap();
+    let repository = temp.path().join("repo-a");
+    fs::create_dir_all(&repository).unwrap();
+    let canonical = repository.canonicalize().unwrap();
+    let app_data_dir = temp.path().join("app-data");
+    write_registry_json(
+        &app_data_dir,
+        json!({
+            "schemaVersion": 1,
+            "activeRepositoryId": "repo-a",
+            "repositories": [
+                {
+                    "repositoryId": "repo-a",
+                    "displayName": "repo-a",
+                    "path": canonical,
+                    "addedAt": "2026-07-07T00:00:00Z",
+                    "lastOpenedAt": "2026-07-07T00:00:00Z"
+                },
+                {
+                    "repositoryId": "repo-b",
+                    "displayName": "repo-b",
+                    "path": canonical,
+                    "addedAt": "2026-07-07T00:00:00Z",
+                    "lastOpenedAt": "2026-07-07T00:00:00Z"
+                }
+            ]
+        }),
+    );
+
+    let error = RepositoryRegistryStore::new(app_data_dir)
+        .load()
+        .unwrap_err();
+
+    assert!(matches!(
+        error,
+        ChronaError::InvalidRepositoryRegistry(message)
+            if message.contains("duplicate repository path")
+    ));
+}
+
+#[test]
+fn load_rejects_dangling_active_repository_id_in_persisted_json() {
+    let temp = tempfile::tempdir().unwrap();
+    let repository = temp.path().join("repo-a");
+    fs::create_dir_all(&repository).unwrap();
+    let canonical = repository.canonicalize().unwrap();
+    let app_data_dir = temp.path().join("app-data");
+    write_registry_json(
+        &app_data_dir,
+        json!({
+            "schemaVersion": 1,
+            "activeRepositoryId": "repo-missing",
+            "repositories": [
+                {
+                    "repositoryId": "repo-a",
+                    "displayName": "repo-a",
+                    "path": canonical,
+                    "addedAt": "2026-07-07T00:00:00Z",
+                    "lastOpenedAt": "2026-07-07T00:00:00Z"
+                }
+            ]
+        }),
+    );
+
+    let error = RepositoryRegistryStore::new(app_data_dir)
+        .load()
+        .unwrap_err();
+
+    assert!(matches!(
+        error,
+        ChronaError::InvalidRepositoryRegistry(message)
+            if message.contains("active repository") && message.contains("repo-missing")
     ));
 }
 
@@ -116,6 +245,42 @@ fn set_active_rejects_unknown_repository_id() {
     assert!(matches!(
         error,
         ChronaError::RepositoryRegistrationNotFound(value) if value == "missing-repo"
+    ));
+}
+
+#[test]
+fn register_duplicate_repository_id_wins_before_missing_candidate_path() {
+    let temp = tempfile::tempdir().unwrap();
+    let repository = temp.path().join("repo-a");
+    fs::create_dir_all(&repository).unwrap();
+    let missing = temp.path().join("missing-repo");
+    let store = RepositoryRegistryStore::new(temp.path().join("app-data"));
+
+    store
+        .register(registered_repository("repo-a", &repository))
+        .unwrap();
+
+    let error = store
+        .register(registered_repository("repo-a", &missing))
+        .unwrap_err();
+
+    assert!(matches!(
+        error,
+        ChronaError::RepositoryAlreadyRegistered(value) if value == "repo-a"
+    ));
+}
+
+#[test]
+fn relink_missing_repository_id_wins_before_missing_candidate_path() {
+    let temp = tempfile::tempdir().unwrap();
+    let missing = temp.path().join("missing-repo");
+    let store = RepositoryRegistryStore::new(temp.path().join("app-data"));
+
+    let error = store.relink("repo-missing", missing).unwrap_err();
+
+    assert!(matches!(
+        error,
+        ChronaError::RepositoryRegistrationNotFound(value) if value == "repo-missing"
     ));
 }
 

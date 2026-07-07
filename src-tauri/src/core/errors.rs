@@ -38,6 +38,8 @@ pub enum ChronaError {
     SnapshotNotFound(String),
     #[error("RepositoryFileNotFound: {0}")]
     RepositoryFileNotFound(String),
+    #[error("InvalidRepositoryRegistry: {0}")]
+    InvalidRepositoryRegistry(String),
     #[error("RepositoryAlreadyRegistered: {0}")]
     RepositoryAlreadyRegistered(String),
     #[error("RepositoryRegistrationNotFound: {0}")]
