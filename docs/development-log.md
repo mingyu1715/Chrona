@@ -404,3 +404,18 @@
 - 상단 저장소 전환 바, 단순 사이드바, 독립 스크롤 본문, 조건부 작업 표시로 앱 셸을 재구성한다.
 - `Sources`와 `Review` 장은 `새 백업` 흐름으로 통합하고, 무결성과 압축 설정은 설정 화면으로 이동한다.
 - 확정된 화면 연결과 컴포넌트 구조를 `docs/specs/0012-ui-usability-improvement.md`에 기록했다.
+
+### Phase 9 대상 플랫폼 정정
+
+- Phase 9의 대상은 macOS와 Windows 데스크톱 앱으로 확정했다.
+- 모바일·태블릿 전용 drawer와 화면 전환 구조는 구현 범위에서 제외했다.
+- 반응형은 제거하지 않고 `960×640` 최소 창부터 1440px 이상 넓은 창까지 데스크톱 작업 영역이 깨지지 않는 방식으로 유지한다.
+- 파일과 스냅샷 master-detail은 compact 창에서도 유지하고 비율과 여백만 조정한다.
+
+### Phase 9 구현 계획 작성
+
+- 승인된 `0012` 설계를 11개 독립 작업으로 나눈 `docs/plans/phase-9-ui-usability-improvement.md`를 작성했다.
+- 저장소 registry/store, library service와 Tauri API, TypeScript 계약, 앱 셸, 저장소 시작 화면, 새 백업, Files, Snapshots, Statistics/Settings, legacy UI 제거, 최종 검증 순서로 정했다.
+- 각 작업에 실패 테스트, 최소 구현 인터페이스, 검증 명령, 권장 커밋 단위를 기록했다.
+- 모바일 UI는 계획에서 제외하고 macOS/Windows의 `960×640`, `1100×800`, `1440×900` 창 검증을 포함했다.
+- Windows native 검증 환경을 사용할 수 없는 경우 검증 공백을 문서화하고 통과했다고 주장하지 않도록 했다.

@@ -10,7 +10,7 @@
 
 ## 현재 구현 계획
 
-- 없음
+- Phase 9 전체 UI 사용성 개선: `docs/plans/phase-9-ui-usability-improvement.md`
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
@@ -18,7 +18,7 @@
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 
-- 전체 UI 사용성 개선: 사용자 spec 검토 후 Phase 9 구현 계획 작성
+- 없음
 
 ## 보관된 완료 계획
 

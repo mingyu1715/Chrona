@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`에는 Phase 9 UI 사용성 개선 설계가 있고 `docs/plans/`에는 아직 구현 계획이 없다. Phase 8까지의 완료 문서는 archive와 implemented 영역에 보관한다.
+현재 `docs/specs/`와 `docs/plans/`에는 Phase 9 UI 사용성 개선 설계와 구현 계획이 있다. Phase 8까지의 완료 문서는 archive와 implemented 영역에 보관한다.
 
 ## 현재 구현 상태
 
@@ -31,7 +31,7 @@
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
 | 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
-| 전체 UI 사용성 개선 | 설계 확정, 구현 계획 작성 전 | `docs/specs/0012-ui-usability-improvement.md` | 없음 | `docs/audits/ui-usability-2026-07/audit.md` | 저장소 라이브러리, 앱 셸, 사용자 작업 중심 화면 연결, 조건부 진행 표시 설계 완료. |
+| 전체 UI 사용성 개선 | 설계·계획 완료, 구현 전 | `docs/specs/0012-ui-usability-improvement.md` | `docs/plans/phase-9-ui-usability-improvement.md` | `docs/audits/ui-usability-2026-07/audit.md` | macOS/Windows 저장소 라이브러리, 앱 셸, 데스크톱 창 크기 대응, 조건부 진행 표시를 11개 Task로 계획함. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
@@ -55,13 +55,11 @@
 
 ## 현재 진행 계획
 
-현재 진행 중인 세부 구현 계획은 없다.
+- `docs/plans/phase-9-ui-usability-improvement.md`: 구현 전, Task 1부터 시작
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
-| 영역 | 설계 문서 | 다음 단계 |
-| --- | --- | --- |
-| 전체 UI 사용성 개선 | `docs/specs/0012-ui-usability-improvement.md` | 사용자 문서 검토 후 Phase 9 구현 계획 작성 |
+현재 없음.
 
 ## 설계와 세부 구현 계획이 모두 없는 작업
 
@@ -95,12 +93,12 @@
 
 ### 현재 활성 작업
 
-Phase 9 전체 UI 사용성 개선 설계를 확정했다. 사용자 문서 검토와 구현 계획 작성 전이며 구현은 아직 시작하지 않았다.
+Phase 9 전체 UI 사용성 개선 설계와 구현 계획을 확정했다. 구현은 아직 시작하지 않았다.
 
 ### 현재 작업: Phase 9 UI 사용성 개선
 
-- 현재 기능을 유지한 채 저장소 라이브러리, 앱 셸, 화면 연결과 반응형 구조를 개선
-- `docs/specs/0012-ui-usability-improvement.md` 사용자 검토 후 구현 계획 작성
+- 현재 기능을 유지한 채 저장소 라이브러리, 앱 셸, 화면 연결과 데스크톱 창 크기 대응을 개선
+- `docs/plans/phase-9-ui-usability-improvement.md`의 Task 1부터 TDD로 구현
 
 ### Phase 9 이후 계획 후보
 
@@ -121,6 +119,6 @@ Phase 9 완료 후 아래 중 하나를 선택해 현재 Phase만 상세화한�
 
 ## 즉시 다음 작업
 
-1. `docs/specs/0012-ui-usability-improvement.md`를 사용자 검토한다.
-2. 승인된 설계를 Phase 9 구현 계획으로 구체화한다.
+1. Phase 9 계획의 Task 1 저장소 registry/store부터 구현한다.
+2. Task 3까지 완료해 기존 UI를 바꾸기 전에 backend와 TypeScript 계약을 고정한다.
 3. Snapshot 삭제/GC와 release packaging은 이후 독립 Phase로 유지한다.
