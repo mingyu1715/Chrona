@@ -14,10 +14,11 @@ import { AppSidebar, type AppView } from './AppSidebar';
 import { AppTopBar, type ThemeMode } from './AppTopBar';
 import { OperationBar, type ActiveOperation } from './OperationBar';
 import { useRepositoryLibrary } from './useRepositoryLibrary';
+import '../styles/component-workspaces.css';
 import './app-shell.css';
 
 interface AppShellProps {
-  children: ReactNode | ((activeView: AppView) => ReactNode);
+  children?: ReactNode | ((activeView: AppView) => ReactNode);
   api?: ChronaApi;
   initialView?: AppView;
   repositorySwitcher?: ReactNode;
