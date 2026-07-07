@@ -350,3 +350,28 @@
 - 통계 index/cache, garbage collection, 자동 scan, chart library와 전체 UI 재설계는 이번 범위에서 제외했다.
 - 승인된 설계를 `docs/specs/0010-repository-statistics-dashboard.md`에 기록했다.
 - overview, 상세 집계, Tauri API, Home 요약, Statistics 화면, 문서/검증 순서의 구현 계획을 `docs/plans/phase-8-repository-statistics-dashboard.md`에 작성했다.
+
+### Phase 8 저장소 통계 대시보드 구현
+
+- 최신 Snapshot 하나만 읽는 Home repository overview를 추가해 파일 수, 논리 용량, 고유 block 수, 파일 종류를 표시했다.
+- 전체 Snapshot의 논리 보관량, block reference, unique raw block을 집계하는 `StatisticsService`를 구현했다.
+- `blocks/` 아래 최종 `.blk`를 scan해 전체, 참조, 미참조, 누락 physical block count와 byte를 분리했다.
+- dedup 절감량과 compression 절감량을 서로 다른 공식으로 계산하고 UI에서도 분리 표시했다.
+- referenced raw/Zstd/LZ4 block 분포와 oldest-first Snapshot 변화 추이를 추가했다.
+- 상세 분석을 blocking task에서 실행하고 `repository-statistics-progress` event를 전달하도록 했다.
+- 누락, 읽기 실패, invalid header/filename, raw size 충돌은 전체 분석을 폐기하지 않고 issue로 반환한다.
+- repository를 변경할 때 이전 overview, report, progress, error를 초기화해 다른 저장소 수치가 남지 않도록 했다.
+- 미참조 block은 조회만 하며 삭제하지 않는다.
+
+### Phase 8 문서 정리
+
+- `docs/implemented/repository-statistics-dashboard.md`에 계산 공식, 데이터 흐름, 제한 사항을 기록했다.
+- 완료된 `0010` spec과 Phase 8 계획을 각각 `docs/archive/specs/`, `docs/archive/plans/`로 이동했다.
+- 다음 기능 후보를 전체 UI 사용성 개선 Phase로 정리했다.
+
+### Phase 8 최종 검증
+
+- `cargo fmt --all -- --check`: Rust 포맷 검사 통과.
+- `cargo test`: Phase 8 Statistics 테스트 7개를 포함해 Rust 테스트 72개 통과.
+- `npm test -- --run`: UI 테스트 파일 6개, 테스트 27개 통과.
+- `npm run build`: TypeScript 검사와 Vite 프로덕션 빌드 통과.

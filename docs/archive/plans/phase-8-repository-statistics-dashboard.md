@@ -314,11 +314,11 @@ git commit -m "feat: add repository statistics dashboard"
 
 **Files:** implementation record, README files, development log, phase status, project plan, plan/archive indexes; archive spec and this plan.
 
-- [ ] **Step 1: Record implementation and limits**
+- [x] **Step 1: Record implementation and limits**
 
 Document exact formulas, Home fast path, detailed live scan, partial issues, async progress, and that unreferenced blocks are reported but never deleted.
 
-- [ ] **Step 2: Update status and archive**
+- [x] **Step 2: Update status and archive**
 
 Mark Phase 8 implemented, add `docs/implemented/repository-statistics-dashboard.md`, move spec/plan to archive, update indexes, and verify links with:
 
@@ -326,7 +326,7 @@ Mark Phase 8 implemented, add `docs/implemented/repository-statistics-dashboard.
 rg -n "0010-repository-statistics|phase-8-repository-statistics" README.md README.ko.md docs
 ```
 
-- [ ] **Step 3: Run fresh final verification**
+- [x] **Step 3: Run fresh final verification**
 
 ```bash
 cd src-tauri
@@ -341,7 +341,7 @@ git status --short --branch
 
 Record exact test counts in Korean development log.
 
-- [ ] **Step 4: Commit documentation**
+- [x] **Step 4: Commit documentation**
 
 ```bash
 git add README.md README.ko.md docs
