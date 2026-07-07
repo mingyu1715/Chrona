@@ -3,159 +3,76 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
+import { createChronaApiMock } from '../../test/chronaApiMock';
 import { SnapshotPanel } from './SnapshotPanel';
 
 afterEach(() => cleanup());
 
 function apiMock(): ChronaApi {
-  return {
-    createRepository: vi.fn(),
-    openRepository: vi.fn(),
-    setRepositoryCompressionMode: vi.fn(),
-    ingestBlocks: vi.fn(),
-    recordAccessEvent: vi.fn(),
-    getHomeSummary: vi.fn(async () => ({
-      continueWorking: null,
-      pinned: [],
-      recentRepositories: [],
-      recentSources: [],
-      recentFiles: [],
-      recentSnapshots: [],
-      recentComparePairs: [],
-    })),
-    pinAccessItem: vi.fn(),
-    unpinAccessItem: vi.fn(),
-    clearAccessHistory: vi.fn(async () => ({
-      schemaVersion: 1,
-      removedCount: 0,
-      remainingCount: 0,
-    })),
-    onBlockIngestProgress: vi.fn(async () => () => undefined),
-    onRepositoryStatisticsProgress: vi.fn(async () => () => undefined),
-    createSnapshot: vi.fn(async () => ({
-      schemaVersion: 1,
+  const { api } = createChronaApiMock();
+
+  vi.mocked(api.createSnapshot).mockResolvedValue({
+    schemaVersion: 1,
+    id: '20260619T103000Z_8f31c2',
+    name: 'Initial import',
+    createdAt: '2026-06-19T10:30:00Z',
+    sourceRoot: '/tmp/source',
+    summary: {
+      fileCount: 1,
+      totalOriginalBytes: 5,
+      totalBlockReferences: 1,
+      newBlockCount: 1,
+      reusedBlockCount: 0,
+      newStoredBytes: 5,
+      newLogicalBytes: 5,
+      compressionSavedBytes: 0,
+      newRawBlockCount: 1,
+      newZstdBlockCount: 0,
+      newLz4BlockCount: 0,
+    },
+    files: [],
+  });
+  vi.mocked(api.listSnapshots).mockResolvedValue([
+    {
       id: '20260619T103000Z_8f31c2',
       name: 'Initial import',
       createdAt: '2026-06-19T10:30:00Z',
       sourceRoot: '/tmp/source',
-      summary: {
-        fileCount: 1,
-        totalOriginalBytes: 5,
-        totalBlockReferences: 1,
-        newBlockCount: 1,
-        reusedBlockCount: 0,
-        newStoredBytes: 5,
-        newLogicalBytes: 5,
-        compressionSavedBytes: 0,
-        newRawBlockCount: 1,
-        newZstdBlockCount: 0,
-        newLz4BlockCount: 0,
-      },
-      files: [],
-    })),
-    listSnapshots: vi.fn(async () => [
+      fileCount: 1,
+      totalOriginalBytes: 5,
+      newStoredBytes: 5,
+    },
+  ]);
+  vi.mocked(api.getSnapshot).mockResolvedValue({
+    schemaVersion: 1,
+    id: '20260619T103000Z_8f31c2',
+    name: 'Initial import',
+    createdAt: '2026-06-19T10:30:00Z',
+    sourceRoot: '/tmp/source',
+    summary: {
+      fileCount: 1,
+      totalOriginalBytes: 5,
+      totalBlockReferences: 1,
+      newBlockCount: 1,
+      reusedBlockCount: 0,
+      newStoredBytes: 5,
+      newLogicalBytes: 5,
+      compressionSavedBytes: 0,
+      newRawBlockCount: 1,
+      newZstdBlockCount: 0,
+      newLz4BlockCount: 0,
+    },
+    files: [
       {
-        id: '20260619T103000Z_8f31c2',
-        name: 'Initial import',
-        createdAt: '2026-06-19T10:30:00Z',
-        sourceRoot: '/tmp/source',
-        fileCount: 1,
-        totalOriginalBytes: 5,
-        newStoredBytes: 5,
+        relativePath: 'a.txt',
+        sizeBytes: 5,
+        modifiedAt: '2026-06-19T10:00:00Z',
+        blocks: [],
       },
-    ]),
-    selectRepositoryPath: vi.fn(async () => null),
-    selectSourceFilePath: vi.fn(async () => null),
-    selectSourceFolderPath: vi.fn(async () => null),
-    selectRestoreTargetPath: vi.fn(async () => null),
-    restoreSnapshot: vi.fn(),
-    verifyRepository: vi.fn(async () => ({
-      schemaVersion: 1,
-      repositoryPath: '/tmp/repo',
-      checkedAt: '2026-06-26T00:00:00Z',
-      status: 'healthy' as const,
-      snapshotCount: 0,
-      fileCount: 0,
-      blockReferenceCount: 0,
-      uniqueBlockCount: 0,
-      missingBlockCount: 0,
-      corruptBlockCount: 0,
-      issues: [],
-    })),
-    getRepositoryInventory: vi.fn(async () => ({
-      schemaVersion: 1,
-      repositoryPath: '/tmp/repo',
-      generatedAt: '2026-06-27T00:00:00Z',
-      snapshotCount: 0,
-      knownFileCount: 0,
-      latestFileCount: 0,
-      deletedInLatestCount: 0,
-      sourceExistsCount: 0,
-      sourceMissingCount: 0,
-      sourceRootMissingCount: 0,
-      totalOriginalBytesLatest: 0,
-      totalBlockReferencesLatest: 0,
-      uniqueBlockCountLatest: 0,
-      kindStats: [],
-      files: [],
-    })),
-    inspectRepositoryFile: vi.fn(),
-    getRepositoryStatisticsOverview: vi.fn(async () => {
-      throw new Error('statistics overview not used');
-    }),
-    analyzeRepositoryStatistics: vi.fn(async () => {
-      throw new Error('statistics analysis not used');
-    }),
-    compareSnapshots: vi.fn(async () => ({
-      schemaVersion: 1,
-      baseSnapshotId: 'base',
-      targetSnapshotId: 'target',
-      summary: {
-        addedFileCount: 0,
-        deletedFileCount: 0,
-        modifiedFileCount: 0,
-        unchangedFileCount: 0,
-        totalBeforeBytes: 0,
-        totalAfterBytes: 0,
-        addedBytes: 0,
-        deletedBytes: 0,
-        modifiedBeforeBytes: 0,
-        modifiedAfterBytes: 0,
-        addedBlockReferences: 0,
-        removedBlockReferences: 0,
-        sharedBlockReferences: 0,
-      },
-      files: [],
-    })),
-    getSnapshot: vi.fn(async () => ({
-      schemaVersion: 1,
-      id: '20260619T103000Z_8f31c2',
-      name: 'Initial import',
-      createdAt: '2026-06-19T10:30:00Z',
-      sourceRoot: '/tmp/source',
-      summary: {
-        fileCount: 1,
-        totalOriginalBytes: 5,
-        totalBlockReferences: 1,
-        newBlockCount: 1,
-        reusedBlockCount: 0,
-        newStoredBytes: 5,
-        newLogicalBytes: 5,
-        compressionSavedBytes: 0,
-        newRawBlockCount: 1,
-        newZstdBlockCount: 0,
-        newLz4BlockCount: 0,
-      },
-      files: [
-        {
-          relativePath: 'a.txt',
-          sizeBytes: 5,
-          modifiedAt: '2026-06-19T10:00:00Z',
-          blocks: [],
-        },
-      ],
-    })),
-  };
+    ],
+  });
+
+  return api;
 }
 
 describe('SnapshotPanel', () => {
@@ -194,29 +111,27 @@ describe('SnapshotPanel', () => {
   });
 
   test('restores the selected snapshot into a chosen target directory', async () => {
-    const api = {
-      ...apiMock(),
-      selectRestoreTargetPath: vi.fn(async () => '/tmp/restore-target'),
-      restoreSnapshot: vi.fn(async () => ({
-        schemaVersion: 1,
-        snapshotId: '20260619T103000Z_8f31c2',
-        targetPath: '/tmp/restore-target',
-        restoredFileCount: 1,
-        restoredBytes: 5,
-        restoredBlockCount: 1,
-        files: [
-          {
-            relativePath: 'a.txt',
-            sizeBytes: 5,
-            blockCount: 1,
-          },
-        ],
-      })),
-    };
+    const api = apiMock();
+    vi.mocked(api.selectRestoreTargetPath).mockResolvedValue('/tmp/restore-target');
+    vi.mocked(api.restoreSnapshot).mockResolvedValue({
+      schemaVersion: 1,
+      snapshotId: '20260619T103000Z_8f31c2',
+      targetPath: '/tmp/restore-target',
+      restoredFileCount: 1,
+      restoredBytes: 5,
+      restoredBlockCount: 1,
+      files: [
+        {
+          relativePath: 'a.txt',
+          sizeBytes: 5,
+          blockCount: 1,
+        },
+      ],
+    });
     const user = userEvent.setup();
     render(
       <SnapshotPanel
-        api={api as unknown as ChronaApi}
+        api={api}
         repositoryPath="/tmp/repo"
         sourcePath="/tmp/source"
         repositoryOpen

@@ -4,312 +4,27 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { RepositoryPage } from './RepositoryPage';
 import type { ChronaApi } from '../../shared/api/chronaApi';
-import type {
-  AccessNode,
-  BlockIngestProgress,
-  RepositoryManifest,
-  RepositoryStatisticsOverview,
-  RepositoryStatisticsProgress,
-  RepositoryStatisticsReport,
-} from '../../shared/types/chrona';
+import {
+  accessNode,
+  createChronaApiMock,
+  statisticsOverview,
+  statisticsReport,
+} from '../../test/chronaApiMock';
+import type { RepositoryStatisticsReport } from '../../shared/types/chrona';
 
 afterEach(() => cleanup());
 
-function accessNode(overrides: Partial<AccessNode> = {}): AccessNode {
-  return {
-    key: 'source:/tmp/source',
-    kind: 'source',
-    label: 'source',
-    path: '/tmp/source',
-    repositoryId: 'repo-id',
-    snapshotId: null,
-    baseSnapshotId: null,
-    targetSnapshotId: null,
-    accessCount: 2,
-    lastAccessedAt: '2026-06-26T00:00:00Z',
-    lastAction: 'ingest_completed',
-    pinned: false,
-    ...overrides,
-  };
-}
-
-function statisticsOverview(
-  overrides: Partial<RepositoryStatisticsOverview> = {},
-): RepositoryStatisticsOverview {
-  return {
-    schemaVersion: 1,
-    repositoryPath: '/tmp/chrona-repo',
-    generatedAt: '2026-07-07T00:00:00Z',
-    hasSnapshot: false,
-    latestSnapshotId: null,
-    latestSnapshotName: null,
-    latestSnapshotCreatedAt: null,
-    latestFileCount: 0,
-    latestLogicalBytes: 0,
-    latestUniqueBlockCount: 0,
-    fileKindStats: [],
-    ...overrides,
-  };
-}
-
-function statisticsReport(): RepositoryStatisticsReport {
-  return {
-    schemaVersion: 1,
-    repositoryPath: '/tmp/chrona-repo',
-    generatedAt: '2026-07-07T00:00:00Z',
-    overview: statisticsOverview({ hasSnapshot: true }),
-    storage: {
-      snapshotCount: 2,
-      retainedLogicalBytes: 100,
-      totalBlockReferences: 10,
-      referencedUniqueBlockCount: 4,
-      referencedUniqueRawBytes: 40,
-      dedupSavedBytes: 60,
-      referencedPhysicalBlockCount: 4,
-      referencedPhysicalBytes: 24,
-      allPhysicalBlockCount: 5,
-      allPhysicalBytes: 26,
-      unreferencedBlockCount: 1,
-      unreferencedBytes: 2,
-      missingReferencedBlockCount: 0,
-      invalidReferencedBlockCount: 0,
-      compressionComparedRawBytes: 40,
-      compressionComparedPhysicalBytes: 24,
-      compressionSavedBytes: 16,
-      storageEfficiencyPercent: 74,
-    },
-    encodings: {
-      rawBlockCount: 1,
-      rawPhysicalBytes: 6,
-      zstdBlockCount: 2,
-      zstdPhysicalBytes: 12,
-      lz4BlockCount: 1,
-      lz4PhysicalBytes: 6,
-      unknownBlockCount: 0,
-      unknownPhysicalBytes: 0,
-    },
-    snapshotTrend: [],
-    issues: [],
-  };
-}
-
-function createApiMock() {
-  const manifest: RepositoryManifest = {
-    schemaVersion: 1,
-    appVersion: '0.1.0',
-    repositoryId: 'repo-id',
-    createdAt: '2026-06-19T00:00:00Z',
-    blockStrategy: {
-      type: 'fixed',
-      sizeBytes: 1048576,
-      hash: 'sha256',
-      encodingVersion: 2,
-      compressionMode: 'standard',
-    },
-  };
-  let progressHandler: ((event: BlockIngestProgress) => void) | undefined;
-  let statisticsProgressHandler:
-    ((event: RepositoryStatisticsProgress) => void) | undefined;
-  const api: ChronaApi & {
-    setRepositoryCompressionMode(
-      repositoryPath: string,
-      compressionMode: 'off' | 'standard' | 'fast',
-    ): Promise<RepositoryManifest>;
-  } = {
-    createRepository: vi.fn(async () => manifest),
-    openRepository: vi.fn(async () => manifest),
-    ingestBlocks: vi.fn(async () => ({
-      fileCount: 2,
-      totalInputBytes: 18,
-      totalBlockReferences: 2,
-      newBlockCount: 1,
-      reusedBlockCount: 1,
-      newlyStoredBytes: 9,
-      newLogicalBytes: 9,
-      compressionSavedBytes: 0,
-      newRawBlockCount: 1,
-      newZstdBlockCount: 0,
-      newLz4BlockCount: 0,
-      files: [],
-    })),
-    createSnapshot: vi.fn(),
-    listSnapshots: vi.fn(async () => []),
-    getSnapshot: vi.fn(),
-    restoreSnapshot: vi.fn(),
-    verifyRepository: vi.fn(async () => ({
-      schemaVersion: 1,
-      repositoryPath: '/tmp/chrona-repo',
-      checkedAt: '2026-06-26T00:00:00Z',
-      status: 'healthy' as const,
-      snapshotCount: 1,
-      fileCount: 2,
-      blockReferenceCount: 2,
-      uniqueBlockCount: 1,
-      missingBlockCount: 0,
-      corruptBlockCount: 0,
-      issues: [],
-    })),
-    setRepositoryCompressionMode: vi.fn(async (_repositoryPath, compressionMode) => ({
-      ...manifest,
-      blockStrategy: {
-        ...manifest.blockStrategy,
-        compressionMode,
-      },
-    })),
-    getRepositoryInventory: vi.fn(async () => ({
-      schemaVersion: 1,
-      repositoryPath: '/tmp/chrona-repo',
-      generatedAt: '2026-06-27T00:00:00Z',
-      snapshotCount: 2,
-      knownFileCount: 3,
-      latestFileCount: 2,
-      deletedInLatestCount: 1,
-      sourceExistsCount: 1,
-      sourceMissingCount: 1,
-      sourceRootMissingCount: 0,
-      totalOriginalBytesLatest: 12,
-      totalBlockReferencesLatest: 2,
-      uniqueBlockCountLatest: 2,
-      kindStats: [
-        { kind: 'document' as const, fileCount: 1, totalBytesLatest: 5 },
-        { kind: 'image' as const, fileCount: 1, totalBytesLatest: 7 },
-      ],
-      files: [
-        {
-          relativePath: 'notes.md',
-          fileName: 'notes.md',
-          extension: 'md',
-          kind: 'document' as const,
-          snapshotState: 'presentInLatest' as const,
-          sourceState: 'exists' as const,
-          latestSizeBytes: 5,
-          latestModifiedAt: '2026-06-27T00:00:00Z',
-          firstSeenSnapshotId: 'first',
-          firstSeenAt: '2026-06-26T00:00:00Z',
-          lastSeenSnapshotId: 'latest',
-          lastSeenAt: '2026-06-27T00:00:00Z',
-          seenInSnapshotCount: 2,
-          blockReferenceCountLatest: 1,
-        },
-        {
-          relativePath: 'old.txt',
-          fileName: 'old.txt',
-          extension: 'txt',
-          kind: 'text' as const,
-          snapshotState: 'deletedInLatest' as const,
-          sourceState: 'missing' as const,
-          latestSizeBytes: null,
-          latestModifiedAt: null,
-          firstSeenSnapshotId: 'first',
-          firstSeenAt: '2026-06-26T00:00:00Z',
-          lastSeenSnapshotId: 'first',
-          lastSeenAt: '2026-06-26T00:00:00Z',
-          seenInSnapshotCount: 1,
-          blockReferenceCountLatest: 0,
-        },
-      ],
-    })),
-    inspectRepositoryFile: vi.fn(async () => ({
-      schemaVersion: 1,
-      repositoryPath: '/tmp/chrona-repo',
-      relativePath: 'notes.md',
-      fileName: 'notes.md',
-      versionCount: 1,
-      firstSeenAt: '2026-06-27T00:00:00Z',
-      lastSeenAt: '2026-06-27T00:00:00Z',
-      latestState: 'added' as const,
-      versions: [
-        {
-          snapshotId: 'latest',
-          snapshotName: 'Latest',
-          snapshotCreatedAt: '2026-06-27T00:00:00Z',
-          state: 'added' as const,
-          sizeBytes: 5,
-          modifiedAt: '2026-06-27T00:00:00Z',
-          totalBlockReferences: 1,
-          uniqueBlockCount: 1,
-          blocks: [
-            {
-              index: 0,
-              offset: 0,
-              sizeBytes: 5,
-              hash: 'a'.repeat(64),
-              wasNew: true,
-              encoding: 'zstd' as const,
-              storageState: 'available' as const,
-              storedSizeBytes: 4,
-              compressionSavedBytes: 1,
-              seenInVersionCount: 1,
-              issue: null,
-            },
-          ],
-        },
-      ],
-    })),
-    getRepositoryStatisticsOverview: vi.fn(async () => statisticsOverview()),
-    analyzeRepositoryStatistics: vi.fn(async () => statisticsReport()),
-    compareSnapshots: vi.fn(async () => ({
-      schemaVersion: 1,
-      baseSnapshotId: 'base',
-      targetSnapshotId: 'target',
-      summary: {
-        addedFileCount: 0,
-        deletedFileCount: 0,
-        modifiedFileCount: 0,
-        unchangedFileCount: 0,
-        totalBeforeBytes: 0,
-        totalAfterBytes: 0,
-        addedBytes: 0,
-        deletedBytes: 0,
-        modifiedBeforeBytes: 0,
-        modifiedAfterBytes: 0,
-        addedBlockReferences: 0,
-        removedBlockReferences: 0,
-        sharedBlockReferences: 0,
-      },
-      files: [],
-    })),
-    selectRepositoryPath: vi.fn(async () => '/picked/chrona-repo'),
-    selectSourceFilePath: vi.fn(async () => '/picked/source.txt'),
-    selectSourceFolderPath: vi.fn(async () => '/picked/source-folder'),
-    selectRestoreTargetPath: vi.fn(async () => null),
-    recordAccessEvent: vi.fn(),
-    getHomeSummary: vi.fn(async () => ({
-      continueWorking: null,
-      pinned: [],
-      recentRepositories: [],
-      recentSources: [],
-      recentFiles: [],
-      recentSnapshots: [],
-      recentComparePairs: [],
-    })),
-    pinAccessItem: vi.fn(),
-    unpinAccessItem: vi.fn(),
-    clearAccessHistory: vi.fn(async () => ({
-      schemaVersion: 1,
-      removedCount: 0,
-      remainingCount: 0,
-    })),
-    onBlockIngestProgress: vi.fn(async (handler) => {
-      progressHandler = handler;
-      return () => undefined;
-    }),
-    onRepositoryStatisticsProgress: vi.fn(async (handler) => {
-      statisticsProgressHandler = handler;
-      return () => undefined;
-    }),
-  };
-  return {
-    api,
-    emitProgress: (event: BlockIngestProgress) => progressHandler?.(event),
-    emitStatisticsProgress: (event: RepositoryStatisticsProgress) =>
-      statisticsProgressHandler?.(event),
-  };
-}
-
 describe('RepositoryPage', () => {
+  test('opens the active registered repository', async () => {
+    const { api, library, openedRepository } = createChronaApiMock();
+
+    await expect(api.getRepositoryLibrary()).resolves.toEqual(library);
+    await expect(api.activateRegisteredRepository('repo-id'))
+      .resolves.toEqual(openedRepository);
+  });
+
   test('creates a repository, ingests blocks, and displays progress and summary', async () => {
-    const { api, emitProgress } = createApiMock();
+    const { api, emitProgress } = createChronaApiMock();
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
 
@@ -341,7 +56,7 @@ describe('RepositoryPage', () => {
   });
 
   test('fills paths from native picker actions', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
 
@@ -360,7 +75,7 @@ describe('RepositoryPage', () => {
 
 
   test('renders unnumbered workspace sections and empty result state', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
 
     render(<RepositoryPage api={api} />);
@@ -384,7 +99,7 @@ describe('RepositoryPage', () => {
   });
 
   test('renders Home recent access after repository activity', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     const recentSource = accessNode({ label: 'demo-source', pinned: true });
     vi.mocked(api.getHomeSummary).mockResolvedValue({
@@ -419,7 +134,7 @@ describe('RepositoryPage', () => {
   });
 
   test('renders the latest repository overview on Home', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     vi.mocked(api.getRepositoryStatisticsOverview).mockResolvedValue(statisticsOverview({
       hasSnapshot: true,
@@ -448,7 +163,7 @@ describe('RepositoryPage', () => {
   });
 
   test('keeps Home access content visible when overview loading fails', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     const recentSource = accessNode({ label: 'still-visible' });
     vi.mocked(api.getHomeSummary).mockResolvedValue({
@@ -474,7 +189,7 @@ describe('RepositoryPage', () => {
   });
 
   test('runs detailed statistics and forwards progress events', async () => {
-    const { api, emitStatisticsProgress } = createApiMock();
+    const { api, emitStatisticsProgress } = createChronaApiMock();
     const user = userEvent.setup();
     let resolveAnalysis: ((report: RepositoryStatisticsReport) => void) | undefined;
     vi.mocked(api.analyzeRepositoryStatistics).mockImplementation(
@@ -505,7 +220,7 @@ describe('RepositoryPage', () => {
   });
 
   test('clears a detailed statistics report when another repository opens', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
 
     render(<RepositoryPage api={api} />);
@@ -528,7 +243,7 @@ describe('RepositoryPage', () => {
   });
 
   test('verifies repository integrity and renders the report', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
 
@@ -547,7 +262,7 @@ describe('RepositoryPage', () => {
   });
 
   test('opens repository explorer and renders inventory rows', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
 
@@ -574,7 +289,7 @@ describe('RepositoryPage', () => {
   });
 
   test('filters inventory rows by path and snapshot state', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
 
@@ -598,7 +313,7 @@ describe('RepositoryPage', () => {
   });
 
   test('inspects a selected inventory file', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
 
@@ -621,7 +336,7 @@ describe('RepositoryPage', () => {
   });
 
   test('keeps inventory visible when file inspection fails', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     vi.mocked(api.inspectRepositoryFile).mockRejectedValueOnce(new Error('inspect failed'));
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
@@ -637,7 +352,7 @@ describe('RepositoryPage', () => {
   });
 
   test('updates the repository compression mode', async () => {
-    const { api } = createApiMock();
+    const { api } = createChronaApiMock();
     const user = userEvent.setup();
     render(<RepositoryPage api={api} />);
 

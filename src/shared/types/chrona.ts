@@ -16,6 +16,27 @@ export interface RepositoryManifest {
   blockStrategy: BlockStrategy;
 }
 
+export type RepositoryConnectionState = 'connected' | 'disconnected';
+
+export interface RepositoryLibraryItem {
+  repositoryId: string;
+  displayName: string;
+  path: string;
+  addedAt: string;
+  lastOpenedAt: string;
+  connectionState: RepositoryConnectionState;
+}
+
+export interface RepositoryLibrary {
+  activeRepositoryId: string | null;
+  repositories: RepositoryLibraryItem[];
+}
+
+export interface OpenedRepository {
+  registration: RepositoryLibraryItem;
+  manifest: RepositoryManifest;
+}
+
 export interface BlockReference {
   index: number;
   offset: number;

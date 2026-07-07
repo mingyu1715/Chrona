@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
 import type { SnapshotComparison, SnapshotIndexItem } from '../../shared/types/chrona';
+import { createChronaApiMock } from '../../test/chronaApiMock';
 import { SnapshotComparePanel } from './SnapshotComparePanel';
 
 function comparison(): SnapshotComparison {
@@ -70,77 +71,9 @@ function comparison(): SnapshotComparison {
 }
 
 function apiMock(result: SnapshotComparison): ChronaApi {
-  return {
-    createRepository: vi.fn(),
-    openRepository: vi.fn(),
-    setRepositoryCompressionMode: vi.fn(),
-    ingestBlocks: vi.fn(),
-    createSnapshot: vi.fn(),
-    listSnapshots: vi.fn(),
-    getSnapshot: vi.fn(),
-    restoreSnapshot: vi.fn(),
-    verifyRepository: vi.fn(async () => ({
-      schemaVersion: 1,
-      repositoryPath: '/tmp/repo',
-      checkedAt: '2026-06-26T00:00:00Z',
-      status: 'healthy' as const,
-      snapshotCount: 0,
-      fileCount: 0,
-      blockReferenceCount: 0,
-      uniqueBlockCount: 0,
-      missingBlockCount: 0,
-      corruptBlockCount: 0,
-      issues: [],
-    })),
-    getRepositoryInventory: vi.fn(async () => ({
-      schemaVersion: 1,
-      repositoryPath: '/tmp/repo',
-      generatedAt: '2026-06-27T00:00:00Z',
-      snapshotCount: 0,
-      knownFileCount: 0,
-      latestFileCount: 0,
-      deletedInLatestCount: 0,
-      sourceExistsCount: 0,
-      sourceMissingCount: 0,
-      sourceRootMissingCount: 0,
-      totalOriginalBytesLatest: 0,
-      totalBlockReferencesLatest: 0,
-      uniqueBlockCountLatest: 0,
-      kindStats: [],
-      files: [],
-    })),
-    inspectRepositoryFile: vi.fn(),
-    getRepositoryStatisticsOverview: vi.fn(async () => {
-      throw new Error('statistics overview not used');
-    }),
-    analyzeRepositoryStatistics: vi.fn(async () => {
-      throw new Error('statistics analysis not used');
-    }),
-    compareSnapshots: vi.fn(async () => result),
-    selectRepositoryPath: vi.fn(async () => null),
-    selectSourceFilePath: vi.fn(async () => null),
-    selectSourceFolderPath: vi.fn(async () => null),
-    selectRestoreTargetPath: vi.fn(async () => null),
-    recordAccessEvent: vi.fn(),
-    getHomeSummary: vi.fn(async () => ({
-      continueWorking: null,
-      pinned: [],
-      recentRepositories: [],
-      recentSources: [],
-      recentFiles: [],
-      recentSnapshots: [],
-      recentComparePairs: [],
-    })),
-    pinAccessItem: vi.fn(),
-    unpinAccessItem: vi.fn(),
-    clearAccessHistory: vi.fn(async () => ({
-      schemaVersion: 1,
-      removedCount: 0,
-      remainingCount: 0,
-    })),
-    onBlockIngestProgress: vi.fn(async () => () => undefined),
-    onRepositoryStatisticsProgress: vi.fn(async () => () => undefined),
-  };
+  const { api } = createChronaApiMock();
+  vi.mocked(api.compareSnapshots).mockResolvedValue(result);
+  return api;
 }
 
 const snapshots: SnapshotIndexItem[] = [
