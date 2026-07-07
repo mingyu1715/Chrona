@@ -6,7 +6,7 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 
 ## 현재 상태
 
-현재는 Phase 4 스냅샷 복원 core flow와 Home/adaptive navigation MVP까지 완료된 상태입니다.
+현재는 Phase 6 블록 압축과 Phase 7 파일 검사기/블록 지도까지 완료된 상태입니다.
 
 구현됨:
 
@@ -32,11 +32,22 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 - Continue Working, pinned item, recent access list를 포함한 Home workspace section
 - `indexes/access-index.json` 기반 repository-local adaptive access history
 - access item pin/unpin과 clear-history control
+- 읽기 전용 repository 무결성 검증 command와 UI
+- 누락 block, block size mismatch, raw SHA-256 mismatch 감지
+- 저장소에 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태를 보여주는 Explorer
+- 현재 원본 파일의 존재, 누락, 원본 루트 누락 상태 확인
+- 경로 검색과 파일 종류·스냅샷 상태·원본 상태 필터
+- schema 2 repository의 raw/off, Zstd level 3 표준, LZ4 빠른 압축 모드
+- 3% 미만 절감 시 raw fallback과 schema 1 legacy raw block 호환
+- 압축 block 복원 및 decoded raw SHA-256 무결성 검증
+- Explorer 파일 선택 기반 File Inspector
+- 내용 기반 snapshot 변경 이력(`added`, `modified`, `unchanged`, `deleted`)
+- 파일 버전별 ordered block map과 raw/Zstd/LZ4 physical metadata
+- 누락되거나 잘못된 block을 전체 조회 실패 없이 부분 상태로 표시
 
 아직 구현되지 않음:
 
-- 블록 압축
-- 무결성 검증 UI
+- 자동 복구와 block garbage collection
 - 패키징된 `.app` 릴리스
 
 ## 기술 스택
@@ -198,9 +209,43 @@ for each file in snapshot.files:
 - 복원 target은 repository 밖에 있어야 하며 비어 있거나 새로 생성되는 폴더여야 합니다.
 - Output file은 최종 rename 전 `.tmp-{operationId}` 경로로 먼저 기록됩니다.
 
-### 6. Future raw-identity block compression
+### 6. Repository integrity verification
 
-압축은 현재 block writer에 포함된 기능이 아니라 이후 저장 최적화 후보입니다. 추가하더라도 Chrona는 block identity를 raw byte 기준으로 유지하고, 물리 payload만 압축해야 합니다.
+무결성 검증은 snapshot에 기록된 block reference가 실제 physical block file과 여전히 일치하는지 확인합니다. 데이터를 고치지는 않고 report를 생성합니다.
+
+```text
+unique_blocks = map()
+
+for each snapshot in snapshot_index:
+  for each file in snapshot.files:
+    for each ref in file.blocks:
+      unique_blocks[ref.hash] = expected_size(ref)
+
+for each (hash, expected_size) in unique_blocks:
+  path = block_path(hash)
+
+  if path is missing:
+    emit missingBlock
+    continue
+
+  bytes = read(path)
+
+  if len(bytes) != expected_size:
+    emit blockSizeMismatch
+
+  if SHA-256(bytes) != hash:
+    emit blockHashMismatch
+```
+
+성질:
+
+- 중복 reference는 metadata 통계에는 반영하지만, physical block 검사는 unique hash마다 한 번만 수행합니다.
+- 검증은 읽기 전용이며 repository 내용을 다시 쓰지 않습니다.
+- healthy report는 현재 참조되는 block의 decoded raw bytes가 snapshot metadata와 일치한다는 뜻입니다.
+
+### 7. Raw-identity block compression
+
+Chrona는 block identity를 압축 전 raw byte 기준으로 유지하고 신규 physical payload에만 압축을 적용합니다. 기본값은 Zstd level 3이고, 빠른 모드는 LZ4 frame이며, off 모드는 raw block을 저장합니다.
 
 ```text
 raw_chunk
@@ -210,7 +255,21 @@ raw_chunk
   -> write encoded payload
 ```
 
-이 방식이면 나중에 압축 설정이 바뀌어도 deduplication과 snapshot comparison이 안정적으로 유지됩니다.
+envelope 전체가 raw보다 3% 이상 작을 때만 압축본을 저장합니다. 기존 schema 1 raw block은 재작성하지 않고 그대로 읽습니다.
+
+### 8. Content-based file history와 ordered block map
+
+파일 이력은 같은 normalized relative path를 snapshot 생성 순서대로 찾고, 파일 크기와 ordered `(hash, size)` block sequence를 이전 존재 버전과 비교해 판정합니다.
+
+```text
+missing -> present               = added
+present + same block sequence    = unchanged
+present + changed block sequence = modified
+present -> missing               = deleted
+deleted -> present               = added
+```
+
+선택한 버전은 block reference의 실제 순서를 유지해 표시합니다. Physical metadata는 unique block hash마다 검사하며, 정상 compressed block은 payload 전체를 압축 해제하지 않고 header에서 raw/Zstd/LZ4 encoding과 저장 크기를 읽습니다.
 
 ### Complexity
 
@@ -221,6 +280,8 @@ raw_chunk
 - `K` = block reference 개수
 - `P` = 비교 대상 snapshot file path 개수
 - `U` = 새로 저장되는 unique block byte 수
+- `S` = 선택 파일의 snapshot 수
+- `R` = 선택 파일 이력의 block reference 수
 
 복잡도:
 
@@ -231,13 +292,14 @@ raw_chunk
 - Snapshot comparison path matching: 안정적인 정렬 출력 기준 `O(P log P)`
 - Snapshot comparison block multiset counting: `O(K)`
 - Physical storage growth: `O(U)`
+- File history traversal: `O(S + R)`
 
 ### 현재 알고리즘 trade-off
 
 - Fixed-size chunking은 단순하고 결정적이지만, 큰 파일 앞부분에 byte가 삽입되면 content-defined chunking보다 재사용 효율이 떨어질 수 있습니다.
-- Chrona는 현재 deduplication을 수행하며, compression 알고리즘은 아직 없습니다. 이후 compression을 추가하더라도 block identity는 raw byte hash로 유지하고, 모드는 raw/off, standard zstd, fast lz4 정도로 단순하게 제한해야 합니다.
+- Chrona는 raw/off, standard Zstd level 3, fast LZ4 frame 모드를 지원하며 block identity는 항상 raw byte hash로 유지합니다.
 - Chrona의 snapshot은 Merkle tree가 아니라 reference graph입니다.
-- Integrity verification, block garbage collection, compression, encryption, content-defined chunking은 이후 알고리즘 후보입니다. Compression은 `docs/specs/0005-block-compression.md`에 future raw-identity payload encoding으로 기록합니다.
+- Block garbage collection, 자동 복구, encryption, content-defined chunking은 이후 알고리즘 후보입니다. 압축 구현 기록은 `docs/implemented/block-compression.md`에 있습니다.
 
 ## 개발 방법
 

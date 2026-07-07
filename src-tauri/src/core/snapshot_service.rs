@@ -60,6 +60,11 @@ impl SnapshotService {
                 new_block_count: summary.new_block_count,
                 reused_block_count: summary.reused_block_count,
                 new_stored_bytes: summary.newly_stored_bytes,
+                new_logical_bytes: summary.new_logical_bytes,
+                compression_saved_bytes: summary.compression_saved_bytes,
+                new_raw_block_count: summary.new_raw_block_count,
+                new_zstd_block_count: summary.new_zstd_block_count,
+                new_lz4_block_count: summary.new_lz4_block_count,
             },
             files: summary
                 .files

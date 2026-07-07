@@ -55,6 +55,11 @@ fn snapshot(id: &str, files: Vec<SnapshotFile>) -> Snapshot {
             new_block_count: 0,
             reused_block_count: 0,
             new_stored_bytes: 0,
+            new_logical_bytes: 0,
+            compression_saved_bytes: 0,
+            new_raw_block_count: 0,
+            new_zstd_block_count: 0,
+            new_lz4_block_count: 0,
         },
         files,
     }

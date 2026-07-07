@@ -799,6 +799,6 @@ Phase 2 is complete when:
 
 ## Self-Review
 
-- Spec coverage: this plan covers snapshot format, index format, command API, persistence, UI, and tests from `docs/specs/0003-snapshot-format.md`.
+- Spec coverage: this plan covers snapshot format, index format, command API, persistence, UI, and tests from `docs/archive/specs/0003-snapshot-format.md`.
 - Placeholder scan: no unresolved marker language is used.
 - Type consistency: Rust `modified_at` maps to TypeScript `modifiedAt`; Rust `new_stored_bytes` maps to TypeScript `newStoredBytes`; command names use snake_case Tauri names and camelCase JS arguments.

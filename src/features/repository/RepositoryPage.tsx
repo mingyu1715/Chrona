@@ -1,4 +1,4 @@
-import { type ComponentType, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ComponentType, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   Archive,
@@ -8,6 +8,7 @@ import {
   Clock3,
   Database,
   File,
+  Files,
   FolderOpen,
   HardDrive,
   Home,
@@ -17,18 +18,28 @@ import {
   PinOff,
   Play,
   RotateCw,
+  ShieldAlert,
+  ShieldCheck,
   Sun,
   Trash2,
 } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
+import { FileInspectorPanel } from '../explorer/FileInspectorPanel';
 import { SnapshotPanel } from '../snapshots/SnapshotPanel';
 import type {
   AccessNode,
   BlockIngestProgress,
   BlockIngestSummary,
+  CompressionMode,
+  FileInspectionReport,
+  FileKind,
   HomeSummary,
+  IntegrityReport,
+  RepositoryInventoryReport,
   RepositoryManifest,
+  SnapshotPresenceState,
+  SourceExistenceState,
 } from '../../shared/types/chrona';
 import './RepositoryPage.css';
 
@@ -36,8 +47,23 @@ interface RepositoryPageProps {
   api?: ChronaApi;
 }
 
-type ChapterId = 'home' | 'repository' | 'source' | 'snapshots' | 'review';
-type PanelKey = 'home' | 'repository' | 'source' | 'store' | 'snapshots' | 'review';
+type ChapterId =
+  | 'home'
+  | 'repository'
+  | 'source'
+  | 'snapshots'
+  | 'explorer'
+  | 'integrity'
+  | 'review';
+type PanelKey =
+  | 'home'
+  | 'repository'
+  | 'source'
+  | 'store'
+  | 'snapshots'
+  | 'explorer'
+  | 'integrity'
+  | 'review';
 type Tone = 'ready' | 'waiting' | 'done';
 type ThemeMode = 'light' | 'dark';
 
@@ -77,6 +103,20 @@ const chapters: Array<{
     icon: Clock3,
   },
   {
+    id: 'explorer',
+    label: 'Explorer',
+    shortLabel: 'Explorer',
+    description: 'Browse recorded files and their current availability.',
+    icon: Files,
+  },
+  {
+    id: 'integrity',
+    label: 'Integrity',
+    shortLabel: 'Integrity',
+    description: 'Verify snapshot block references against stored block files.',
+    icon: ShieldCheck,
+  },
+  {
     id: 'review',
     label: 'Review',
     shortLabel: 'Review',
@@ -89,9 +129,24 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
   const [repositoryPath, setRepositoryPath] = useState('');
   const [sourcePath, setSourcePath] = useState('');
   const [manifest, setManifest] = useState<RepositoryManifest | null>(null);
+  const [compressionModeDraft, setCompressionModeDraft] =
+    useState<CompressionMode>('standard');
   const [progress, setProgress] = useState<BlockIngestProgress | null>(null);
   const [summary, setSummary] = useState<BlockIngestSummary | null>(null);
   const [homeSummary, setHomeSummary] = useState<HomeSummary | null>(null);
+  const [integrityReport, setIntegrityReport] = useState<IntegrityReport | null>(null);
+  const [inventoryReport, setInventoryReport] = useState<RepositoryInventoryReport | null>(null);
+  const [inventoryQuery, setInventoryQuery] = useState('');
+  const [inventoryKindFilter, setInventoryKindFilter] = useState<FileKind | 'all'>('all');
+  const [inventorySnapshotFilter, setInventorySnapshotFilter] =
+    useState<SnapshotPresenceState | 'all'>('all');
+  const [inventorySourceFilter, setInventorySourceFilter] =
+    useState<SourceExistenceState | 'all'>('all');
+  const [selectedInventoryPath, setSelectedInventoryPath] = useState<string | null>(null);
+  const [fileInspection, setFileInspection] = useState<FileInspectionReport | null>(null);
+  const [fileInspectionLoading, setFileInspectionLoading] = useState(false);
+  const [fileInspectionError, setFileInspectionError] = useState<string | null>(null);
+  const fileInspectionRequestId = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>('light');
@@ -102,6 +157,8 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     source: true,
     store: true,
     snapshots: true,
+    explorer: true,
+    integrity: true,
     review: true,
   });
 
@@ -214,6 +271,60 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     });
   }
 
+  async function verifyRepositoryIntegrity() {
+    await runAction(async () => {
+      setIntegrityReport(await api.verifyRepository(repositoryPath));
+    });
+  }
+
+  async function applyCompressionMode() {
+    await runAction(async () => {
+      const nextManifest = await api.setRepositoryCompressionMode(
+        repositoryPath,
+        compressionModeDraft,
+      );
+      setManifest(nextManifest);
+      setCompressionModeDraft(nextManifest.blockStrategy.compressionMode);
+    });
+  }
+
+  async function refreshInventory() {
+    resetFileInspection();
+    await runAction(async () => {
+      setInventoryReport(await api.getRepositoryInventory(repositoryPath));
+    });
+  }
+
+  function resetFileInspection() {
+    fileInspectionRequestId.current += 1;
+    setSelectedInventoryPath(null);
+    setFileInspection(null);
+    setFileInspectionLoading(false);
+    setFileInspectionError(null);
+  }
+
+  async function inspectInventoryFile(relativePath: string) {
+    if (!manifest) return;
+    const requestId = ++fileInspectionRequestId.current;
+    setSelectedInventoryPath(relativePath);
+    setFileInspection(null);
+    setFileInspectionError(null);
+    setFileInspectionLoading(true);
+    try {
+      const report = await api.inspectRepositoryFile(repositoryPath, relativePath);
+      if (requestId === fileInspectionRequestId.current) {
+        setFileInspection(report);
+      }
+    } catch (caught) {
+      if (requestId === fileInspectionRequestId.current) {
+        setFileInspectionError(caught instanceof Error ? caught.message : String(caught));
+      }
+    } finally {
+      if (requestId === fileInspectionRequestId.current) {
+        setFileInspectionLoading(false);
+      }
+    }
+  }
 
   function togglePanel(panel: PanelKey) {
     setOpenPanels((current) => ({ ...current, [panel]: !current[panel] }));
@@ -239,6 +350,12 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
     }
     if (chapter === 'snapshots') {
       return manifest && sourcePath.trim().length > 0 ? 'ready' : 'waiting';
+    }
+    if (chapter === 'explorer') {
+      return inventoryReport ? 'done' : manifest ? 'ready' : 'waiting';
+    }
+    if (chapter === 'integrity') {
+      return integrityReport ? 'done' : manifest ? 'ready' : 'waiting';
     }
     return summary ? 'done' : 'waiting';
   }
@@ -436,6 +553,14 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     onClick={() => runAction(async () => {
                       const nextManifest = await api.createRepository(repositoryPath);
                       setManifest(nextManifest);
+                      setCompressionModeDraft(nextManifest.blockStrategy.compressionMode);
+                      setIntegrityReport(null);
+                      setInventoryReport(null);
+                      setInventoryQuery('');
+                      setInventoryKindFilter('all');
+                      setInventorySnapshotFilter('all');
+                      setInventorySourceFilter('all');
+                      resetFileInspection();
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_created');
                       setActiveChapter('source');
                     })}
@@ -450,6 +575,14 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                     onClick={() => runAction(async () => {
                       const nextManifest = await api.openRepository(repositoryPath);
                       setManifest(nextManifest);
+                      setCompressionModeDraft(nextManifest.blockStrategy.compressionMode);
+                      setIntegrityReport(null);
+                      setInventoryReport(null);
+                      setInventoryQuery('');
+                      setInventoryKindFilter('all');
+                      setInventorySnapshotFilter('all');
+                      setInventorySourceFilter('all');
+                      resetFileInspection();
                       await recordRepositoryAccess(nextManifest, repositoryPath, 'repository_opened');
                       setActiveChapter('source');
                     })}
@@ -473,7 +606,39 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                         <dt>Hash</dt>
                         <dd>{manifest.blockStrategy.hash}</dd>
                       </div>
+                      <div>
+                        <dt>Encoding version</dt>
+                        <dd>{manifest.blockStrategy.encodingVersion}</dd>
+                      </div>
+                      <div>
+                        <dt>Compression mode</dt>
+                        <dd>{manifest.blockStrategy.compressionMode}</dd>
+                      </div>
                     </dl>
+                    <div className="compression-control">
+                      <label className="field">
+                        <span>Compression mode</span>
+                        <select
+                          value={compressionModeDraft}
+                          onChange={(event) =>
+                            setCompressionModeDraft(event.target.value as CompressionMode)}
+                        >
+                          <option value="off">Off · raw blocks</option>
+                          <option value="standard">Standard · Zstd level 3</option>
+                          <option value="fast">Fast · LZ4 frame</option>
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        disabled={
+                          busy
+                          || compressionModeDraft === manifest.blockStrategy.compressionMode
+                        }
+                        onClick={applyCompressionMode}
+                      >
+                        Apply Compression Mode
+                      </button>
+                    </div>
                     <div className="panel-footer-actions">
                       <button type="button" onClick={() => setActiveChapter('source')}>
                         Open Sources
@@ -573,6 +738,80 @@ export function RepositoryPage({ api = chronaApi }: RepositoryPageProps) {
                   repositoryOpen={Boolean(manifest)}
                   embedded
                 />
+              </DropPanel>
+            )}
+
+            {activeChapter === 'explorer' && (
+              <DropPanel
+                title="Repository inventory"
+                kicker="Explorer"
+                status={inventoryReport ? 'Loaded' : manifest ? 'Ready' : 'Waiting'}
+                icon={Files}
+                open={openPanels.explorer}
+                onToggle={() => togglePanel('explorer')}
+              >
+                <div className="run-card">
+                  <div>
+                    <strong>Repository inventory</strong>
+                    <p>
+                      {inventoryReport
+                        ? `${inventoryReport.knownFileCount.toLocaleString()} known files · ${inventoryReport.snapshotCount.toLocaleString()} snapshots`
+                        : 'No inventory report loaded'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy || !manifest}
+                    onClick={refreshInventory}
+                  >
+                    <RotateCw size={16} />
+                    Refresh Inventory
+                  </button>
+                </div>
+                <InventoryContent
+                  report={inventoryReport}
+                  repositoryOpen={Boolean(manifest)}
+                  query={inventoryQuery}
+                  kindFilter={inventoryKindFilter}
+                  snapshotFilter={inventorySnapshotFilter}
+                  sourceFilter={inventorySourceFilter}
+                  selectedPath={selectedInventoryPath}
+                  inspectionReport={fileInspection}
+                  inspectionLoading={fileInspectionLoading}
+                  inspectionError={fileInspectionError}
+                  onQueryChange={setInventoryQuery}
+                  onKindFilterChange={setInventoryKindFilter}
+                  onSnapshotFilterChange={setInventorySnapshotFilter}
+                  onSourceFilterChange={setInventorySourceFilter}
+                  onInspect={inspectInventoryFile}
+                />
+              </DropPanel>
+            )}
+
+            {activeChapter === 'integrity' && (
+              <DropPanel
+                title="Repository integrity"
+                kicker="Integrity"
+                status={integrityReport ? integrityStatusLabel(integrityReport.status) : manifest ? 'Ready' : 'Waiting'}
+                icon={ShieldCheck}
+                open={openPanels.integrity}
+                onToggle={() => togglePanel('integrity')}
+              >
+                <div className="run-card">
+                  <div>
+                    <strong>Integrity verification</strong>
+                    <p>Checks snapshot block references, missing blocks, block sizes, and raw SHA-256 identity.</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy || !manifest}
+                    onClick={verifyRepositoryIntegrity}
+                  >
+                    <ShieldCheck size={16} />
+                    Verify Repository
+                  </button>
+                </div>
+                <IntegrityReportContent report={integrityReport} repositoryOpen={Boolean(manifest)} />
               </DropPanel>
             )}
 
@@ -786,6 +1025,318 @@ function ProgressBox({ progress }: { progress: BlockIngestProgress }) {
   );
 }
 
+function IntegrityReportContent({
+  report,
+  repositoryOpen,
+}: {
+  report: IntegrityReport | null;
+  repositoryOpen: boolean;
+}) {
+  if (!repositoryOpen) {
+    return (
+      <div className="empty-state integrity-empty">
+        <span><ShieldAlert size={20} /></span>
+        <div>
+          <strong>No repository open</strong>
+          <p>Open a repository before running integrity verification.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="empty-state integrity-empty">
+        <span><ShieldCheck size={20} /></span>
+        <div>
+          <strong>No integrity report yet</strong>
+          <p>Run verification to check stored blocks against snapshot references.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="integrity-report">
+      <div className={`integrity-status integrity-status-${report.status}`}>
+        {report.status === 'failed' ? <ShieldAlert size={18} /> : <ShieldCheck size={18} />}
+        <strong>Integrity {integrityStatusLabel(report.status)}</strong>
+        <span>{report.checkedAt}</span>
+      </div>
+
+      <dl className="result-grid integrity-grid">
+        <div>
+          <dt>Snapshots checked</dt>
+          <dd>{report.snapshotCount}</dd>
+        </div>
+        <div>
+          <dt>Files checked</dt>
+          <dd>{report.fileCount}</dd>
+        </div>
+        <div>
+          <dt>Block references</dt>
+          <dd>{report.blockReferenceCount}</dd>
+        </div>
+        <div>
+          <dt>Unique blocks</dt>
+          <dd>{report.uniqueBlockCount}</dd>
+        </div>
+        <div>
+          <dt>Missing blocks</dt>
+          <dd>{report.missingBlockCount}</dd>
+        </div>
+        <div>
+          <dt>Corrupt blocks</dt>
+          <dd>{report.corruptBlockCount}</dd>
+        </div>
+      </dl>
+
+      {report.issues.length === 0 ? (
+        <p className="integrity-clean">No integrity issues found</p>
+      ) : (
+        <ul className="issue-list" aria-label="Integrity issues">
+          {report.issues.map((issue, index) => (
+            <li key={`${issue.code}-${index}`} className={`issue-list-${issue.severity}`}>
+              <div>
+                <strong>{issue.code}</strong>
+                <p>{issue.message}</p>
+              </div>
+              <small>
+                {[issue.snapshotId, issue.relativePath, issue.blockHash].filter(Boolean).join(' · ')}
+              </small>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function InventoryContent({
+  report,
+  repositoryOpen,
+  query,
+  kindFilter,
+  snapshotFilter,
+  sourceFilter,
+  selectedPath,
+  inspectionReport,
+  inspectionLoading,
+  inspectionError,
+  onQueryChange,
+  onKindFilterChange,
+  onSnapshotFilterChange,
+  onSourceFilterChange,
+  onInspect,
+}: {
+  report: RepositoryInventoryReport | null;
+  repositoryOpen: boolean;
+  query: string;
+  kindFilter: FileKind | 'all';
+  snapshotFilter: SnapshotPresenceState | 'all';
+  sourceFilter: SourceExistenceState | 'all';
+  selectedPath: string | null;
+  inspectionReport: FileInspectionReport | null;
+  inspectionLoading: boolean;
+  inspectionError: string | null;
+  onQueryChange: (value: string) => void;
+  onKindFilterChange: (value: FileKind | 'all') => void;
+  onSnapshotFilterChange: (value: SnapshotPresenceState | 'all') => void;
+  onSourceFilterChange: (value: SourceExistenceState | 'all') => void;
+  onInspect: (relativePath: string) => void;
+}) {
+  if (!repositoryOpen) {
+    return (
+      <div className="empty-state inventory-empty">
+        <span><Files size={20} /></span>
+        <div>
+          <strong>No repository open</strong>
+          <p>Inventory is unavailable.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="empty-state inventory-empty">
+        <span><Files size={20} /></span>
+        <div>
+          <strong>No inventory loaded</strong>
+          <p>Refresh to read the current snapshot metadata.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const availableKinds = Array.from(new Set(report.files.map((file) => file.kind))).sort();
+  const filteredFiles = report.files.filter((file) => {
+    const matchesQuery = normalizedQuery.length === 0
+      || file.relativePath.toLocaleLowerCase().includes(normalizedQuery);
+    const matchesKind = kindFilter === 'all' || file.kind === kindFilter;
+    const matchesSnapshot = snapshotFilter === 'all' || file.snapshotState === snapshotFilter;
+    const matchesSource = sourceFilter === 'all' || file.sourceState === sourceFilter;
+    return matchesQuery && matchesKind && matchesSnapshot && matchesSource;
+  });
+
+  return (
+    <div className="inventory-content">
+      <dl className="result-grid inventory-summary">
+        <div>
+          <dt>Snapshots</dt>
+          <dd>{report.snapshotCount.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Known files</dt>
+          <dd>{report.knownFileCount.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Latest files</dt>
+          <dd>{report.latestFileCount.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Deleted in latest</dt>
+          <dd>{report.deletedInLatestCount.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt>Source missing</dt>
+          <dd>{(report.sourceMissingCount + report.sourceRootMissingCount).toLocaleString()}</dd>
+        </div>
+      </dl>
+
+      <div className="inventory-kind-strip" aria-label="File kind summary">
+        {report.kindStats.length === 0 ? (
+          <span>No file kinds recorded</span>
+        ) : report.kindStats.map((stat) => (
+          <span key={stat.kind}>
+            <strong>{stat.kind}</strong>
+            {stat.fileCount.toLocaleString()} · {formatBytes(stat.totalBytesLatest)}
+          </span>
+        ))}
+      </div>
+
+      <div className="inventory-filters" aria-label="Inventory filters">
+        <label>
+          <span>File search</span>
+          <input
+            type="search"
+            value={query}
+            placeholder="Search recorded paths"
+            onChange={(event) => onQueryChange(event.target.value)}
+          />
+        </label>
+        <label>
+          <span>File kind</span>
+          <select
+            value={kindFilter}
+            onChange={(event) => onKindFilterChange(event.target.value as FileKind | 'all')}
+          >
+            <option value="all">All kinds</option>
+            {availableKinds.map((kind) => (
+              <option key={kind} value={kind}>{kind}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Snapshot state</span>
+          <select
+            value={snapshotFilter}
+            onChange={(event) => onSnapshotFilterChange(
+              event.target.value as SnapshotPresenceState | 'all',
+            )}
+          >
+            <option value="all">All snapshot states</option>
+            <option value="presentInLatest">Present in latest</option>
+            <option value="deletedInLatest">Deleted in latest</option>
+          </select>
+        </label>
+        <label>
+          <span>Source state</span>
+          <select
+            value={sourceFilter}
+            onChange={(event) => onSourceFilterChange(
+              event.target.value as SourceExistenceState | 'all',
+            )}
+          >
+            <option value="all">All source states</option>
+            <option value="exists">Exists</option>
+            <option value="missing">Missing</option>
+            <option value="sourceRootMissing">Source root missing</option>
+            <option value="unchecked">Unchecked</option>
+          </select>
+        </label>
+      </div>
+
+      <p className="inventory-result-count">
+        {filteredFiles.length.toLocaleString()} of {report.files.length.toLocaleString()} files
+      </p>
+
+      <div className="inventory-browser">
+        <div className="inventory-list-pane">
+          <div className="inventory-table-wrap">
+            <table className="inventory-table">
+              <thead>
+                <tr>
+                  <th scope="col">Path</th>
+                  <th scope="col">Kind</th>
+                  <th scope="col">Latest size</th>
+                  <th scope="col">Snapshot state</th>
+                  <th scope="col">Source state</th>
+                  <th scope="col">Last seen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFiles.map((file) => (
+                  <tr key={file.relativePath}>
+                    <td className="inventory-path">
+                      <button
+                        type="button"
+                        className="inventory-file-button"
+                        aria-label={`Inspect ${file.relativePath}`}
+                        aria-current={selectedPath === file.relativePath ? 'true' : undefined}
+                        title={file.relativePath}
+                        onClick={() => onInspect(file.relativePath)}
+                      >
+                        {file.relativePath}
+                      </button>
+                    </td>
+                    <td><span className="inventory-kind">{file.kind}</span></td>
+                    <td>{file.latestSizeBytes === null ? '—' : formatBytes(file.latestSizeBytes)}</td>
+                    <td>
+                      <span className={`inventory-state inventory-state-${file.snapshotState}`}>
+                        {file.snapshotState}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`inventory-state inventory-state-${file.sourceState}`}>
+                        {file.sourceState}
+                      </span>
+                    </td>
+                    <td title={file.lastSeenAt}>{file.lastSeenSnapshotId}</td>
+                  </tr>
+                ))}
+                {filteredFiles.length === 0 && (
+                  <tr>
+                    <td className="inventory-no-results" colSpan={6}>No matching files</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <FileInspectorPanel
+          key={selectedPath ?? 'no-selection'}
+          selectedPath={selectedPath}
+          report={inspectionReport}
+          loading={inspectionLoading}
+          error={inspectionError}
+        />
+      </div>
+    </div>
+  );
+}
+
 function ResultContent({ summary, reuseRatio }: { summary: BlockIngestSummary | null; reuseRatio: string }) {
   if (!summary) {
     return (
@@ -822,11 +1373,35 @@ function ResultContent({ summary, reuseRatio }: { summary: BlockIngestSummary | 
         <dd>{formatBytes(summary.newlyStoredBytes)}</dd>
       </div>
       <div>
+        <dt>New logical bytes</dt>
+        <dd>{formatBytes(summary.newLogicalBytes)}</dd>
+      </div>
+      <div>
+        <dt>Compression saved</dt>
+        <dd>{formatBytes(summary.compressionSavedBytes)}</dd>
+      </div>
+      <div>
+        <dt>New block encodings</dt>
+        <dd>
+          {summary.newRawBlockCount} raw · {summary.newZstdBlockCount} zstd · {summary.newLz4BlockCount} lz4
+        </dd>
+      </div>
+      <div>
         <dt>Reuse ratio</dt>
         <dd>{reuseRatio}</dd>
       </div>
     </dl>
   );
+}
+
+function integrityStatusLabel(status: IntegrityReport['status']): string {
+  if (status === 'healthy') {
+    return 'Healthy';
+  }
+  if (status === 'warning') {
+    return 'Warning';
+  }
+  return 'Failed';
 }
 
 function formatBytes(bytes: number): string {

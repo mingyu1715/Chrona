@@ -2,9 +2,9 @@
 
 ## Status
 
-Future design. Not implemented in the current application.
+Implemented in the Home/adaptive navigation slice.
 
-This document defines a future Chrona home screen and adaptive access index for recent and repeated work. It records how splay tree behavior may be used without changing the visible filesystem hierarchy.
+This document defines the Chrona home screen and adaptive access index for recent and repeated work. It records how splay tree behavior may be used without changing the visible filesystem hierarchy.
 
 ## Goal
 

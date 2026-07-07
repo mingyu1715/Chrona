@@ -20,5 +20,15 @@ pub struct BlockIngestSummary {
     pub new_block_count: u64,
     pub reused_block_count: u64,
     pub newly_stored_bytes: u64,
+    #[serde(default)]
+    pub new_logical_bytes: u64,
+    #[serde(default)]
+    pub compression_saved_bytes: u64,
+    #[serde(default)]
+    pub new_raw_block_count: u64,
+    #[serde(default)]
+    pub new_zstd_block_count: u64,
+    #[serde(default)]
+    pub new_lz4_block_count: u64,
     pub files: Vec<FileIngestResult>,
 }

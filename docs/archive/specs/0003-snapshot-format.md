@@ -1,5 +1,9 @@
 # 0003. Snapshot Format
 
+## Status
+
+Implemented in Phase 2.
+
 ## Scope
 
 Phase 2 introduces snapshot metadata persistence. It records the state of a source tree at a point in time by reusing the Phase 1 block ingest result.

@@ -32,10 +32,21 @@ function createApiMock() {
     appVersion: '0.1.0',
     repositoryId: 'repo-id',
     createdAt: '2026-06-19T00:00:00Z',
-    blockStrategy: { type: 'fixed', sizeBytes: 1048576, hash: 'sha256' },
+    blockStrategy: {
+      type: 'fixed',
+      sizeBytes: 1048576,
+      hash: 'sha256',
+      encodingVersion: 2,
+      compressionMode: 'standard',
+    },
   };
   let progressHandler: ((event: BlockIngestProgress) => void) | undefined;
-  const api: ChronaApi = {
+  const api: ChronaApi & {
+    setRepositoryCompressionMode(
+      repositoryPath: string,
+      compressionMode: 'off' | 'standard' | 'fast',
+    ): Promise<RepositoryManifest>;
+  } = {
     createRepository: vi.fn(async () => manifest),
     openRepository: vi.fn(async () => manifest),
     ingestBlocks: vi.fn(async () => ({
@@ -45,12 +56,127 @@ function createApiMock() {
       newBlockCount: 1,
       reusedBlockCount: 1,
       newlyStoredBytes: 9,
+      newLogicalBytes: 9,
+      compressionSavedBytes: 0,
+      newRawBlockCount: 1,
+      newZstdBlockCount: 0,
+      newLz4BlockCount: 0,
       files: [],
     })),
     createSnapshot: vi.fn(),
     listSnapshots: vi.fn(async () => []),
     getSnapshot: vi.fn(),
     restoreSnapshot: vi.fn(),
+    verifyRepository: vi.fn(async () => ({
+      schemaVersion: 1,
+      repositoryPath: '/tmp/chrona-repo',
+      checkedAt: '2026-06-26T00:00:00Z',
+      status: 'healthy' as const,
+      snapshotCount: 1,
+      fileCount: 2,
+      blockReferenceCount: 2,
+      uniqueBlockCount: 1,
+      missingBlockCount: 0,
+      corruptBlockCount: 0,
+      issues: [],
+    })),
+    setRepositoryCompressionMode: vi.fn(async (_repositoryPath, compressionMode) => ({
+      ...manifest,
+      blockStrategy: {
+        ...manifest.blockStrategy,
+        compressionMode,
+      },
+    })),
+    getRepositoryInventory: vi.fn(async () => ({
+      schemaVersion: 1,
+      repositoryPath: '/tmp/chrona-repo',
+      generatedAt: '2026-06-27T00:00:00Z',
+      snapshotCount: 2,
+      knownFileCount: 3,
+      latestFileCount: 2,
+      deletedInLatestCount: 1,
+      sourceExistsCount: 1,
+      sourceMissingCount: 1,
+      sourceRootMissingCount: 0,
+      totalOriginalBytesLatest: 12,
+      totalBlockReferencesLatest: 2,
+      uniqueBlockCountLatest: 2,
+      kindStats: [
+        { kind: 'document' as const, fileCount: 1, totalBytesLatest: 5 },
+        { kind: 'image' as const, fileCount: 1, totalBytesLatest: 7 },
+      ],
+      files: [
+        {
+          relativePath: 'notes.md',
+          fileName: 'notes.md',
+          extension: 'md',
+          kind: 'document' as const,
+          snapshotState: 'presentInLatest' as const,
+          sourceState: 'exists' as const,
+          latestSizeBytes: 5,
+          latestModifiedAt: '2026-06-27T00:00:00Z',
+          firstSeenSnapshotId: 'first',
+          firstSeenAt: '2026-06-26T00:00:00Z',
+          lastSeenSnapshotId: 'latest',
+          lastSeenAt: '2026-06-27T00:00:00Z',
+          seenInSnapshotCount: 2,
+          blockReferenceCountLatest: 1,
+        },
+        {
+          relativePath: 'old.txt',
+          fileName: 'old.txt',
+          extension: 'txt',
+          kind: 'text' as const,
+          snapshotState: 'deletedInLatest' as const,
+          sourceState: 'missing' as const,
+          latestSizeBytes: null,
+          latestModifiedAt: null,
+          firstSeenSnapshotId: 'first',
+          firstSeenAt: '2026-06-26T00:00:00Z',
+          lastSeenSnapshotId: 'first',
+          lastSeenAt: '2026-06-26T00:00:00Z',
+          seenInSnapshotCount: 1,
+          blockReferenceCountLatest: 0,
+        },
+      ],
+    })),
+    inspectRepositoryFile: vi.fn(async () => ({
+      schemaVersion: 1,
+      repositoryPath: '/tmp/chrona-repo',
+      relativePath: 'notes.md',
+      fileName: 'notes.md',
+      versionCount: 1,
+      firstSeenAt: '2026-06-27T00:00:00Z',
+      lastSeenAt: '2026-06-27T00:00:00Z',
+      latestState: 'added' as const,
+      versions: [
+        {
+          snapshotId: 'latest',
+          snapshotName: 'Latest',
+          snapshotCreatedAt: '2026-06-27T00:00:00Z',
+          state: 'added' as const,
+          sizeBytes: 5,
+          modifiedAt: '2026-06-27T00:00:00Z',
+          totalBlockReferences: 1,
+          uniqueBlockCount: 1,
+          blocks: [
+            {
+              index: 0,
+              offset: 0,
+              sizeBytes: 5,
+              hash: 'a'.repeat(64),
+              wasNew: true,
+              encoding: 'zstd' as const,
+              storageState: 'available' as const,
+              storedSizeBytes: 4,
+              compressionSavedBytes: 1,
+              seenInVersionCount: 1,
+              issue: null,
+            },
+          ],
+        },
+      ],
+    })),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
       baseSnapshotId: 'base',
@@ -210,6 +336,133 @@ describe('RepositoryPage', () => {
     expect(screen.getAllByText('demo-source').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/recent repositories/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText('chrona-repo').length).toBeGreaterThan(0);
+  });
+
+  test('verifies repository integrity and renders the report', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await waitFor(() => expect(api.openRepository).toHaveBeenCalledWith('/tmp/chrona-repo'));
+
+    await user.click(screen.getByRole('button', { name: /integrity/i }));
+    await user.click(screen.getByRole('button', { name: /verify repository/i }));
+
+    await waitFor(() => expect(api.verifyRepository).toHaveBeenCalledWith('/tmp/chrona-repo'));
+    expect(screen.getByText(/integrity healthy/i)).toBeInTheDocument();
+    expect(screen.getByText('Snapshots checked').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Missing blocks').nextElementSibling).toHaveTextContent('0');
+    expect(screen.getByText('No integrity issues found')).toBeInTheDocument();
+  });
+
+  test('opens repository explorer and renders inventory rows', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await waitFor(() => expect(api.openRepository).toHaveBeenCalledWith('/tmp/chrona-repo'));
+
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+
+    await waitFor(() =>
+      expect(api.getRepositoryInventory).toHaveBeenCalledWith('/tmp/chrona-repo'),
+    );
+    const inventorySummary = screen.getByText('Known files').closest('dl');
+    expect(inventorySummary).not.toBeNull();
+    expect(within(inventorySummary!).getByText('Known files').nextElementSibling)
+      .toHaveTextContent('3');
+    expect(within(inventorySummary!).getByText('Deleted in latest').nextElementSibling)
+      .toHaveTextContent('1');
+    expect(screen.getByText('notes.md')).toBeInTheDocument();
+    expect(screen.getByText('old.txt')).toBeInTheDocument();
+    expect(screen.getByText('deletedInLatest')).toBeInTheDocument();
+    expect(screen.getByText('missing')).toBeInTheDocument();
+  });
+
+  test('filters inventory rows by path and snapshot state', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+    await screen.findByText('notes.md');
+
+    await user.type(screen.getByLabelText(/file search/i), 'notes');
+    expect(screen.getByText('notes.md')).toBeInTheDocument();
+    expect(screen.queryByText('old.txt')).not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText(/file search/i));
+    await user.selectOptions(
+      screen.getByLabelText(/snapshot state/i),
+      'deletedInLatest',
+    );
+    expect(screen.getByText('old.txt')).toBeInTheDocument();
+    expect(screen.queryByText('notes.md')).not.toBeInTheDocument();
+  });
+
+  test('inspects a selected inventory file', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+    const inspectButton = await screen.findByRole('button', { name: /inspect notes.md/i });
+
+    await user.click(inspectButton);
+
+    await waitFor(() => {
+      expect(api.inspectRepositoryFile).toHaveBeenCalledWith(
+        '/tmp/chrona-repo',
+        'notes.md',
+      );
+    });
+    expect(await screen.findByRole('heading', { name: 'notes.md' })).toBeInTheDocument();
+    expect(inspectButton).toHaveAttribute('aria-current', 'true');
+  });
+
+  test('keeps inventory visible when file inspection fails', async () => {
+    const { api } = createApiMock();
+    vi.mocked(api.inspectRepositoryFile).mockRejectedValueOnce(new Error('inspect failed'));
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /explorer/i }));
+    await user.click(screen.getByRole('button', { name: /refresh inventory/i }));
+    await user.click(await screen.findByRole('button', { name: /inspect notes.md/i }));
+
+    expect(await screen.findByText('inspect failed')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /inspect old.txt/i })).toBeInTheDocument();
+  });
+
+  test('updates the repository compression mode', async () => {
+    const { api } = createApiMock();
+    const user = userEvent.setup();
+    render(<RepositoryPage api={api} />);
+
+    await user.type(screen.getByLabelText(/repository path/i), '/tmp/chrona-repo');
+    await user.click(screen.getByRole('button', { name: /open repository/i }));
+    await user.click(screen.getByRole('button', { name: /repository/i }));
+
+    await user.selectOptions(screen.getByLabelText(/compression mode/i), 'fast');
+    await user.click(screen.getByRole('button', { name: /apply compression mode/i }));
+
+    await waitFor(() =>
+      expect(api.setRepositoryCompressionMode)
+        .toHaveBeenCalledWith('/tmp/chrona-repo', 'fast'),
+    );
   });
 
 });

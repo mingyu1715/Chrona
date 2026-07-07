@@ -9,7 +9,7 @@ use crate::core::hasher::sha256_hex;
 use crate::core::path_safety::assert_source_repository_separate;
 use crate::core::repository::RepositoryManager;
 use crate::core::scanner::FileScanner;
-use crate::models::block::BlockReference;
+use crate::models::block::{BlockEncoding, BlockReference};
 use crate::models::ingest::{BlockIngestSummary, FileIngestResult};
 use crate::models::progress::BlockIngestProgress;
 
@@ -31,7 +31,7 @@ impl BlockIngestService {
     where
         F: FnMut(BlockIngestProgress),
     {
-        RepositoryManager::open(repository_path)?;
+        let manifest = RepositoryManager::open(repository_path)?;
         assert_source_repository_separate(source_path, repository_path)?;
 
         let operation_id = Uuid::new_v4().to_string();
@@ -52,7 +52,10 @@ impl BlockIngestService {
             total_bytes,
         );
 
-        let store = BlockStore::new(repository_path.to_path_buf());
+        let store = BlockStore::with_compression_mode(
+            repository_path.to_path_buf(),
+            manifest.block_strategy.compression_mode,
+        );
         let chunker = FixedChunker::new(BLOCK_SIZE);
         let mut summary = BlockIngestSummary {
             file_count: total_files,
@@ -61,6 +64,11 @@ impl BlockIngestService {
             new_block_count: 0,
             reused_block_count: 0,
             newly_stored_bytes: 0,
+            new_logical_bytes: 0,
+            compression_saved_bytes: 0,
+            new_raw_block_count: 0,
+            new_zstd_block_count: 0,
+            new_lz4_block_count: 0,
             files: Vec::new(),
         };
         let mut total_bytes_processed = 0_u64;
@@ -97,7 +105,15 @@ impl BlockIngestService {
                 summary.total_block_references += 1;
                 if write.was_new {
                     summary.new_block_count += 1;
-                    summary.newly_stored_bytes += write.size_bytes;
+                    summary.new_logical_bytes += write.raw_size_bytes;
+                    summary.newly_stored_bytes += write.stored_size_bytes;
+                    summary.compression_saved_bytes +=
+                        write.raw_size_bytes.saturating_sub(write.stored_size_bytes);
+                    match write.encoding {
+                        BlockEncoding::Raw => summary.new_raw_block_count += 1,
+                        BlockEncoding::Zstd => summary.new_zstd_block_count += 1,
+                        BlockEncoding::Lz4 => summary.new_lz4_block_count += 1,
+                    }
                 } else {
                     summary.reused_block_count += 1;
                 }

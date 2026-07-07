@@ -17,4 +17,26 @@ pub struct BlockStrategy {
     pub strategy_type: String,
     pub size_bytes: u64,
     pub hash: String,
+    #[serde(default = "legacy_encoding_version")]
+    pub encoding_version: u32,
+    #[serde(default)]
+    pub compression_mode: CompressionMode,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum CompressionMode {
+    Off,
+    Standard,
+    Fast,
+}
+
+impl Default for CompressionMode {
+    fn default() -> Self {
+        Self::Off
+    }
+}
+
+fn legacy_encoding_version() -> u32 {
+    1
 }

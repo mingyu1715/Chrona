@@ -1,5 +1,9 @@
 # 0004. Snapshot Comparison
 
+## Status
+
+Implemented in Phase 3.
+
 ## Scope
 
 Phase 3 introduces snapshot comparison on top of the Phase 2 snapshot metadata. It compares two persisted snapshot JSON files and reports file-level and block-reference-level changes.

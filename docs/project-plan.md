@@ -28,9 +28,11 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - Block size: 기본 1 MiB fixed-size chunk
 - Test: Rust unit/integration test, Vitest, Playwright smoke test
 
-## 3. MVP 범위
+## 3. MVP 범위와 현재 상태
 
-### 포함
+현재 상태의 상세 matrix는 `docs/phase-status.md`를 기준으로 관리한다.
+
+### 구현 완료 또는 현재 브랜치에서 완료
 
 - Chrona 저장소 생성 및 열기
 - 파일 또는 폴더 선택
@@ -40,32 +42,45 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - 동일 블록 재사용
 - 스냅샷 생성
 - 스냅샷 목록 조회
-- 스냅샷 상세 통계
+- 스냅샷 상세 조회
 - 두 스냅샷 비교
 - 선택 스냅샷을 지정 폴더로 복원
-- 저장 공간 분석 대시보드
-- 파일별 블록 목록 및 변경 이력
+- Home/adaptive navigation
 - 블록 무결성 검증
-- README, 개발 가이드, 개발 로그, 구현 기록 문서
+- Repository Inventory Explorer
+- 블록 압축(`off` raw, `standard` Zstd level 3, `fast` LZ4 frame)
+- File Inspector / Block Map
+- README, 개발 로그, 구현 기록 문서
 
-### 제외
+### 다음 구현 후보
+
+- Repository Statistics Dashboard의 집계 범위와 UI를 현재 Phase 기준으로 상세화
+
+### 아직 세부 계획 없음
+
+- 저장 공간 분석 대시보드
+- 패키징된 `.app` 릴리스와 signing
+
+### MVP에서 제외하거나 Future로 유지
 
 - 자동 백업 스케줄러
 - 암호화
-- 압축
 - 내용 기반 청킹
 - 클라우드 연동
 - 완전한 macOS 권한 자동 처리
 - 스냅샷 삭제와 가비지 컬렉션
 - 실시간 파일 감시
 
-## 4. 전체 시스템 아키텍처
+## 4. 전체 목표 시스템 아키텍처
+
+아래 구조는 최종적으로 지향하는 목표 구조다. 현재 구현된 부분과 아직 없는 부분은 `docs/phase-status.md`와 이 문서의 상태 표를 기준으로 판단한다.
 
 ```text
 React UI
   ├─ Dashboard
   ├─ Snapshot List / Detail
   ├─ Snapshot Compare
+  ├─ Repository Explorer / Inventory
   ├─ File Inspector
   ├─ Block Map
   └─ Restore Dialog
@@ -78,7 +93,8 @@ Tauri Commands
   ├─ get_snapshot
   ├─ compare_snapshots
   ├─ restore_snapshot
-  ├─ verify_blocks
+  ├─ verify_repository
+  ├─ get_repository_inventory
   └─ get_statistics
 
 Rust Core
@@ -92,6 +108,7 @@ Rust Core
   ├─ DiffService
   ├─ RestoreService
   ├─ IntegrityService
+  ├─ InventoryService
   └─ StatisticsService
 
 Chrona Repository
@@ -106,7 +123,7 @@ UI는 도메인 로직을 갖지 않고 Tauri command를 호출한다. Rust core
 
 ## 5. 저장 구조
 
-Chrona는 사용자가 선택한 저장소 폴더 안에 다음 구조를 만든다.
+현재 구현된 저장소 구조는 다음과 같다.
 
 ```text
 chrona-repository/
@@ -116,13 +133,28 @@ chrona-repository/
       cd/
         abcdef...sha256.blk
   snapshots/
-    2026-06-19T10-30-00Z_8f31c2.json
+    20260619T103000Z_8f31c2.json
   indexes/
-    block-index.json
     snapshot-index.json
+    access-index.json
   logs/
-    development-events.jsonl
 ```
+
+현재 구현 기준:
+
+- `manifest.json`: repository schema와 block strategy 기록
+- `blocks/`: raw `.blk` block payload 저장
+- `snapshots/`: snapshot JSON 저장
+- `indexes/snapshot-index.json`: snapshot 목록 index
+- `indexes/access-index.json`: Home/adaptive navigation 접근 기록
+- `logs/`: 예약된 디렉터리. structured app log는 아직 구현하지 않음
+
+아직 구현되지 않은 저장 구조:
+
+- `indexes/block-index.json`: 현재 없음. physical block은 hash path 존재 여부로 확인한다.
+- SQLite metadata backend: Future
+- compressed block envelope: Future
+- snapshot delete/GC metadata: Future
 
 ### manifest.json
 
@@ -140,29 +172,12 @@ chrona-repository/
 }
 ```
 
-### block-index.json
-
-MVP에서는 JSON으로 시작한다. 블록 수가 늘어나면 SQLite로 전환한다.
-
-```json
-{
-  "blocks": {
-    "sha256hex": {
-      "hash": "sha256hex",
-      "sizeBytes": 1048576,
-      "path": "blocks/ab/cd/sha256hex.blk",
-      "firstSeenSnapshotId": "snapshot-id",
-      "createdAt": "2026-06-19T10:30:00Z"
-    }
-  }
-}
-```
-
 ### snapshot 파일
 
 ```json
 {
-  "id": "2026-06-19T10-30-00Z_8f31c2",
+  "schemaVersion": 1,
+  "id": "20260619T103000Z_8f31c2",
   "name": "Initial import",
   "createdAt": "2026-06-19T10:30:00Z",
   "sourceRoot": "/Users/example/Documents/demo",
@@ -184,7 +199,8 @@ MVP에서는 JSON으로 시작한다. 블록 수가 늘어나면 SQLite로 전�
           "index": 0,
           "offset": 0,
           "sizeBytes": 1024,
-          "hash": "sha256hex"
+          "hash": "sha256hex",
+          "wasNew": true
         }
       ]
     }
@@ -194,323 +210,348 @@ MVP에서는 JSON으로 시작한다. 블록 수가 늘어나면 SQLite로 전�
 
 ## 6. 핵심 데이터 흐름
 
-### 스냅샷 생성
+### 구현 완료: Block ingest
 
-1. 사용자가 source folder와 snapshot name을 선택한다.
-2. `FileScanner`가 하위 파일 목록을 만든다.
-3. 각 파일을 `FixedChunker`가 1 MiB 단위로 읽는다.
-4. `BlockHasher`가 블록 SHA-256을 계산한다.
-5. `BlockStore`가 이미 존재하는 블록이면 저장하지 않고 참조만 기록한다.
-6. 새 블록이면 `blocks/xx/yy/hash.blk`에 쓴다.
-7. `SnapshotService`가 파일 메타데이터와 블록 목록을 snapshot JSON으로 저장한다.
-8. `StatisticsService`가 대시보드 수치를 계산한다.
+1. 사용자가 repository path와 source path를 지정한다.
+2. `RepositoryManager`가 repository를 검증한다.
+3. source/repository 포함 관계를 차단한다.
+4. `FileScanner`가 source 파일 목록을 만든다.
+5. `FixedChunker`가 1 MiB 단위로 streaming read한다.
+6. `Hasher`가 raw chunk SHA-256을 계산한다.
+7. `BlockStore`가 block path 존재 여부로 reuse/new를 판정한다.
+8. 새 block이면 `.tmp-{operationId}`로 쓴 뒤 rename한다.
+9. UI는 progress event와 summary를 받는다.
 
-### 스냅샷 비교
+### 구현 완료: Snapshot 생성
+
+1. `SnapshotService`가 block ingest를 실행한다.
+2. ingest 결과의 file/block metadata를 snapshot JSON으로 변환한다.
+3. `SnapshotStore`가 snapshot 파일을 `.tmp` 후 rename으로 저장한다.
+4. `indexes/snapshot-index.json`을 최신순으로 갱신한다.
+
+### 구현 완료: Snapshot 비교
 
 1. 두 snapshot JSON을 읽는다.
 2. relative path 기준으로 파일 집합을 비교한다.
-3. 추가 파일: 이전에는 없고 이후에는 있음.
-4. 삭제 파일: 이전에는 있고 이후에는 없음.
-5. 수정 파일: 경로는 같지만 size, modifiedAt, block hash list 중 하나가 다름.
-6. 블록 집합 차이로 새 저장 블록, 재사용 블록, 저장량 증가분을 계산한다.
+3. size와 ordered block hash sequence로 unchanged/modified를 판정한다.
+4. block reference multiset으로 added/removed/shared reference counts를 계산한다.
 
-### 복원
+### 구현 완료: Snapshot 복원
 
 1. 사용자가 snapshot과 target folder를 선택한다.
-2. 앱은 기본적으로 비어 있거나 새로 만든 폴더로 복원하도록 안내한다.
-3. `RestoreService`가 snapshot의 파일 목록을 순회한다.
-4. 각 파일의 block hash 순서대로 `.blk` 파일을 읽어 target path에 이어 쓴다.
-5. 파일 크기가 snapshot metadata와 일치하는지 확인한다.
-6. 옵션으로 복원 전 `IntegrityService`가 필요한 블록 해시를 검증한다.
+2. target이 repository 내부이거나 non-empty이면 거부한다.
+3. snapshot file entry의 block hash 순서대로 `.blk` 파일을 읽는다.
+4. target file을 `.tmp-{operationId}`로 쓴 뒤 rename한다.
+5. block 누락과 size mismatch는 오류로 반환한다.
+
+### 구현 완료: Integrity 검증
+
+1. snapshot index와 snapshot JSON을 읽는다.
+2. unique block hash와 expected size를 수집한다.
+3. physical `.blk` 파일 존재 여부를 확인한다.
+4. size와 raw SHA-256을 검증한다.
+5. missing/corrupt issue를 report로 반환한다.
+
+### 구현 완료: Repository Inventory Explorer
+
+1. snapshot index와 snapshot JSON을 읽는다.
+2. relative path별로 기록된 파일을 aggregate한다.
+3. 확장자로 file kind를 분류한다.
+4. 최신 snapshot 기준 present/deleted 상태를 계산한다.
+5. source root가 있으면 현재 원본 파일 존재 여부를 best-effort로 확인한다.
+6. Explorer UI가 summary, kind breakdown, filterable table을 표시한다.
 
 ## 7. 모듈 구조
 
+### 현재 구현된 Rust modules
+
 ```text
 src-tauri/src/
-  main.rs
   commands/
+    block_commands.rs
+    home_commands.rs
+    integrity_commands.rs
+    inventory_commands.rs
+    file_inspector_commands.rs
     repository_commands.rs
-    snapshot_commands.rs
     restore_commands.rs
-    statistics_commands.rs
+    snapshot_commands.rs
   core/
-    repository.rs
-    scanner.rs
-    chunker.rs
-    hasher.rs
+    access_index.rs
+    access_store.rs
+    block_codec.rs
+    block_ingest_service.rs
     block_store.rs
-    snapshot_store.rs
-    snapshot_service.rs
+    chunker.rs
     diff_service.rs
-    restore_service.rs
-    integrity_service.rs
-    statistics_service.rs
     errors.rs
-  models/
+    hasher.rs
+    home_service.rs
+    integrity_service.rs
+    inventory_service.rs
+    file_inspector_service.rs
+    path_safety.rs
     repository.rs
+    restore_service.rs
+    scanner.rs
+    snapshot_service.rs
+    snapshot_store.rs
+  models/
+    access.rs
     block.rs
-    snapshot.rs
     diff.rs
-    statistics.rs
-
-src/
-  app/
-    App.tsx
-    routes.tsx
-  features/
-    dashboard/
-    repository/
-    snapshots/
-    compare/
-    restore/
-    file-inspector/
-    visualization/
-  shared/
-    api/
-    components/
-    formatting/
-    types/
+    ingest.rs
+    integrity.rs
+    inventory.rs
+    file_inspector.rs
+    progress.rs
+    repository.rs
+    restore.rs
+    snapshot.rs
 ```
 
-Rust core는 파일 시스템과 저장소 포맷을 책임진다. React는 조회, 상태 표시, 사용자 입력, 시각화만 담당한다.
+### 현재 구현된 UI modules
 
-## 8. 핵심 클래스와 객체
+```text
+src/
+  features/
+    explorer/
+      FileInspectorPanel.tsx
+      FileInspectorPanel.test.tsx
+    repository/
+      RepositoryPage.tsx
+      RepositoryPage.css
+      RepositoryPage.test.tsx
+    snapshots/
+      SnapshotPanel.tsx
+      SnapshotComparePanel.tsx
+      *.test.tsx
+  shared/
+    api/chronaApi.ts
+    types/chrona.ts
+```
 
-### Rust service
+아직 없는 modules:
+
+- `statistics_service.rs`
+- dashboard feature module
+- garbage collection module
+- watcher module
+
+## 8. 핵심 클래스와 객체 상태
+
+### 구현 완료
 
 - `RepositoryManager`: 저장소 생성, 열기, manifest 검증
-- `FileScanner`: 파일 목록 수집, 제외 규칙 처리
-- `FixedChunker`: 파일을 고정 크기 블록 iterator로 제공
-- `BlockHasher`: SHA-256 해시 계산
-- `BlockStore`: 블록 존재 확인, 저장, 읽기
-- `SnapshotStore`: snapshot JSON 저장과 조회
-- `SnapshotService`: 스캔, 청킹, 저장, metadata 생성을 조율
-- `DiffService`: 스냅샷 비교 결과 생성
+- `FileScanner`: 파일 목록 수집과 metadata relative path 정규화
+- `FixedChunker`: 파일을 고정 크기 block으로 streaming
+- `BlockCodec`: raw/Zstd/LZ4 payload 인코딩과 압축 envelope 검증
+- `BlockStore`: block 저장, reuse 판정, 압축 payload의 투명한 raw read
+- `SnapshotStore`: snapshot JSON과 snapshot index 저장/조회
+- `SnapshotService`: block ingest와 snapshot metadata 생성을 조율
+- `DiffService`: snapshot comparison 계산
 - `RestoreService`: snapshot에서 파일 재조립
-- `IntegrityService`: 저장된 블록 해시 재계산
-- `StatisticsService`: 저장 공간, 재사용률, 시계열 통계 계산
+- `IntegrityService`: 저장된 block 존재/size/hash 검증
+- `InventoryService`: repository에 기록된 파일, 종류, 상태를 metadata-only로 집계
+- `FileInspectorService`: 특정 relative path의 content-based snapshot 이력과 ordered block metadata 집계
+- `AccessIndex`, `AccessStore`, `HomeService`: Home/adaptive access 기록
 
-### 주요 모델
+### 아직 없음
 
-- `RepositoryManifest`
-- `BlockRecord`
-- `Snapshot`
-- `FileRecord`
-- `BlockReference`
-- `SnapshotSummary`
-- `SnapshotDiff`
-- `RepositoryStatistics`
-- `RestoreReport`
-- `IntegrityReport`
+- `StatisticsService`
+- `GarbageCollectionService`
+- `WatcherService`
 
-## 9. 화면 구성
+## 9. 화면 구성 상태
 
-### 메인 대시보드
+### 구현 완료
 
-- 전체 파일 수
-- 전체 블록 수
-- 스냅샷 개수
-- 원본 총량
-- 실제 저장량
-- 절약량
-- 블록 재사용률
-- 최근 스냅샷 목록
-- 스냅샷별 추가 저장량 bar chart
+- Repository 생성/열기
+- Source file/folder 선택
+- Block ingest progress/result
+- Snapshot 생성/list/detail
+- Snapshot comparison
+- Snapshot restore target/result
+- Home/adaptive navigation
+- Integrity verification report
+- Repository Explorer / Inventory summary, kind breakdown, filters, file table
+- Explorer master-detail File Inspector와 ordered block map
+- Light/dark theme과 Docker Desktop 참고 sidebar layout
 
-### Repository 화면
+### 아직 없음
 
-- 저장소 생성/열기
-- 현재 저장소 위치
-- source folder 선택
-- snapshot name 입력
-- snapshot 생성 진행률
-
-### Snapshot List
-
-- 스냅샷 생성 시간
-- 이름
-- 파일 수
-- 새 블록 수
-- 재사용 블록 수
-- 추가 저장량
-
-### Snapshot Detail
-
-- 스냅샷 요약 카드
-- 파일 트리
-- 선택 파일의 블록 목록
-- Block Map
-
-### Compare
-
-- 기준 스냅샷과 비교 스냅샷 선택
-- added / modified / deleted 파일 탭
-- 추가 저장량
-- 새 블록 수
-- 재사용 블록 수
-
-### Restore
-
-- 복원할 스냅샷 선택
-- target folder 선택
-- 복원 전 검증 여부
-- 결과 리포트
+- Repository Statistics Dashboard
+- Advanced visualization charts
+- Release/About screen
 
 ## 10. 시각화 기준
 
-시각화는 MVP의 핵심 기능이다. 단, 복잡한 그래프 라이브러리보다 이해 가능한 기본 시각화를 우선한다.
+현재 구현된 시각화는 summary cards, status panels, list/table 중심이다. 고급 block visualization은 아직 없다.
 
-- 저장 공간 분석: 카드 + bar chart
-- 시점별 변화: line chart 또는 stacked bar chart
-- 블록 구조: 파일 1개를 기준으로 block strip map 표시
-- 블록 재사용: 같은 hash를 같은 색으로 표시
-- 스냅샷 비교: added/modified/deleted 요약과 상세 목록
-- 데이터 흐름: 첫 화면 또는 docs에 pipeline diagram 제공
+Repository Inventory Explorer와 파일 단위 ordered block map까지 metadata 기반 가시화가 구현됐다. 다음 시각화는 statistics dashboard를 별도 spec/plan으로 설계한 뒤 구현한다.
 
-MVP에서는 전체 저장소의 거대한 block graph를 만들지 않는다. 대신 파일 단위 Block Map과 스냅샷별 통계 시각화에 집중한다.
+MVP에서는 전체 저장소의 거대한 block graph를 만들지 않는다. snapshot별 통계 시각화는 아직 세부 계획이 없다.
 
 ## 11. 테스트 구조
 
+### 현재 구현된 테스트
+
 ```text
-src-tauri/src/core/*_test.rs
-tests/
-  fixtures/
-    initial/
-    changed/
-    duplicate-blocks/
-  integration/
-    snapshot_restore_test.rs
-src/**/*.test.tsx
-e2e/
-  app-smoke.spec.ts
+src-tauri/tests/
+  phase1_core.rs
+  phase2_snapshot.rs
+  phase3_diff.rs
+  phase4_restore.rs
+  phase5_integrity.rs
+  phase5_inventory.rs
+  home_access.rs
+src/features/**/*.test.tsx
 ```
 
-### 필수 테스트
+### 검증 기준
 
-- 동일한 입력 블록은 동일한 hash를 만든다.
-- 동일 블록은 중복 저장하지 않는다.
-- 파일 하나를 snapshot으로 저장하면 block reference가 순서대로 기록된다.
-- 두 snapshot의 added/modified/deleted 결과가 정확하다.
-- snapshot에서 복원한 파일 내용이 원본과 동일하다.
-- 블록 파일이 손상되면 integrity 검증이 실패한다.
-- UI dashboard가 repository statistics를 렌더링한다.
+- Rust core 변경: `cd src-tauri && cargo test`
+- UI 변경: `npm test`
+- TypeScript/Vite build: `npm run build`
+- whitespace: `git diff --check`
 
-## 12. 개발 우선순위
+Repository Inventory Explorer는 다음을 검증한다.
 
-1. 저장소 포맷과 block engine
-2. snapshot 생성
-3. snapshot 조회와 기본 통계
-4. snapshot diff
-5. restore
-6. dashboard와 핵심 시각화
-7. integrity verification
-8. 문서와 GitHub 운영 정리
-9. 패키징과 릴리스 준비
+- one snapshot inventory
+- file kind classification
+- deleted in latest snapshot
+- current source missing
+- source root missing
+- Explorer UI render/filter behavior
 
-Phase 3은 snapshot diff를 먼저 구현한다. 복원은 사용자의 파일 시스템에 새 파일을 쓰는 기능이므로, 비교 알고리즘과 snapshot metadata 신뢰성을 먼저 확보한 뒤 별도 Phase에서 다룬다.
+## 12. 현재 상태 요약
+
+상세 상태표는 `docs/phase-status.md`에 둔다. 이 문서는 큰 방향을 유지하고, 실제 완료/진행/미계획 상태는 아래 기준으로 해석한다.
+
+### 구현 완료
+
+- Phase 0/1: 프로젝트 초기 구조, GitHub 운영 문서, 저장소 포맷, 블록 엔진
+- Phase 2: 스냅샷 엔진
+- Phase 3: 스냅샷 비교
+- Phase 4: 스냅샷 복원
+- 별도 작업: 홈/적응형 탐색
+- Phase 5a: 무결성 검증
+- Phase 5b: Repository Inventory Explorer
+- Phase 6: 블록 압축
+- Phase 7: File Inspector / Block Map
+
+완료된 설계 문서는 `docs/archive/specs/`에 보관한다.
+
+### 현재 구현 계획
+
+- 활성 구현 계획 없음
+- 다음 후보: Repository Statistics Dashboard spec과 구현 plan 작성
+
+### 설계와 상세 계획이 모두 없는 후보
+
+- Repository Statistics Dashboard
+- Packaged `.app` release/signing
+- Snapshot delete and garbage collection
+- Watcher/automatic snapshots
+- SQLite metadata backend
+- Encryption
+- Content-defined chunking
+- Cloud block storage adapter
+- Repository migration tool
 
 ## 13. Phase별 개발 계획
 
-### Phase 0. 프로젝트 부트스트랩
+### Phase 0/1. Project Scaffold + Block Engine
 
-- 기간: 2~3일
-- 목표: 실행 가능한 Tauri 앱과 문서 기반 개발 흐름 확보
-- 구현 기능: Tauri/React 초기화, Rust test 환경, README, docs 구조, AGENTS.md 초안
-- 필요한 모듈: app shell, docs
-- 구현 방식: 빈 화면이 아닌 repository open/create 화면부터 시작
-- 데이터 흐름: 없음
-- 화면 구성: repository landing 화면
-- 테스트 방법: 앱 실행, Rust 기본 test, UI smoke test
-- 완료 기준: `npm run tauri dev`, `cargo test`, `npm test`가 통과
-- 다음 조건: 저장소 생성 기능을 붙일 준비 완료
+- 상태: 완료
+- Spec: `docs/archive/specs/0001-repository-format.md`, `docs/archive/specs/0002-block-engine.md`
+- Plan: `docs/archive/plans/phase-1-block-engine.md`
+- Implemented: `docs/implemented/block-engine.md`, `docs/implemented/phase-1-summary.md`
+- 완료 범위: repository 생성/열기, fixed chunking, SHA-256 block identity, duplicate block reuse, `.tmp` then rename writes, progress events, minimal ingest UI
 
-### Phase 1. 기본 저장 구조와 블록 엔진
+### Phase 2. Snapshot Engine
 
-- 기간: 1주
-- 목표: 파일을 블록으로 나누고 중복 블록을 재사용해 저장
-- 구현 기능: repository 생성, manifest 저장, file scan, fixed chunking, SHA-256 hash, block store
-- 필요한 모듈: `RepositoryManager`, `FileScanner`, `FixedChunker`, `BlockHasher`, `BlockStore`
-- 구현 방식: 1 MiB 단위 streaming read. hash 앞 4자를 디렉터리 prefix로 사용해 block 파일 분산 저장
-- 데이터 흐름: source file -> chunk -> hash -> block exists check -> write or reuse
-- 화면 구성: source folder 선택, scan 결과, 저장된 block count 표시
-- 테스트 방법: fixture 파일로 chunk 수, hash, 중복 저장 방지 검증
-- 완료 기준: 같은 파일을 두 번 처리해도 block 파일 수가 증가하지 않음
-- 다음 조건: block reference를 snapshot metadata로 저장할 수 있음
+- 상태: 완료
+- Spec: `docs/archive/specs/0003-snapshot-format.md`
+- Plan: `docs/archive/plans/phase-2-snapshot-engine.md`
+- Implemented: `docs/implemented/snapshot-engine.md`
+- 완료 범위: snapshot create/list/detail, snapshot index, snapshot JSON persistence, minimal snapshot UI
 
-### Phase 2. 스냅샷 시스템
+### Phase 3. Snapshot Comparison
 
-- 기간: 1주
-- 목표: 특정 시점의 파일 상태를 snapshot으로 저장하고 목록으로 조회
-- 구현 기능: snapshot 생성, snapshot JSON 저장, snapshot index, summary statistics
-- 필요한 모듈: `SnapshotStore`, `SnapshotService`, `StatisticsService`
-- 구현 방식: relative path, size, modifiedAt, block list를 snapshot file에 기록
-- 데이터 흐름: scanned files -> block refs -> snapshot metadata -> snapshot index update
-- 화면 구성: snapshot 생성 버튼, snapshot list, snapshot detail summary
-- 테스트 방법: snapshot JSON schema, 파일 수, block refs, summary 값 검증
-- 완료 기준: 앱에서 스냅샷 생성 후 재시작해도 목록과 상세 조회 가능
-- 다음 조건: snapshot 두 개 이상을 비교하고 복원할 수 있음
+- 상태: 완료
+- Spec: `docs/archive/specs/0004-snapshot-comparison.md`
+- Plan: `docs/archive/plans/phase-3-snapshot-comparison.md`
+- Implemented: `docs/implemented/snapshot-comparison.md`
+- 완료 범위: added/deleted/modified/unchanged classification, block-reference multiset counts, compare command and UI
 
-### Phase 3. 스냅샷 비교
+### Phase 4. Snapshot Restore
 
-- 기간: 1주
-- 목표: 두 snapshot의 파일/블록 참조 차이를 계산하고 UI에서 확인
-- 구현 기능: diff added/modified/deleted/unchanged, block-reference added/removed/shared counts, compare command, minimal compare UI
-- 필요한 모듈: `DiffService`, `SnapshotComparison` models, `compare_snapshots` command
-- 구현 방식: snapshot JSON 두 개를 읽고 normalized relative path 기준으로 매칭한 뒤, block hash sequence와 size로 content change를 판정
-- 데이터 흐름: snapshot A + snapshot B -> path map -> file diff rows -> block multiset counts -> comparison summary
-- 화면 구성: snapshot 선택 2개, compare 실행, summary, file diff list
-- 테스트 방법: added/deleted/modified/unchanged fixture, duplicate block reference multiset count, command integration, UI render test
-- 완료 기준: 변경된 파일, 삭제된 파일, 추가된 파일, 동일 파일이 UI에 정확히 표시되고 block reference 변화량이 계산됨
-- 다음 조건: 비교 결과를 바탕으로 restore 또는 visualization 중 다음 Phase를 선택 가능
+- 상태: 완료
+- Spec: `docs/archive/specs/0007-snapshot-restore.md`
+- Plan: `docs/archive/plans/phase-4-snapshot-restore.md`
+- Implemented: `docs/implemented/snapshot-restore.md`
+- 완료 범위: restore to empty/new target, target safety checks, block read, file materialization, `.tmp` then rename output writes
 
-### Phase 4. 홈과 적응형 탐색
+### Side Slice. Home and Adaptive Navigation
 
-- 기간: 1주
-- 목표: 사용자가 최근/반복 작업으로 빠르게 복귀할 수 있는 Home 화면과 adaptive quick access 제공
-- 구현 기능: Home screen, Continue Working, recent repositories/sources/folders/files/snapshots/compare pairs, pin/unpin, clear access history
-- 범위 제한: 자동 변경 감지와 자동 snapshot 생성은 Future watcher phase로 분리
-- 필요한 모듈: `AccessIndex`, `AccessStore`, `HomeService`, `home_commands`
-- 구현 방식: 실제 filesystem hierarchy는 안정적인 path 기반 view로 유지하고, splay tree는 접근 기록용 adaptive access index로만 사용
-- 데이터 흐름: user action -> access event -> splay/access metadata update -> `indexes/access-index.json` -> Home summary -> UI cards
-- 화면 구성: Home, Recent/Quick Access sections, existing Repository/Sources/Snapshots/Review sections 유지
-- 테스트 방법: splay behavior unit test, access persistence integration test, Home UI render test, source/snapshot stable ordering test
-- 완료 기준: Home에서 마지막 작업과 최근/자주 쓰는 항목으로 복귀할 수 있고, 메인 source/snapshot 목록 정렬은 흔들리지 않음
-- 다음 조건: visualization dashboard 또는 restore 중 다음 Phase 선택 가능
+- 상태: 완료
+- Spec: `docs/archive/specs/0006-home-adaptive-navigation.md`
+- Plan: `docs/archive/plans/phase-next-home-adaptive-navigation.md`
+- Implemented: `docs/implemented/home-adaptive-navigation.md`
+- 완료 범위: Continue Working, pinned/recent items, repository-local access index, pin/unpin, clear history
 
-### Later. 복원
+### Phase 5a. Integrity Verification
 
-- 목표: 선택한 snapshot을 새 target folder에 byte-level로 안전하게 복원
-- 구현 기능: restore command, target path safety, restore report, missing block handling
-- 필요한 모듈: `RestoreService`, `BlockStore` read path, `restore_commands`
-- 구현 방식: snapshot file entry의 block hash sequence를 순서대로 읽어 target file로 재조립하고 크기/hash를 검증
-- 데이터 흐름: snapshot -> file block references -> block reads -> target files -> restore report
-- 화면 구성: restore target picker, restore preview, restore result/error report
-- 테스트 방법: restored bytes equal original fixture, target path safety, missing/corrupt block handling
-- 완료 기준: 사용자가 선택한 snapshot을 새 폴더에 복원하고 원본 snapshot과 byte-level로 일치함
+- 상태: 구현 완료, 원격 기능 브랜치 푸시 완료
+- Spec: `docs/archive/specs/0008-integrity-verification.md`
+- Plan: `docs/archive/plans/phase-5-integrity-verification.md`
+- Implemented: `docs/implemented/integrity-verification.md`
+- 완료 범위: read-only verification, missing block detection, block size mismatch, raw SHA-256 mismatch, Integrity UI
 
-### Later. 시각화와 UX
+### Phase 5b. Repository Inventory Explorer
 
-- 목표: Chrona의 핵심 가치인 블록 재사용과 시점별 변화를 시각적으로 표현
-- 구현 기능: dashboard cards, storage chart, snapshot timeline, file block map, file inspector
-- 필요한 모듈: `StatisticsService` 확장, UI visualization components
-- 구현 방식: repository statistics API를 만들고 UI는 계산 대신 렌더링에 집중
-- 데이터 흐름: snapshots + block index -> statistics -> charts/cards/block map
-- 화면 구성: dashboard, snapshot detail block map, file timeline
-- 테스트 방법: statistics unit test, chart component rendering test, Playwright screenshot smoke
-- 완료 기준: 새 snapshot을 만들면 대시보드 수치와 그래프가 갱신됨
+- 상태: 구현 완료
+- Spec: `docs/archive/specs/0009-repository-inventory-explorer.md`
+- Plan: `docs/archive/plans/phase-5-repository-inventory-explorer.md`
+- Implemented: `docs/implemented/repository-inventory-explorer.md`
+- 완료 범위: 기록된 파일, 파일 종류, 최신 snapshot 기준 삭제 여부, 현재 원본 파일 존재 여부, 검색과 상태 필터
+- 당시 범위에서 제외: compression, block payload read, garbage collection, snapshot delete, watcher
 
-### Phase 5. 안정화, 무결성, 문서화
+### Phase 6. Block Compression
 
-- 기간: 1~2주
-- 목표: 공개 가능한 오픈소스 MVP로 정리
-- 구현 기능: integrity verification, error handling, progress reporting, docs 정리, implemented 문서 작성
-- 필요한 모듈: `IntegrityService`, `errors.rs`, docs
-- 구현 방식: block read 실패, hash mismatch, permission error를 사용자 메시지로 변환
-- 데이터 흐름: block index -> block read -> hash verify -> integrity report
-- 화면 구성: verify action, error report, about/project docs link
-- 테스트 방법: 손상 block fixture, permission error 가능한 범위의 integration test, 전체 smoke test
-- 완료 기준: README만 보고 설치/실행/테스트가 가능하고 주요 기능이 검증됨
-- 다음 조건: v0.1.0 release tag 생성 가능
+- 상태: 구현 완료
+- Spec: `docs/archive/specs/0005-block-compression.md`
+- Plan: `docs/archive/plans/phase-6-block-compression.md`
+- Implemented: `docs/implemented/block-compression.md`
+- 완료 범위: schema 1 raw 저장소 호환, schema 2 신규 저장소의 Standard 기본값, Off/Standard/Fast 모드, 3% raw fallback, 압축 블록 복원과 무결성 검증
+
+### Phase 5c. Repository Statistics Dashboard
+
+- 상태: 후보, 세부 spec/plan 없음
+- 목표: 저장량, 절약량, reuse ratio, snapshot별 변화량을 dashboard로 표시
+- 다음 문서 후보: `docs/specs/0010-repository-statistics-dashboard.md`
+
+### Phase 7. File Inspector / Block Map
+
+- 상태: 구현 완료
+- Spec: `docs/archive/specs/0011-file-inspector-block-map.md`
+- Plan: `docs/archive/plans/phase-7-file-inspector-block-map.md`
+- Implemented: `docs/implemented/file-inspector-block-map.md`
+- 목표: 특정 파일의 block reference sequence와 snapshot별 변경 이력을 시각화
+- 범위: Explorer master-detail, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata
+- 제외: payload preview, 수정/삭제, 고급 graph library, 전체 UI 재설계
+
+### Release Phase. Packaging and Release Hardening
+
+- 상태: 후보, 세부 plan 없음
+- 목표: README 기준 설치/실행/테스트 정리, macOS `.app` packaging, release note, smoke test
+- 다음 문서 후보: `docs/plans/phase-release-packaging.md`
+
+### Future. Storage Extensions
+
+- 상태: Future
+- 범위: SQLite backend, encryption, content-defined chunking, snapshot delete/GC, watcher, cloud adapter, migration tool
 
 ## 14. 2인 역할 분담
 
@@ -590,6 +631,7 @@ AGENTS.md
 LICENSE
 docs/
   development-log.md
+  phase-status.md
   project-plan.md
   implemented/
     block-engine.md
@@ -597,23 +639,36 @@ docs/
     snapshot-comparison.md
     snapshot-restore.md
     home-adaptive-navigation.md
+    integrity-verification.md
+    repository-inventory-explorer.md
+    block-compression.md
+    file-inspector-block-map.md
   specs/
-    0001-repository-format.md
-    0002-block-engine.md
-    0003-snapshot-format.md
-    0004-snapshot-comparison.md
-    0005-block-compression.md
-    0006-home-adaptive-navigation.md
-    0007-snapshot-restore.md
   plans/
     README.md
   archive/
     README.md
+    specs/
+      README.md
+      0001-repository-format.md
+      0002-block-engine.md
+      0003-snapshot-format.md
+      0004-snapshot-comparison.md
+      0005-block-compression.md
+      0006-home-adaptive-navigation.md
+      0007-snapshot-restore.md
+      0008-integrity-verification.md
+      0009-repository-inventory-explorer.md
+      0011-file-inspector-block-map.md
     plans/
       phase-1-block-engine.md
       phase-2-snapshot-engine.md
       phase-3-snapshot-comparison.md
       phase-4-snapshot-restore.md
+      phase-5-integrity-verification.md
+      phase-5-repository-inventory-explorer.md
+      phase-6-block-compression.md
+      phase-7-file-inspector-block-map.md
       phase-next-home-adaptive-navigation.md
 ```
 
@@ -625,8 +680,10 @@ docs/
 - `AGENTS.md`: AI coding agent 작업 규칙
 - `docs/development-log.md`: 날짜별 작업 기록
 - `docs/implemented/`: 큰 기능 완료 후 구현 기록
-- `docs/specs/`: 설계 결정과 데이터 포맷
+- `docs/specs/`: 아직 구현하지 않았거나 다음에 구현할 설계 문서
 - `docs/plans/`: 현재 진행 또는 다음 작업 체크리스트
+- `docs/archive/specs/`: 구현 완료 후 보관한 설계 문서
+- `docs/archive/plans/`: 완료되었거나 폐기된 작업 계획
 - `docs/archive/`: 완료되었거나 폐기된 오래된 작업 문서
 
 ## 17. Development Guide 규칙
@@ -641,9 +698,10 @@ docs/
 
 문서 수정 규칙:
 
-- 데이터 포맷이 바뀌면 specs 갱신
+- 데이터 포맷이 바뀌면 현재 `docs/specs/` 또는 보관된 `docs/archive/specs/` 문서를 갱신
 - 큰 기능이 완료되면 implemented 문서 작성
 - phase가 끝나면 development log 갱신
+- 구현 완료된 spec은 `docs/archive/specs/`로 이동
 - README는 사용자 관점, docs는 개발자 관점으로 작성
 
 테스트 기준:
@@ -720,17 +778,19 @@ source file -> chunk -> hash -> block store
 
 - Spec은 "무엇을 왜 만들지"를 기록한다.
 - Plan은 "어떤 파일을 어떤 순서로 바꿀지"를 기록한다.
-- Spec은 설계 결정이므로 오래 유지한다.
-- Plan은 실행 체크리스트이므로 완료 후 `docs/archive/plans/`로 이동할 수 있다.
+- 아직 구현하지 않았거나 다음 구현 대상인 Spec은 `docs/specs/`에 둔다.
+- 구현 완료된 Spec은 `docs/archive/specs/`로 이동한다.
+- Plan은 실행 체크리스트이므로 완료 후 `docs/archive/plans/`로 이동한다.
 - 구현이 끝난 큰 기능은 `docs/implemented/`에 결과 중심 문서를 남긴다.
 
 권장 흐름:
 
 ```text
-docs/specs/0002-block-engine.md
+docs/specs/00NN-current-work.md
 docs/plans/phase-N-current-work.md
 implementation
-docs/implemented/block-engine.md
+docs/implemented/current-work.md
+docs/archive/specs/00NN-current-work.md
 docs/archive/plans/phase-N-current-work.md
 ```
 
@@ -763,12 +823,11 @@ docs/archive/plans/phase-N-current-work.md
 
 ## 23. 확장 기능
 
-### Future compression rule
+### 구현된 compression rule
 
-Block compression은 저장 공간 최적화 후보지만 현재 MVP 구현 대상은 아니다. 이후 도입 시에도 block hash는 반드시 압축 전 raw chunk의 SHA-256으로 유지하고, 새 block의 물리 payload만 선택적으로 압축한다. 압축 모드는 `off`(raw), `standard`(`zstd` level 3), `fast`(`lz4`)로 제한한다. 기본값은 `standard`이며, 압축 결과가 envelope overhead를 포함해 raw보다 최소 3% 이상 작지 않으면 raw 저장으로 fallback한다.
+Block compression은 raw chunk의 SHA-256을 block identity로 유지하고 새 block의 물리 payload만 선택적으로 압축한다. 압축 모드는 `off`(raw), `standard`(Zstd level 3), `fast`(LZ4 frame)이며 신규 저장소의 기본값은 `standard`다. 압축 결과가 envelope overhead를 포함해 raw보다 최소 3% 이상 작지 않으면 raw 저장으로 fallback한다. schema 1 저장소와 기존 raw block은 그대로 읽을 수 있다.
 
 - SQLite metadata backend
-- compression with raw-byte block identity, standard zstd mode, and fast lz4 mode (`docs/specs/0005-block-compression.md`)
 - encryption
 - content-defined chunking
 - snapshot delete and garbage collection

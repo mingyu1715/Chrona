@@ -1,7 +1,11 @@
+export type CompressionMode = 'off' | 'standard' | 'fast';
+
 export interface BlockStrategy {
   type: 'fixed';
   sizeBytes: number;
   hash: 'sha256';
+  encodingVersion: number;
+  compressionMode: CompressionMode;
 }
 
 export interface RepositoryManifest {
@@ -34,6 +38,11 @@ export interface BlockIngestSummary {
   newBlockCount: number;
   reusedBlockCount: number;
   newlyStoredBytes: number;
+  newLogicalBytes: number;
+  compressionSavedBytes: number;
+  newRawBlockCount: number;
+  newZstdBlockCount: number;
+  newLz4BlockCount: number;
   files: FileIngestResult[];
 }
 
@@ -57,6 +66,11 @@ export interface SnapshotSummary {
   newBlockCount: number;
   reusedBlockCount: number;
   newStoredBytes: number;
+  newLogicalBytes: number;
+  compressionSavedBytes: number;
+  newRawBlockCount: number;
+  newZstdBlockCount: number;
+  newLz4BlockCount: number;
 }
 
 export interface SnapshotFile {
@@ -149,6 +163,132 @@ export interface RestoreReport {
   restoredBytes: number;
   restoredBlockCount: number;
   files: RestoreFileResult[];
+}
+
+export type IntegrityStatus = 'healthy' | 'warning' | 'failed';
+
+export type IntegrityIssueSeverity = 'warning' | 'error';
+
+export interface IntegrityIssue {
+  severity: IntegrityIssueSeverity;
+  code: string;
+  message: string;
+  snapshotId: string | null;
+  relativePath: string | null;
+  blockHash: string | null;
+}
+
+export interface IntegrityReport {
+  schemaVersion: number;
+  repositoryPath: string;
+  checkedAt: string;
+  status: IntegrityStatus;
+  snapshotCount: number;
+  fileCount: number;
+  blockReferenceCount: number;
+  uniqueBlockCount: number;
+  missingBlockCount: number;
+  corruptBlockCount: number;
+  issues: IntegrityIssue[];
+}
+
+export type FileKind =
+  | 'document'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'archive'
+  | 'code'
+  | 'text'
+  | 'data'
+  | 'binary'
+  | 'folderless'
+  | 'unknown';
+
+export type SnapshotPresenceState = 'presentInLatest' | 'deletedInLatest';
+export type SourceExistenceState = 'exists' | 'missing' | 'sourceRootMissing' | 'unchecked';
+
+export interface FileKindStat {
+  kind: FileKind;
+  fileCount: number;
+  totalBytesLatest: number;
+}
+
+export interface InventoryFileEntry {
+  relativePath: string;
+  fileName: string;
+  extension: string | null;
+  kind: FileKind;
+  snapshotState: SnapshotPresenceState;
+  sourceState: SourceExistenceState;
+  latestSizeBytes: number | null;
+  latestModifiedAt: string | null;
+  firstSeenSnapshotId: string;
+  firstSeenAt: string;
+  lastSeenSnapshotId: string;
+  lastSeenAt: string;
+  seenInSnapshotCount: number;
+  blockReferenceCountLatest: number;
+}
+
+export interface RepositoryInventoryReport {
+  schemaVersion: number;
+  repositoryPath: string;
+  generatedAt: string;
+  snapshotCount: number;
+  knownFileCount: number;
+  latestFileCount: number;
+  deletedInLatestCount: number;
+  sourceExistsCount: number;
+  sourceMissingCount: number;
+  sourceRootMissingCount: number;
+  totalOriginalBytesLatest: number;
+  totalBlockReferencesLatest: number;
+  uniqueBlockCountLatest: number;
+  kindStats: FileKindStat[];
+  files: InventoryFileEntry[];
+}
+
+export type FileVersionState = 'added' | 'modified' | 'unchanged' | 'deleted';
+export type BlockStorageEncoding = 'raw' | 'zstd' | 'lz4' | 'unknown';
+export type BlockStorageState = 'available' | 'missing' | 'unreadable' | 'invalidHeader';
+
+export interface FileInspectionReport {
+  schemaVersion: number;
+  repositoryPath: string;
+  relativePath: string;
+  fileName: string;
+  versionCount: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  latestState: FileVersionState;
+  versions: FileInspectionVersion[];
+}
+
+export interface FileInspectionVersion {
+  snapshotId: string;
+  snapshotName: string;
+  snapshotCreatedAt: string;
+  state: FileVersionState;
+  sizeBytes: number | null;
+  modifiedAt: string | null;
+  totalBlockReferences: number;
+  uniqueBlockCount: number;
+  blocks: FileBlockInspection[];
+}
+
+export interface FileBlockInspection {
+  index: number;
+  offset: number;
+  sizeBytes: number;
+  hash: string;
+  wasNew: boolean;
+  encoding: BlockStorageEncoding;
+  storageState: BlockStorageState;
+  storedSizeBytes: number | null;
+  compressionSavedBytes: number | null;
+  seenInVersionCount: number;
+  issue: string | null;
 }
 
 export type AccessNodeKind = 'repository' | 'source' | 'folder' | 'file' | 'snapshot' | 'comparePair';

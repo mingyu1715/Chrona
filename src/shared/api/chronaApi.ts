@@ -8,7 +8,11 @@ import type {
   AccessNode,
   BlockIngestProgress,
   BlockIngestSummary,
+  CompressionMode,
+  FileInspectionReport,
   HomeSummary,
+  IntegrityReport,
+  RepositoryInventoryReport,
   RepositoryManifest,
   RestoreReport,
   Snapshot,
@@ -19,12 +23,22 @@ import type {
 export interface ChronaApi {
   createRepository(repositoryPath: string): Promise<RepositoryManifest>;
   openRepository(repositoryPath: string): Promise<RepositoryManifest>;
+  setRepositoryCompressionMode(
+    repositoryPath: string,
+    compressionMode: CompressionMode,
+  ): Promise<RepositoryManifest>;
   ingestBlocks(repositoryPath: string, sourcePath: string): Promise<BlockIngestSummary>;
   createSnapshot(repositoryPath: string, sourcePath: string, name: string): Promise<Snapshot>;
   listSnapshots(repositoryPath: string): Promise<SnapshotIndexItem[]>;
   getSnapshot(repositoryPath: string, snapshotId: string): Promise<Snapshot>;
   compareSnapshots(repositoryPath: string, baseSnapshotId: string, targetSnapshotId: string): Promise<SnapshotComparison>;
   restoreSnapshot(repositoryPath: string, snapshotId: string, targetPath: string): Promise<RestoreReport>;
+  verifyRepository(repositoryPath: string): Promise<IntegrityReport>;
+  getRepositoryInventory(repositoryPath: string): Promise<RepositoryInventoryReport>;
+  inspectRepositoryFile(
+    repositoryPath: string,
+    relativePath: string,
+  ): Promise<FileInspectionReport>;
   recordAccessEvent(repositoryPath: string, event: AccessEvent): Promise<AccessNode>;
   getHomeSummary(repositoryPath: string): Promise<HomeSummary>;
   pinAccessItem(repositoryPath: string, key: string): Promise<AccessNode>;
@@ -45,6 +59,12 @@ export const chronaApi: ChronaApi = {
   },
   openRepository(repositoryPath) {
     return invoke<RepositoryManifest>('open_repository', { repositoryPath });
+  },
+  setRepositoryCompressionMode(repositoryPath, compressionMode) {
+    return invoke<RepositoryManifest>('set_repository_compression_mode', {
+      repositoryPath,
+      compressionMode,
+    });
   },
   ingestBlocks(repositoryPath, sourcePath) {
     return invoke<BlockIngestSummary>('ingest_blocks', { repositoryPath, sourcePath });
@@ -70,6 +90,18 @@ export const chronaApi: ChronaApi = {
       repositoryPath,
       snapshotId,
       targetPath,
+    });
+  },
+  verifyRepository(repositoryPath) {
+    return invoke<IntegrityReport>('verify_repository', { repositoryPath });
+  },
+  getRepositoryInventory(repositoryPath) {
+    return invoke<RepositoryInventoryReport>('get_repository_inventory', { repositoryPath });
+  },
+  inspectRepositoryFile(repositoryPath, relativePath) {
+    return invoke<FileInspectionReport>('inspect_repository_file', {
+      repositoryPath,
+      relativePath,
     });
   },
   recordAccessEvent(repositoryPath, event) {
