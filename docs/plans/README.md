@@ -10,11 +10,10 @@
 
 ## 현재 구현 계획
 
-- Phase 9 전체 UI 사용성 개선: `docs/plans/phase-9-ui-usability-improvement.md`
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
-- 전체 UI 사용성 개선과 저장소 라이브러리: `docs/specs/0012-ui-usability-improvement.md`
+- 완료된 Phase 9 UI 계획과 spec: `docs/archive/plans/phase-9-ui-usability-improvement.md`, `docs/archive/specs/0012-ui-usability-improvement.md`
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 

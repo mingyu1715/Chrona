@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`와 `docs/plans/`에는 Phase 9 UI 사용성 개선 설계와 구현 계획이 있다. Phase 8까지의 완료 문서는 archive와 implemented 영역에 보관한다.
+Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 implemented 영역에 보관한다.
 
 ## 현재 구현 상태
 
@@ -31,7 +31,7 @@
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
 | 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
-| 전체 UI 사용성 개선 | 구현 중, Task 1~2 완료 | `docs/specs/0012-ui-usability-improvement.md` | `docs/plans/phase-9-ui-usability-improvement.md` | `docs/audits/ui-usability-2026-07/audit.md` | 저장소 registry/store와 library/Tauri command 구현 및 리뷰 완료. Task 3 TypeScript 계약 진행. |
+| 전체 UI 사용성 개선 | 구현 완료 | `docs/archive/specs/0012-ui-usability-improvement.md` | `docs/archive/plans/phase-9-ui-usability-improvement.md` | `docs/implemented/ui-usability-improvement.md` | 저장소 라이브러리와 5개 작업 공간, 새 백업, 조건부 진행 표시 구현 완료. native 시각 검증은 남아 있음. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
@@ -55,7 +55,7 @@
 
 ## 현재 진행 계획
 
-- `docs/plans/phase-9-ui-usability-improvement.md`: 구현 전, Task 1부터 시작
+- Phase 9 계획은 `docs/archive/plans/phase-9-ui-usability-improvement.md`로 보관 완료
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 

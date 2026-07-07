@@ -472,3 +472,13 @@
 - `npm run build`: TypeScript 검사와 Vite 프로덕션 빌드 통과.
 - `git diff --check`: 공백 오류 없음.
 - Task 9 Statistics·Settings, Task 10 legacy UI 제거, Task 11 native 화면 검증은 다음 작업으로 남아 있다.
+
+### Phase 9 Task 9~11 완료
+
+- Statistics와 Settings를 독립 작업 공간으로 옮겼다.
+- 레거시 chapter 기반 `RepositoryPage`와 테스트를 제거하고 공용 컴포넌트 스타일만 유지했다.
+- 완료된 Phase 9 spec과 plan을 archive로 이동하고 구현 문서를 작성했다.
+- `cargo test`: Rust 테스트 93개 통과.
+- `npm test -- --run`: UI 테스트 34개 통과.
+- `npm run build`, `git diff --check`: 통과.
+- native macOS/Windows smoke test와 시각·키보드·zoom 검증은 이번 정적 검증에서 수행하지 않았다.

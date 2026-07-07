@@ -55,7 +55,7 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 
 ### 다음 구현 후보
 
-- Phase 9 전체 UI 사용성 개선 계획 구현
+- Phase 9 전체 UI 사용성 개선 구현 완료
 
 ### 아직 세부 계획 없음
 
@@ -446,7 +446,7 @@ Repository Inventory Explorer는 다음을 검증한다.
 - Phase 6: 블록 압축
 - Phase 7: File Inspector / Block Map
 - Phase 8: Repository Statistics Dashboard
-- Phase 9: UI 사용성 개선과 저장소 라이브러리(설계·계획 완료, 구현 전)
+- Phase 9: UI 사용성 개선과 저장소 라이브러리 구현 완료
 
 완료된 설계 문서는 `docs/archive/specs/`에 보관한다.
 
