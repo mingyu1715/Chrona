@@ -33,6 +33,9 @@ Implemented:
 - Repository-local adaptive access history in `indexes/access-index.json`
 - Pin/unpin and clear-history controls for access items
 - Read-only repository integrity verification command and UI
+- Desktop repository library with Home, Files, Snapshots, Statistics, and Settings workspaces
+- Default app-data repositories, custom locations, existing repository registration, and switching
+- Conditional backup progress bar and streamlined snapshot creation
 - Missing block, block size mismatch, and raw SHA-256 mismatch detection
 - Repository Explorer for recorded files, file kinds, and latest-snapshot presence state
 - Current source existence, missing-file, and missing-root status

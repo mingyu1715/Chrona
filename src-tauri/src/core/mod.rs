@@ -13,6 +13,8 @@ pub mod integrity_service;
 pub mod inventory_service;
 pub mod path_safety;
 pub mod repository;
+pub mod repository_library_service;
+pub mod repository_registry_store;
 pub mod restore_service;
 pub mod scanner;
 pub mod snapshot_service;

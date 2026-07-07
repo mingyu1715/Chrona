@@ -375,3 +375,110 @@
 - `cargo test`: Phase 8 Statistics 테스트 7개를 포함해 Rust 테스트 72개 통과.
 - `npm test -- --run`: UI 테스트 파일 6개, 테스트 27개 통과.
 - `npm run build`: TypeScript 검사와 Vite 프로덕션 빌드 통과.
+
+## 2026-07-07
+
+### 전체 UI 사용성 감사
+
+- `feature/ui-usability-improvement` 브랜치를 `main`에서 분리했다.
+- 실제 Chrona 컴포넌트와 현실적인 감사용 데이터를 사용해 저장소, 소스, 홈, 스냅샷, 탐색기, 파일 상세, 통계, 무결성 흐름을 캡처했다.
+- 라이트/다크 데스크톱 화면과 390×844 모바일 화면을 함께 확인했다.
+- 화면 11장과 단계별 UX·접근성 기록을 `docs/audits/ui-usability-2026-07/`에 저장했다.
+- 데스크톱에서 반복되는 상태·경로 영역이 실제 작업 공간을 줄이고, 모바일에서는 사이드바 때문에 본문이 약 653px 아래에서 시작하는 문제를 확인했다.
+- 감사용 진입점, mock 코드, 임시 스크립트와 로컬 서버는 검수 후 모두 제거했다.
+
+### 현재 결정 대기
+
+- 기능과 데이터 흐름은 유지한다.
+- 공통 앱 셸과 모바일 탐색을 먼저 정리한 뒤 장별 화면을 옮기는 단계적 개선을 우선안으로 둔다.
+- 구현 전 개선 방식과 범위를 승인받은 뒤 별도 spec과 Phase 9 구현 계획을 작성한다.
+
+### Phase 9 UI 구조 설계 확정
+
+- `Waiting`, `Available`, `Ready`, `Loaded` 탐색 배지를 제거하기로 했다.
+- 라이트/다크 팔레트는 현재 방향을 유지한다.
+- 하단 진행 표시는 실제 작업 중에만 나타나도록 변경한다.
+- 새 저장소의 기본 위치는 macOS와 Windows의 플랫폼 앱 로컬 데이터 디렉터리로 정했다.
+- 기본 위치 생성, 사용자 위치 생성, 기존 저장소 등록을 모두 지원하는 저장소 라이브러리 구조로 정했다.
+- 마지막 활성 저장소는 다음 실행에서 자동으로 열고, 외장 저장소 연결이 끊겨도 등록은 유지한다.
+- 상단 저장소 전환 바, 단순 사이드바, 독립 스크롤 본문, 조건부 작업 표시로 앱 셸을 재구성한다.
+- `Sources`와 `Review` 장은 `새 백업` 흐름으로 통합하고, 무결성과 압축 설정은 설정 화면으로 이동한다.
+- 확정된 화면 연결과 컴포넌트 구조를 `docs/specs/0012-ui-usability-improvement.md`에 기록했다.
+
+### Phase 9 대상 플랫폼 정정
+
+- Phase 9의 대상은 macOS와 Windows 데스크톱 앱으로 확정했다.
+- 모바일·태블릿 전용 drawer와 화면 전환 구조는 구현 범위에서 제외했다.
+- 반응형은 제거하지 않고 `960×640` 최소 창부터 1440px 이상 넓은 창까지 데스크톱 작업 영역이 깨지지 않는 방식으로 유지한다.
+- 파일과 스냅샷 master-detail은 compact 창에서도 유지하고 비율과 여백만 조정한다.
+
+### Phase 9 구현 계획 작성
+
+- 승인된 `0012` 설계를 11개 독립 작업으로 나눈 `docs/plans/phase-9-ui-usability-improvement.md`를 작성했다.
+- 저장소 registry/store, library service와 Tauri API, TypeScript 계약, 앱 셸, 저장소 시작 화면, 새 백업, Files, Snapshots, Statistics/Settings, legacy UI 제거, 최종 검증 순서로 정했다.
+- 각 작업에 실패 테스트, 최소 구현 인터페이스, 검증 명령, 권장 커밋 단위를 기록했다.
+- 모바일 UI는 계획에서 제외하고 macOS/Windows의 `960×640`, `1100×800`, `1440×900` 창 검증을 포함했다.
+- Windows native 검증 환경을 사용할 수 없는 경우 검증 공백을 문서화하고 통과했다고 주장하지 않도록 했다.
+
+### Phase 9 Task 1 저장소 Registry 완료
+
+- `feature/phase-9-ui-implementation` 브랜치에서 앱 수준 저장소 등록 모델과 atomic JSON store를 구현했다.
+- registry는 manifest의 `repository_id`를 단일 등록 키로 사용한다.
+- 등록 목록은 앱 로컬 데이터 디렉터리의 `repository-registry.json`에 저장하고 `.tmp-{uuid}` 작성, `sync_all`, rename 순서를 사용한다.
+- 중복 repository ID, 중복 canonical path, 존재하지 않는 활성 ID와 손상된 registry 상태를 거부한다.
+- 등록, 활성 저장소 변경, 등록 해제, 경로 relink를 구현했다.
+- 리뷰에서 발견된 load 무결성 검증과 stable ID 우선 오류 순서를 회귀 테스트와 함께 수정했다.
+- Task 1 리뷰 승인을 완료하고 Task 2 저장소 library service 구현으로 진행한다.
+
+### Phase 9 Task 1 검증
+
+- `cargo test --test phase9_repository_registry`: 11개 통과.
+- `cargo test`: 기존 기능과 Phase 9 Task 1을 포함한 Rust 통합 테스트 83개 통과.
+
+### Phase 9 Task 2 저장소 Library 완료
+
+- 플랫폼 앱 로컬 데이터 디렉터리 아래 `Repositories/`에 기본 저장소를 만드는 library service를 구현했다.
+- 사용자 지정 부모 폴더에 새 저장소를 만들고 기존 저장소를 이동 없이 등록하도록 구현했다.
+- 저장소 활성화, 연결 끊김 판정, 경로 relink, 실제 파일을 삭제하지 않는 등록 해제를 추가했다.
+- Tauri command 7개와 `1180×800`, 최소 `960×640` native window 설정을 추가했다.
+- 목록 조회가 저장소 레이아웃을 생성하는 리뷰 지적을 수정해 read-only `RepositoryManager::probe` 경로로 분리했다.
+- Task 2 리뷰 승인을 완료하고 Task 3 TypeScript 계약으로 진행한다.
+
+### Phase 9 Task 2 검증
+
+- `cargo test --test phase9_repository_library`: 10개 통과.
+- `cargo test`: Task 1~2와 기존 기능을 포함한 Rust 전체 테스트 통과.
+
+### 프로젝트 보고서 자료 정리
+
+- 실제 Rust 구현에서 보고서에 사용하기 좋은 핵심 코드를 `docs/report-key-code.md`에 정리했다.
+- 스트리밍 블록 분할, SHA-256 중복 제거, atomic 저장, Zstd/LZ4 압축, 스냅샷, 멀티셋 비교, 복원, 무결성, 경로 안전성을 포함했다.
+- 각 코드에 동작 설명, 알고리즘 효과, 복잡도, 보고서용 설명 문장과 추천 조합을 추가했다.
+
+### Phase 9 Task 3~8 UI 구현
+
+- 저장소 라이브러리 TypeScript API와 공용 테스트 mock을 추가했다.
+- 5개 작업 공간 사이드바, 상단 저장소 전환 영역, 다크 모드, 실행 중에만 표시되는 하단 작업 표시줄을 구현했다.
+- 기본 앱 데이터 위치 생성, 사용자 지정 위치 생성, 기존 저장소 등록, 전환, relink, 등록 해제 UI를 연결했다.
+- Home 화면을 파일 수, 논리 용량, 고유 블록 수, 최근 백업과 최근 작업 중심으로 단순화했다.
+- 새 백업 대화상자는 `createSnapshot`을 한 번만 호출하며 파일 처리 진행 상황을 앱 하단에 표시한다.
+- Files 화면에 저장소 파일 목록, 검색·상태 필터, 독립 스크롤 목록·상세 패널을 구현했다.
+- Snapshots 화면에 항상 유지되는 목록, 상세·비교 전환, 별도 복원 대화상자를 구현했다.
+- 별도 장으로 표시하던 `Waiting`, `Available`, `Ready`, `Loaded` 상태 배지는 새 앱 셸에서 제거했다.
+
+### Phase 9 Task 3~8 검증
+
+- `npm test -- --run`: UI 테스트 47개 통과.
+- `npm run build`: TypeScript 검사와 Vite 프로덕션 빌드 통과.
+- `git diff --check`: 공백 오류 없음.
+- Task 9 Statistics·Settings, Task 10 legacy UI 제거, Task 11 native 화면 검증은 다음 작업으로 남아 있다.
+
+### Phase 9 Task 9~11 완료
+
+- Statistics와 Settings를 독립 작업 공간으로 옮겼다.
+- 레거시 chapter 기반 `RepositoryPage`와 테스트를 제거하고 공용 컴포넌트 스타일만 유지했다.
+- 완료된 Phase 9 spec과 plan을 archive로 이동하고 구현 문서를 작성했다.
+- `cargo test`: Rust 테스트 93개 통과.
+- `npm test -- --run`: UI 테스트 34개 통과.
+- `npm run build`, `git diff --check`: 통과.
+- native macOS/Windows smoke test와 시각·키보드·zoom 검증은 이번 정적 검증에서 수행하지 않았다.

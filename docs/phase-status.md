@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-현재 `docs/specs/`와 `docs/plans/`에는 활성 문서가 없다. Phase 8 완료 문서는 archive와 implemented 영역에 보관한다.
+Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 implemented 영역에 보관한다.
 
 ## 현재 구현 상태
 
@@ -31,10 +31,11 @@
 | 블록 압축 | 구현 완료 | `docs/archive/specs/0005-block-compression.md` | `docs/archive/plans/phase-6-block-compression.md` | `docs/implemented/block-compression.md` | raw/off, Zstd 표준, LZ4 빠른 모드, 3% raw fallback, schema 1 legacy raw 호환 구현 완료. |
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
 | 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
+| 전체 UI 사용성 개선 | 구현 완료 | `docs/archive/specs/0012-ui-usability-improvement.md` | `docs/archive/plans/phase-9-ui-usability-improvement.md` | `docs/implemented/ui-usability-improvement.md` | 저장소 라이브러리와 5개 작업 공간, 새 백업, 조건부 진행 표시 구현 완료. native 시각 검증은 남아 있음. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
-- 없음
+- `docs/specs/0012-ui-usability-improvement.md`: 설계 확정, 사용자 문서 검토 후 구현 계획 작성
 
 ## 보관된 완료 설계 문서
 
@@ -54,7 +55,7 @@
 
 ## 현재 진행 계획
 
-현재 진행 중인 세부 구현 계획은 없다.
+- Phase 9 계획은 `docs/archive/plans/phase-9-ui-usability-improvement.md`로 보관 완료
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
@@ -92,20 +93,20 @@
 
 ### 현재 활성 작업
 
-현재 활성 구현 Phase는 없다.
+Phase 9 Task 1~2 저장소 registry/store와 library/Tauri command 구현 및 리뷰를 완료하고 Task 3을 진행한다.
 
-### 현재 다음 작업 후보: UI 사용성 개선
+### 현재 작업: Phase 9 UI 사용성 개선
 
-- 현재 기능을 유지한 채 Home, sidebar, chapter, panel 흐름을 실제 반복 사용 기준으로 정리
-- 별도 spec/plan 승인 후 진행
+- 현재 기능을 유지한 채 저장소 라이브러리, 앱 셸, 화면 연결과 데스크톱 창 크기 대응을 개선
+- `docs/plans/phase-9-ui-usability-improvement.md`의 Task 3부터 TDD로 구현
 
-### 다음 계획 후보
+### Phase 9 이후 계획 후보
 
-아래 중 하나를 선택해 현재 Phase만 상세화한다.
+Phase 9 완료 후 아래 중 하나를 선택해 현재 Phase만 상세화한다.
 
-1. 전체 UI 사용성 개선
-2. 릴리스 패키징 및 기본 실행 테스트 강화
-3. 스냅샷 삭제 / 블록 정리
+1. 릴리스 패키징 및 기본 실행 테스트 강화
+2. 스냅샷 삭제 / 블록 정리
+3. 파일 감시 / 자동 스냅샷
 
 ### 향후 작업
 
@@ -118,6 +119,6 @@
 
 ## 즉시 다음 작업
 
-1. Phase 8 브랜치를 최종 검증하고 원격에 푸시한다.
-2. 전체 UI 사용성 개선 Phase의 현재 문제와 범위를 별도 spec으로 정리한다.
+1. Phase 9 계획의 Task 3 TypeScript 저장소 library 계약을 구현한다.
+2. Task 3 완료 후 기존 UI를 바꾸기 전에 backend와 TypeScript 계약을 고정한다.
 3. Snapshot 삭제/GC와 release packaging은 이후 독립 Phase로 유지한다.

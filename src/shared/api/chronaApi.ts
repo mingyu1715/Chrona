@@ -12,8 +12,10 @@ import type {
   FileInspectionReport,
   HomeSummary,
   IntegrityReport,
+  OpenedRepository,
   RepositoryInventoryReport,
   RepositoryManifest,
+  RepositoryLibrary,
   RepositoryStatisticsOverview,
   RepositoryStatisticsProgress,
   RepositoryStatisticsReport,
@@ -26,6 +28,16 @@ import type {
 export interface ChronaApi {
   createRepository(repositoryPath: string): Promise<RepositoryManifest>;
   openRepository(repositoryPath: string): Promise<RepositoryManifest>;
+  getRepositoryLibrary(): Promise<RepositoryLibrary>;
+  createManagedRepository(displayName: string): Promise<OpenedRepository>;
+  createRepositoryAt(displayName: string, parentPath: string): Promise<OpenedRepository>;
+  registerExistingRepository(repositoryPath: string): Promise<OpenedRepository>;
+  activateRegisteredRepository(repositoryId: string): Promise<OpenedRepository>;
+  removeRepositoryRegistration(repositoryId: string): Promise<RepositoryLibrary>;
+  relinkRegisteredRepository(
+    repositoryId: string,
+    repositoryPath: string,
+  ): Promise<OpenedRepository>;
   setRepositoryCompressionMode(
     repositoryPath: string,
     compressionMode: CompressionMode,
@@ -54,6 +66,8 @@ export interface ChronaApi {
   unpinAccessItem(repositoryPath: string, key: string): Promise<AccessNode>;
   clearAccessHistory(repositoryPath: string): Promise<AccessHistorySummary>;
   selectRepositoryPath(): Promise<string | null>;
+  selectRepositoryParentPath(): Promise<string | null>;
+  selectExistingRepositoryPath(): Promise<string | null>;
   selectSourceFilePath(): Promise<string | null>;
   selectSourceFolderPath(): Promise<string | null>;
   selectRestoreTargetPath(): Promise<string | null>;
@@ -71,6 +85,32 @@ export const chronaApi: ChronaApi = {
   },
   openRepository(repositoryPath) {
     return invoke<RepositoryManifest>('open_repository', { repositoryPath });
+  },
+  getRepositoryLibrary() {
+    return invoke<RepositoryLibrary>('get_repository_library');
+  },
+  createManagedRepository(displayName) {
+    return invoke<OpenedRepository>('create_managed_repository', { displayName });
+  },
+  createRepositoryAt(displayName, parentPath) {
+    return invoke<OpenedRepository>('create_repository_at', { displayName, parentPath });
+  },
+  registerExistingRepository(repositoryPath) {
+    return invoke<OpenedRepository>('register_existing_repository', {
+      path: repositoryPath,
+    });
+  },
+  activateRegisteredRepository(repositoryId) {
+    return invoke<OpenedRepository>('activate_registered_repository', { repositoryId });
+  },
+  removeRepositoryRegistration(repositoryId) {
+    return invoke<RepositoryLibrary>('remove_repository_registration', { repositoryId });
+  },
+  relinkRegisteredRepository(repositoryId, repositoryPath) {
+    return invoke<OpenedRepository>('relink_registered_repository', {
+      repositoryId,
+      path: repositoryPath,
+    });
   },
   setRepositoryCompressionMode(repositoryPath, compressionMode) {
     return invoke<RepositoryManifest>('set_repository_compression_mode', {
@@ -146,6 +186,20 @@ export const chronaApi: ChronaApi = {
       directory: true,
       multiple: false,
       title: 'Choose Chrona Repository Folder',
+    });
+  },
+  selectRepositoryParentPath() {
+    return openSinglePath({
+      directory: true,
+      multiple: false,
+      title: 'Choose Repository Parent Folder',
+    });
+  },
+  selectExistingRepositoryPath() {
+    return openSinglePath({
+      directory: true,
+      multiple: false,
+      title: 'Choose Existing Repository Folder',
     });
   },
   selectSourceFilePath() {

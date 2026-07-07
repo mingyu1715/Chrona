@@ -33,6 +33,9 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 - `indexes/access-index.json` 기반 repository-local adaptive access history
 - access item pin/unpin과 clear-history control
 - 읽기 전용 repository 무결성 검증 command와 UI
+- Home, Files, Snapshots, Statistics, Settings로 구성된 데스크톱 저장소 라이브러리
+- 앱 기본 위치·사용자 지정 위치·기존 저장소 등록과 전환
+- 백업 실행 중에만 표시되는 진행 표시와 단순화된 스냅샷 생성
 - 누락 block, block size mismatch, raw SHA-256 mismatch 감지
 - 저장소에 기록된 파일, 파일 종류, 최신 스냅샷 존재/삭제 상태를 보여주는 Explorer
 - 현재 원본 파일의 존재, 누락, 원본 루트 누락 상태 확인

@@ -12,8 +12,10 @@
     "windows": [
       {
         "title": "Chrona",
-        "width": 1100,
-        "height": 800
+        "width": 1180,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 640
       }
     ]
   }

@@ -42,6 +42,29 @@ impl RepositoryManager {
     }
 
     pub fn open(repository_path: &Path) -> ChronaResult<RepositoryManifest> {
+        Self::validate(repository_path, true)
+    }
+
+    pub fn probe(repository_path: &Path) -> ChronaResult<RepositoryManifest> {
+        Self::validate(repository_path, false)
+    }
+
+    pub fn set_compression_mode(
+        repository_path: &Path,
+        compression_mode: CompressionMode,
+    ) -> ChronaResult<RepositoryManifest> {
+        let mut manifest = Self::open(repository_path)?;
+        manifest.schema_version = CURRENT_SCHEMA_VERSION;
+        manifest.block_strategy.encoding_version = 2;
+        manifest.block_strategy.compression_mode = compression_mode;
+        write_manifest(repository_path, &manifest)?;
+        Ok(manifest)
+    }
+
+    fn validate(
+        repository_path: &Path,
+        repair_snapshot_layout: bool,
+    ) -> ChronaResult<RepositoryManifest> {
         let manifest_path = repository_path.join("manifest.json");
         if !manifest_path.is_file() {
             return Err(ChronaError::InvalidRepository(format!(
@@ -60,7 +83,11 @@ impl RepositoryManager {
             }
         }
 
-        ensure_snapshot_layout(repository_path)?;
+        if repair_snapshot_layout {
+            ensure_snapshot_layout(repository_path)?;
+        } else {
+            validate_snapshot_layout(repository_path)?;
+        }
 
         let manifest: RepositoryManifest =
             serde_json::from_str(&fs::read_to_string(manifest_path)?)?;
@@ -72,18 +99,6 @@ impl RepositoryManager {
                 manifest.schema_version,
             ));
         }
-        Ok(manifest)
-    }
-
-    pub fn set_compression_mode(
-        repository_path: &Path,
-        compression_mode: CompressionMode,
-    ) -> ChronaResult<RepositoryManifest> {
-        let mut manifest = Self::open(repository_path)?;
-        manifest.schema_version = CURRENT_SCHEMA_VERSION;
-        manifest.block_strategy.encoding_version = 2;
-        manifest.block_strategy.compression_mode = compression_mode;
-        write_manifest(repository_path, &manifest)?;
         Ok(manifest)
     }
 }
@@ -118,5 +133,25 @@ fn ensure_snapshot_layout(repository_path: &Path) -> ChronaResult<()> {
     if !index_path.is_file() {
         fs::write(index_path, r#"{"schemaVersion":1,"snapshots":[]}"#)?;
     }
+    Ok(())
+}
+
+fn validate_snapshot_layout(repository_path: &Path) -> ChronaResult<()> {
+    let snapshots_path = repository_path.join("snapshots");
+    if !snapshots_path.is_dir() {
+        return Err(ChronaError::InvalidRepository(format!(
+            "missing directory {}",
+            snapshots_path.display()
+        )));
+    }
+
+    let index_path = repository_path.join("indexes").join(SNAPSHOT_INDEX_FILE);
+    if !index_path.is_file() {
+        return Err(ChronaError::InvalidRepository(format!(
+            "missing snapshot index {}",
+            index_path.display()
+        )));
+    }
+
     Ok(())
 }
