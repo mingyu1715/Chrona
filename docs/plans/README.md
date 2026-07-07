@@ -14,11 +14,11 @@
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
-- 없음
+- 전체 UI 사용성 개선과 저장소 라이브러리: `docs/specs/0012-ui-usability-improvement.md`
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 
-- 없음
+- 전체 UI 사용성 개선: 사용자 spec 검토 후 Phase 9 구현 계획 작성
 
 ## 보관된 완료 계획
 
