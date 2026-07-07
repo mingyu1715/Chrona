@@ -8,6 +8,8 @@ import { HomePage } from '../features/home/HomePage';
 import { RepositoryLibraryMenu } from '../features/repository-library/RepositoryLibraryMenu';
 import { RepositorySetupDialog } from '../features/repository-library/RepositorySetupDialog';
 import { SnapshotsPage } from '../features/snapshots/SnapshotsPage';
+import { StatisticsPage } from '../features/statistics/StatisticsPage';
+import { SettingsPage } from '../features/settings/SettingsPage';
 import { AppSidebar, type AppView } from './AppSidebar';
 import { AppTopBar, type ThemeMode } from './AppTopBar';
 import { OperationBar, type ActiveOperation } from './OperationBar';
@@ -98,6 +100,10 @@ export function AppShell({
         onNewBackup={() => setBackupOpen(true)}
       />
     );
+  } else if (api && repositoryLibrary.activeRepository && activeView === 'statistics') {
+    mainContent = <StatisticsPage api={api} repositoryPath={repositoryLibrary.activeRepository.registration.path} onOperationChange={setInternalOperation} />;
+  } else if (api && repositoryLibrary.activeRepository && activeView === 'settings') {
+    mainContent = <SettingsPage api={api} repository={repositoryLibrary.activeRepository} repositories={repositoryLibrary.library?.repositories ?? []} theme={theme} onToggleTheme={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} onRemoveRepository={(id) => void repositoryLibrary.remove(id)} />;
   }
 
   return (
