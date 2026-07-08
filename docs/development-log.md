@@ -545,3 +545,12 @@
 - Tauri Opener는 path open과 reveal, Clipboard Manager는 text write 권한만 허용했다.
 - adapter 테스트에서는 plugin 함수 경계만 mock하고 UI에서는 경로가 있는 상태에만 동작을 노출한다.
 - UI 전체 테스트 54개, Rust 전체 테스트 97개, cargo check, rustfmt와 production build가 통과했다.
+
+### Phase 10 Task 7 백업 진입점 구분 완료
+
+- 상단 `New Backup`은 이전 source를 가져오지 않고 항상 빈 source로 시작한다.
+- snapshot이 없는 Home은 `Create first backup`, 최근 source가 있는 Home은 `Back up again`으로 표시한다.
+- 반복 백업은 최근 source path를 미리 채우고 대화상자를 열 때마다 새 기본 백업 이름을 만든다.
+- 최근 source path가 없으면 반복 진입이어도 빈 source 선택 상태로 시작한다.
+- 모든 진입점은 기존 단일 `createSnapshot` 호출 경로를 공유한다.
+- UI 전체 테스트 58개와 TypeScript/Vite production build가 통과했다.

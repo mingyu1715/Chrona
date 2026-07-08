@@ -2,6 +2,7 @@ import { BarChart3, Clock3, Folder, Pin, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
+import type { BackupEntryRequest } from '../backup/NewBackupDialog';
 import type {
   AccessNode,
   HomeSummary,
@@ -13,7 +14,7 @@ interface HomePageProps {
   api: ChronaApi;
   repositoryPath: string;
   refreshKey?: number;
-  onNewBackup: () => void;
+  onNewBackup: (request: BackupEntryRequest) => void;
   onOpenStatistics: () => void;
 }
 
@@ -60,6 +61,23 @@ export function HomePage({
     }
     return [...items.values()].slice(0, 8);
   }, [home]);
+  const recentSourcePath = home?.recentSources.find((item) => item.path)?.path ?? undefined;
+  const backupLabel = !overview
+    ? 'New Backup'
+    : !overview.hasSnapshot
+      ? 'Create first backup'
+      : recentSourcePath ? 'Back up again' : 'New Backup';
+
+  function openBackup() {
+    if (!overview?.hasSnapshot) {
+      onNewBackup({ entryPoint: 'first-backup' });
+      return;
+    }
+    onNewBackup({
+      entryPoint: 'repeat',
+      ...(recentSourcePath ? { initialSourcePath: recentSourcePath } : {}),
+    });
+  }
 
   return (
     <div className="home-page">
@@ -68,9 +86,9 @@ export function HomePage({
           <h1>Home</h1>
           <p>{repositoryPath}</p>
         </div>
-        <button className="workspace-primary-action" type="button" onClick={onNewBackup}>
+        <button className="workspace-primary-action" type="button" onClick={openBackup}>
           <Plus size={17} aria-hidden="true" />
-          New Backup
+          {backupLabel}
         </button>
       </header>
 

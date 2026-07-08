@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 
 import { HomePage } from './HomePage';
@@ -42,8 +43,80 @@ test('shows one primary backup action and a compact repository overview', async 
   );
 
   expect(await screen.findByText('148')).toBeInTheDocument();
-  expect(screen.getAllByRole('button', { name: /new backup/i })).toHaveLength(1);
+  expect(screen.getAllByRole('button', { name: /back up again/i })).toHaveLength(1);
   expect(screen.getByText('School project')).toBeInTheDocument();
   expect(screen.getByText('Final submission')).toBeInTheDocument();
   expect(screen.queryByText(/continue working/i)).not.toBeInTheDocument();
+});
+
+test('labels and opens the first backup when no snapshot exists', async () => {
+  const { api } = createChronaApiMock();
+  const user = userEvent.setup();
+  const onNewBackup = vi.fn();
+  vi.mocked(api.getRepositoryStatisticsOverview).mockResolvedValue(statisticsOverview());
+
+  render(
+    <HomePage
+      api={api}
+      repositoryPath="/tmp/chrona-repo"
+      onNewBackup={onNewBackup}
+      onOpenStatistics={vi.fn()}
+    />,
+  );
+
+  await user.click(await screen.findByRole('button', { name: 'Create first backup' }));
+  expect(onNewBackup).toHaveBeenCalledWith({ entryPoint: 'first-backup' });
+});
+
+test('repeats from the most recent source and falls back when its path is missing', async () => {
+  const { api } = createChronaApiMock();
+  const user = userEvent.setup();
+  const onNewBackup = vi.fn();
+  vi.mocked(api.getRepositoryStatisticsOverview).mockResolvedValue(statisticsOverview({
+    hasSnapshot: true,
+  }));
+  vi.mocked(api.getHomeSummary).mockResolvedValue({
+    continueWorking: null,
+    pinned: [],
+    recentRepositories: [],
+    recentSources: [accessNode({ path: '/recent/source' })],
+    recentFiles: [],
+    recentSnapshots: [],
+    recentComparePairs: [],
+  });
+
+  const { rerender } = render(
+    <HomePage
+      api={api}
+      repositoryPath="/tmp/chrona-repo"
+      onNewBackup={onNewBackup}
+      onOpenStatistics={vi.fn()}
+    />,
+  );
+  await user.click(await screen.findByRole('button', { name: 'Back up again' }));
+  expect(onNewBackup).toHaveBeenLastCalledWith({
+    entryPoint: 'repeat',
+    initialSourcePath: '/recent/source',
+  });
+
+  vi.mocked(api.getHomeSummary).mockResolvedValue({
+    continueWorking: null,
+    pinned: [],
+    recentRepositories: [],
+    recentSources: [accessNode({ path: null })],
+    recentFiles: [],
+    recentSnapshots: [],
+    recentComparePairs: [],
+  });
+  rerender(
+    <HomePage
+      api={api}
+      repositoryPath="/tmp/chrona-repo"
+      refreshKey={1}
+      onNewBackup={onNewBackup}
+      onOpenStatistics={vi.fn()}
+    />,
+  );
+  await user.click(await screen.findByRole('button', { name: 'New Backup' }));
+  expect(onNewBackup).toHaveBeenLastCalledWith({ entryPoint: 'repeat' });
 });

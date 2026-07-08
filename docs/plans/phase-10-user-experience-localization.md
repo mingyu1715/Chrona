@@ -233,13 +233,13 @@ interface NewBackupDialogProps {
 }
 ```
 
-- [ ] Test global entry starts with an empty source.
-- [ ] Test first-backup label when no snapshots exist.
-- [ ] Test repeat entry pre-fills the latest existing source and generates a fresh name.
-- [ ] Test a missing recent source falls back to source selection.
-- [ ] Keep the single `createSnapshot` call invariant.
-- [ ] Run Home, backup and AppShell tests.
-- [ ] Commit: `feat: distinguish backup entry points`.
+- [x] Test global entry starts with an empty source.
+- [x] Test first-backup label when no snapshots exist.
+- [x] Test repeat entry pre-fills the latest existing source and generates a fresh name.
+- [x] Test a missing recent source falls back to source selection.
+- [x] Keep the single `createSnapshot` call invariant.
+- [x] Run Home, backup and AppShell tests.
+- [x] Commit: `feat: distinguish backup entry points`.
 
 ### Task 8: Original File And Restore Folder Actions
 

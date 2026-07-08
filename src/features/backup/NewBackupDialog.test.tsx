@@ -41,6 +41,7 @@ test('creates one snapshot from the selected source', async () => {
     <NewBackupDialog
       api={api}
       repositoryPath="/tmp/chrona-repo"
+      entryPoint="global"
       onClose={vi.fn()}
       onOperationChange={vi.fn()}
       onCompleted={onCompleted}
@@ -72,6 +73,7 @@ test('maps block progress to the application operation bar', async () => {
     <NewBackupDialog
       api={api}
       repositoryPath="/tmp/chrona-repo"
+      entryPoint="global"
       onClose={vi.fn()}
       onOperationChange={onOperationChange}
       onCompleted={vi.fn()}
@@ -110,6 +112,7 @@ test('keeps the selected source and error visible when backup fails', async () =
     <NewBackupDialog
       api={api}
       repositoryPath="/tmp/chrona-repo"
+      entryPoint="global"
       onClose={vi.fn()}
       onOperationChange={vi.fn()}
       onCompleted={vi.fn()}
@@ -137,6 +140,7 @@ test('offers desktop actions only after a source is selected', async () => {
     <NewBackupDialog
       api={api}
       repositoryPath="/tmp/chrona-repo"
+      entryPoint="global"
       desktopActions={desktopActions}
       onClose={vi.fn()}
       onOperationChange={vi.fn()}
@@ -152,4 +156,42 @@ test('offers desktop actions only after a source is selected', async () => {
 
   expect(desktopActions.revealPath).toHaveBeenCalledWith('/picked/source-folder');
   expect(desktopActions.copyText).toHaveBeenCalledWith('/picked/source-folder');
+});
+
+test('keeps the global entry empty and pre-fills only a repeat entry', () => {
+  const { api } = createChronaApiMock();
+  const common = {
+    api,
+    repositoryPath: '/tmp/chrona-repo',
+    onClose: vi.fn(),
+    onOperationChange: vi.fn(),
+    onCompleted: vi.fn(),
+  };
+  const { rerender } = render(
+    <NewBackupDialog {...common} entryPoint="global" initialSourcePath="/ignored" />,
+  );
+  expect(screen.getByRole('textbox', { name: 'Source path' })).toHaveValue('');
+
+  rerender(
+    <NewBackupDialog {...common} entryPoint="repeat" initialSourcePath="/recent/source" />,
+  );
+  expect(screen.getByRole('textbox', { name: 'Source path' })).toHaveValue('/recent/source');
+  expect(screen.getByRole('textbox', { name: 'Backup name' })).not.toHaveValue('');
+});
+
+test('falls back to source selection when repeat entry has no recent path', () => {
+  const { api } = createChronaApiMock();
+  render(
+    <NewBackupDialog
+      api={api}
+      repositoryPath="/tmp/chrona-repo"
+      entryPoint="repeat"
+      onClose={vi.fn()}
+      onOperationChange={vi.fn()}
+      onCompleted={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole('textbox', { name: 'Source path' })).toHaveValue('');
+  expect(screen.getByRole('button', { name: 'Choose Folder' })).toBeEnabled();
 });

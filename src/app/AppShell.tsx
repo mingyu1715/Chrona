@@ -3,7 +3,10 @@ import { type ReactNode, useEffect, useState } from 'react';
 import type { ChronaApi } from '../shared/api/chronaApi';
 import { useAppPreferences } from '../shared/preferences/AppPreferencesProvider';
 import type { Snapshot } from '../shared/types/chrona';
-import { NewBackupDialog } from '../features/backup/NewBackupDialog';
+import {
+  type BackupEntryRequest,
+  NewBackupDialog,
+} from '../features/backup/NewBackupDialog';
 import { ExplorerPage } from '../features/explorer/ExplorerPage';
 import { HomePage } from '../features/home/HomePage';
 import { RepositoryLibraryMenu } from '../features/repository-library/RepositoryLibraryMenu';
@@ -41,7 +44,7 @@ export function AppShell({
   const [systemTheme, setSystemTheme] = useState<ThemeMode>(getSystemTheme);
   const [repositoryMenuOpen, setRepositoryMenuOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
-  const [backupOpen, setBackupOpen] = useState(false);
+  const [backupRequest, setBackupRequest] = useState<BackupEntryRequest | null>(null);
   const [internalOperation, setInternalOperation] = useState<ActiveOperation | null>(null);
   const [completedSnapshot, setCompletedSnapshot] = useState<Snapshot | null>(null);
   const [homeRefreshKey, setHomeRefreshKey] = useState(0);
@@ -89,7 +92,7 @@ export function AppShell({
   const newBackupAction = api
     ? () => {
         if (hasRepository) {
-          setBackupOpen(true);
+          setBackupRequest({ entryPoint: 'global' });
           onNewBackup?.();
         }
         else if (disconnected) setRepositoryMenuOpen(true);
@@ -137,7 +140,7 @@ export function AppShell({
         api={api}
         repositoryPath={repositoryLibrary.activeRepository.registration.path}
         refreshKey={homeRefreshKey}
-        onNewBackup={() => setBackupOpen(true)}
+        onNewBackup={setBackupRequest}
         onOpenStatistics={() => setActiveView('statistics')}
       />
     );
@@ -153,7 +156,7 @@ export function AppShell({
       <SnapshotsPage
         api={api}
         repositoryPath={repositoryLibrary.activeRepository.registration.path}
-        onNewBackup={() => setBackupOpen(true)}
+        onNewBackup={() => setBackupRequest({ entryPoint: 'global' })}
       />
     );
   } else if (api && repositoryLibrary.activeRepository && activeView === 'statistics') {
@@ -198,11 +201,13 @@ export function AppShell({
           onDismiss={() => setSetupOpen(false)}
         />
       )}
-      {api && backupOpen && repositoryLibrary.activeRepository && (
+      {api && backupRequest && repositoryLibrary.activeRepository && (
         <NewBackupDialog
           api={api}
           repositoryPath={repositoryLibrary.activeRepository.registration.path}
-          onClose={() => setBackupOpen(false)}
+          entryPoint={backupRequest.entryPoint}
+          initialSourcePath={backupRequest.initialSourcePath}
+          onClose={() => setBackupRequest(null)}
           onOperationChange={setInternalOperation}
           onCompleted={(snapshot) => {
             setCompletedSnapshot(snapshot);

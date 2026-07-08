@@ -13,24 +13,43 @@ import './new-backup-dialog.css';
 interface NewBackupDialogProps {
   api: ChronaApi;
   repositoryPath: string;
+  initialSourcePath?: string;
+  entryPoint: BackupEntryPoint;
   onClose: () => void;
   onOperationChange: (operation: ActiveOperation | null) => void;
   onCompleted: (snapshot: Snapshot) => void;
   desktopActions?: DesktopActions;
 }
 
+export type BackupEntryPoint = 'global' | 'first-backup' | 'repeat';
+
+export interface BackupEntryRequest {
+  entryPoint: BackupEntryPoint;
+  initialSourcePath?: string;
+}
+
 export function NewBackupDialog({
   api,
   repositoryPath,
+  initialSourcePath,
+  entryPoint,
   onClose,
   onOperationChange,
   onCompleted,
   desktopActions = defaultDesktopActions,
 }: NewBackupDialogProps) {
-  const [sourcePath, setSourcePath] = useState('');
+  const [sourcePath, setSourcePath] = useState(
+    entryPoint === 'repeat' ? initialSourcePath ?? '' : '',
+  );
   const [backupName, setBackupName] = useState(defaultBackupName);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSourcePath(entryPoint === 'repeat' ? initialSourcePath ?? '' : '');
+    setBackupName(defaultBackupName());
+    setError(null);
+  }, [entryPoint, initialSourcePath]);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -106,7 +125,11 @@ export function NewBackupDialog({
     <div className="backup-dialog-layer">
       <section className="backup-dialog" role="dialog" aria-modal="true" aria-labelledby="backup-dialog-title">
         <header>
-          <h1 id="backup-dialog-title">New Backup</h1>
+          <h1 id="backup-dialog-title">
+            {entryPoint === 'first-backup'
+              ? 'Create first backup'
+              : entryPoint === 'repeat' ? 'Back up again' : 'New Backup'}
+          </h1>
           <button type="button" aria-label="Close new backup" title="Close" disabled={busy} onClick={onClose}>
             <X size={18} aria-hidden="true" />
           </button>
