@@ -536,3 +536,12 @@
 - 저장소 활성화, 이름 변경, 연결 위치 찾기, 등록 해제를 한 화면에서 처리한다.
 - 상단 저장소 메뉴에서는 등록 해제를 제거하고 빠른 전환·추가·관리 화면 진입만 유지한다.
 - Rust 전체 테스트 97개, UI 전체 테스트 50개, TypeScript/Vite production build와 rustfmt 검증이 통과했다.
+
+### Phase 10 Task 6 데스크톱 경로 동작 완료
+
+- macOS Finder와 Windows File Explorer를 공통으로 호출하는 `DesktopActions` adapter를 추가했다.
+- 저장소와 선택한 source 경로에 파일 탐색기 표시·경로 복사 동작을 추가했다.
+- 복원이 완료된 뒤에만 결과 폴더 열기와 경로 복사 동작을 표시한다.
+- Tauri Opener는 path open과 reveal, Clipboard Manager는 text write 권한만 허용했다.
+- adapter 테스트에서는 plugin 함수 경계만 mock하고 UI에서는 경로가 있는 상태에만 동작을 노출한다.
+- UI 전체 테스트 54개, Rust 전체 테스트 97개, cargo check, rustfmt와 production build가 통과했다.

@@ -1,6 +1,8 @@
 import {
   CheckCircle2,
+  Copy,
   Database,
+  FolderOpen,
   FolderPlus,
   FolderSearch,
   Pencil,
@@ -12,6 +14,10 @@ import {
 import { useMemo, useState } from 'react';
 
 import type { RepositoryLibraryItem } from '../../shared/types/chrona';
+import {
+  desktopActions as defaultDesktopActions,
+  type DesktopActions,
+} from '../../shared/desktop/desktopActions';
 
 type RepositorySort = 'recent' | 'name' | 'status';
 
@@ -24,6 +30,7 @@ export interface RepositoryManagementPageProps {
   onRename: (repositoryId: string, displayName: string) => void;
   onRelink: (repositoryId: string) => void;
   onRemove: (repositoryId: string) => void;
+  desktopActions?: DesktopActions;
 }
 
 export function RepositoryManagementPage({
@@ -35,6 +42,7 @@ export function RepositoryManagementPage({
   onRename,
   onRelink,
   onRemove,
+  desktopActions = defaultDesktopActions,
 }: RepositoryManagementPageProps) {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<RepositorySort>('recent');
@@ -175,6 +183,28 @@ export function RepositoryManagementPage({
                     </>
                   ) : (
                     <>
+                      {repository.path && (
+                        <>
+                          <button
+                            className="settings-icon-button"
+                            type="button"
+                            aria-label={`Show ${repository.displayName} in file explorer`}
+                            title="Show in Finder or File Explorer"
+                            onClick={() => void desktopActions.revealPath(repository.path)}
+                          >
+                            <FolderOpen size={16} aria-hidden="true" />
+                          </button>
+                          <button
+                            className="settings-icon-button"
+                            type="button"
+                            aria-label={`Copy ${repository.displayName} path`}
+                            title="Copy path"
+                            onClick={() => void desktopActions.copyText(repository.path)}
+                          >
+                            <Copy size={16} aria-hidden="true" />
+                          </button>
+                        </>
+                      )}
                       {active ? (
                         <span className="settings-current">
                           <CheckCircle2 size={15} aria-hidden="true" />

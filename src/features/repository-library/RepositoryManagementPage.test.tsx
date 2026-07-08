@@ -35,15 +35,21 @@ function renderManagement() {
     onRelink: vi.fn(),
     onRemove: vi.fn(),
   };
+  const desktopActions = {
+    revealPath: vi.fn(async () => undefined),
+    openPath: vi.fn(async () => undefined),
+    copyText: vi.fn(async () => undefined),
+  };
 
   render(
     <RepositoryManagementPage
       repositories={repositories}
       activeRepositoryId={registration.repositoryId}
+      desktopActions={desktopActions}
       {...actions}
     />,
   );
-  return actions;
+  return { ...actions, desktopActions };
 }
 
 test('searches and sorts registered repositories', async () => {
@@ -85,4 +91,19 @@ test('renames and removes only the selected registration', async () => {
   await user.click(screen.getByRole('button', { name: 'Remove Project Files from Chrona' }));
   expect(actions.onRemove).toHaveBeenCalledWith('projects-id');
   expect(screen.queryByText(/delete files/i)).not.toBeInTheDocument();
+});
+
+test('reveals and copies a registered repository path', async () => {
+  const user = userEvent.setup();
+  const { desktopActions } = renderManagement();
+
+  await user.click(screen.getByRole('button', {
+    name: 'Show Chrona Repository in file explorer',
+  }));
+  await user.click(screen.getByRole('button', {
+    name: 'Copy Chrona Repository path',
+  }));
+
+  expect(desktopActions.revealPath).toHaveBeenCalledWith('/tmp/chrona-repo');
+  expect(desktopActions.copyText).toHaveBeenCalledWith('/tmp/chrona-repo');
 });

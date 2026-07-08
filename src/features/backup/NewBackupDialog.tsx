@@ -1,8 +1,12 @@
-import { File, FolderOpen, X } from 'lucide-react';
+import { Copy, File, FolderOpen, FolderSearch, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { ActiveOperation } from '../../app/OperationBar';
 import type { ChronaApi } from '../../shared/api/chronaApi';
+import {
+  desktopActions as defaultDesktopActions,
+  type DesktopActions,
+} from '../../shared/desktop/desktopActions';
 import type { Snapshot } from '../../shared/types/chrona';
 import './new-backup-dialog.css';
 
@@ -12,6 +16,7 @@ interface NewBackupDialogProps {
   onClose: () => void;
   onOperationChange: (operation: ActiveOperation | null) => void;
   onCompleted: (snapshot: Snapshot) => void;
+  desktopActions?: DesktopActions;
 }
 
 export function NewBackupDialog({
@@ -20,6 +25,7 @@ export function NewBackupDialog({
   onClose,
   onOperationChange,
   onCompleted,
+  desktopActions = defaultDesktopActions,
 }: NewBackupDialogProps) {
   const [sourcePath, setSourcePath] = useState('');
   const [backupName, setBackupName] = useState(defaultBackupName);
@@ -124,6 +130,28 @@ export function NewBackupDialog({
               <FolderOpen size={16} aria-hidden="true" />
               Choose Folder
             </button>
+            {sourcePath.trim() && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Show source in file explorer"
+                  title="Show in Finder or File Explorer"
+                  disabled={busy}
+                  onClick={() => void desktopActions.revealPath(sourcePath.trim())}
+                >
+                  <FolderSearch size={16} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Copy source path"
+                  title="Copy path"
+                  disabled={busy}
+                  onClick={() => void desktopActions.copyText(sourcePath.trim())}
+                >
+                  <Copy size={16} aria-hidden="true" />
+                </button>
+              </>
+            )}
           </div>
           <label>
             <span>Backup name</span>

@@ -1,7 +1,11 @@
-import { FolderOpen, X } from 'lucide-react';
+import { Copy, FolderOpen, X } from 'lucide-react';
 import { useState } from 'react';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
+import {
+  desktopActions as defaultDesktopActions,
+  type DesktopActions,
+} from '../../shared/desktop/desktopActions';
 import type { RestoreReport, Snapshot } from '../../shared/types/chrona';
 
 interface RestoreSnapshotDialogProps {
@@ -9,6 +13,7 @@ interface RestoreSnapshotDialogProps {
   repositoryPath: string;
   snapshot: Snapshot;
   onClose: () => void;
+  desktopActions?: DesktopActions;
 }
 
 export function RestoreSnapshotDialog({
@@ -16,6 +21,7 @@ export function RestoreSnapshotDialog({
   repositoryPath,
   snapshot,
   onClose,
+  desktopActions = defaultDesktopActions,
 }: RestoreSnapshotDialogProps) {
   const [targetPath, setTargetPath] = useState('');
   const [report, setReport] = useState<RestoreReport | null>(null);
@@ -63,11 +69,31 @@ export function RestoreSnapshotDialog({
           </button>
           {error && <p role="alert">{error}</p>}
           {report && (
-            <dl>
-              <div><dt>Files</dt><dd>{report.restoredFileCount.toLocaleString()}</dd></div>
-              <div><dt>Bytes</dt><dd>{formatBytes(report.restoredBytes)}</dd></div>
-              <div><dt>Blocks</dt><dd>{report.restoredBlockCount.toLocaleString()}</dd></div>
-            </dl>
+            <div className="snapshot-restore-dialog__result">
+              <dl>
+                <div><dt>Files</dt><dd>{report.restoredFileCount.toLocaleString()}</dd></div>
+                <div><dt>Bytes</dt><dd>{formatBytes(report.restoredBytes)}</dd></div>
+                <div><dt>Blocks</dt><dd>{report.restoredBlockCount.toLocaleString()}</dd></div>
+              </dl>
+              <div>
+                <button
+                  type="button"
+                  aria-label="Open restore folder"
+                  onClick={() => void desktopActions.openPath(report.targetPath)}
+                >
+                  <FolderOpen size={16} aria-hidden="true" />
+                  Open restore folder
+                </button>
+                <button
+                  type="button"
+                  aria-label="Copy restore folder path"
+                  title="Copy path"
+                  onClick={() => void desktopActions.copyText(report.targetPath)}
+                >
+                  <Copy size={16} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
           )}
         </div>
         <footer>

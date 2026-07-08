@@ -120,5 +120,36 @@ test('keeps the selected source and error visible when backup fails', async () =
   await user.click(screen.getByRole('button', { name: /^start backup$/i }));
 
   expect(await screen.findByRole('alert')).toHaveTextContent('backup failed');
-  expect(screen.getByLabelText(/source path/i)).toHaveValue('/picked/source-folder');
+  expect(screen.getByRole('textbox', { name: 'Source path' }))
+    .toHaveValue('/picked/source-folder');
+});
+
+test('offers desktop actions only after a source is selected', async () => {
+  const { api } = createChronaApiMock();
+  const user = userEvent.setup();
+  const desktopActions = {
+    revealPath: vi.fn(async () => undefined),
+    openPath: vi.fn(async () => undefined),
+    copyText: vi.fn(async () => undefined),
+  };
+
+  render(
+    <NewBackupDialog
+      api={api}
+      repositoryPath="/tmp/chrona-repo"
+      desktopActions={desktopActions}
+      onClose={vi.fn()}
+      onOperationChange={vi.fn()}
+      onCompleted={vi.fn()}
+    />,
+  );
+
+  expect(screen.queryByRole('button', { name: 'Show source in file explorer' }))
+    .not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: /choose folder/i }));
+  await user.click(screen.getByRole('button', { name: 'Show source in file explorer' }));
+  await user.click(screen.getByRole('button', { name: 'Copy source path' }));
+
+  expect(desktopActions.revealPath).toHaveBeenCalledWith('/picked/source-folder');
+  expect(desktopActions.copyText).toHaveBeenCalledWith('/picked/source-folder');
 });

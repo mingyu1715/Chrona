@@ -1,6 +1,8 @@
 import {
   Check,
   ChevronDown,
+  Copy,
+  FolderOpen,
   FolderSearch,
   HardDrive,
   Plus,
@@ -9,6 +11,10 @@ import {
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
 import type { RepositoryLibraryController } from '../../app/useRepositoryLibrary';
+import {
+  desktopActions as defaultDesktopActions,
+  type DesktopActions,
+} from '../../shared/desktop/desktopActions';
 
 interface RepositoryLibraryMenuProps {
   api: ChronaApi;
@@ -17,6 +23,7 @@ interface RepositoryLibraryMenuProps {
   onOpenChange: (open: boolean) => void;
   onNewRepository: () => void;
   onManageRepositories: () => void;
+  desktopActions?: DesktopActions;
 }
 
 export function RepositoryLibraryMenu({
@@ -26,6 +33,7 @@ export function RepositoryLibraryMenu({
   onOpenChange,
   onNewRepository,
   onManageRepositories,
+  desktopActions = defaultDesktopActions,
 }: RepositoryLibraryMenuProps) {
   const active = controller.activeRepository?.registration;
   const repositories = controller.library?.repositories ?? [];
@@ -104,6 +112,29 @@ export function RepositoryLibraryMenu({
           </div>
 
           <div className="repository-library-menu__commands">
+            {active?.path && (
+              <>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    void desktopActions.revealPath(active.path);
+                    onOpenChange(false);
+                  }}
+                >
+                  <FolderOpen size={16} aria-hidden="true" />
+                  Show in file explorer
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void desktopActions.copyText(active.path)}
+                >
+                  <Copy size={16} aria-hidden="true" />
+                  Copy repository path
+                </button>
+              </>
+            )}
             <button type="button" role="menuitem" onClick={onNewRepository}>
               <Plus size={16} aria-hidden="true" />
               New repository

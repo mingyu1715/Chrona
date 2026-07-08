@@ -208,12 +208,12 @@ export interface DesktopActions {
 }
 ```
 
-- [ ] Add Tauri Opener and clipboard manager with minimum permissions.
-- [ ] Unit-test adapters with plugin functions mocked only at the boundary.
-- [ ] Add reveal/copy icon commands with tooltips to repository, source and restore result locations.
-- [ ] Hide commands when the path does not exist in current state.
-- [ ] Run focused UI tests and Tauri capability build.
-- [ ] Commit: `feat: add desktop path actions`.
+- [x] Add Tauri Opener and clipboard manager with minimum permissions.
+- [x] Unit-test adapters with plugin functions mocked only at the boundary.
+- [x] Add reveal/copy icon commands with tooltips to repository, source and restore result locations.
+- [x] Hide commands when the path does not exist in current state.
+- [x] Run focused UI tests and Tauri capability build.
+- [x] Commit: `feat: add desktop path actions`.
 
 ### Task 7: Distinct Global And Contextual Backup Entry Points
 
