@@ -495,3 +495,11 @@
 - 상단 `새 백업`은 빈 source로 시작하고 Home은 `첫 백업 만들기` 또는 최근 source 기반 `다시 백업`으로 구분한다.
 - Rust 오류 전체 번역, 실제 저장소 삭제, 자동 백업, 배포·서명은 이번 Phase에서 제외했다.
 - 설계는 `docs/specs/0013-user-experience-localization.md`, 구현 계획은 `docs/plans/phase-10-user-experience-localization.md`에 기록했다.
+
+### Phase 10 Task 1 설정 저장·오프라인 폰트 완료
+
+- Tauri Store의 앱 데이터 `settings.json`에 language와 theme preferences를 저장하는 provider를 추가했다.
+- 없는 설정과 유효하지 않은 설정 값은 `system` 기본값으로 복구한다.
+- Pretendard Variable WOFF2와 OFL 1.1 라이선스를 저장소에 포함하고 CSS에서 로컬 asset만 참조한다.
+- production build에서 약 2.06MB WOFF2가 별도 asset으로 출력되는 것을 확인했다.
+- preferences/offline asset 테스트 4개, UI 전체 테스트 38개, TypeScript/Vite build, Rust check와 format 검증이 통과했다.

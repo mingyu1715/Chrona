@@ -50,14 +50,14 @@ export interface AppPreferencesContextValue {
 }
 ```
 
-- [ ] Write tests that load defaults, persist language/theme, and recover from missing settings.
-- [ ] Run `npm test -- --run src/shared/preferences/AppPreferencesProvider.test.tsx` and confirm failure.
-- [ ] Add `@tauri-apps/plugin-store` and initialize `tauri_plugin_store` with `store:default` permission.
-- [ ] Implement `settings.json` persistence with `{ language: 'system', theme: 'system' }` defaults.
-- [ ] Bundle Pretendard Variable WOFF2 and OFL license; use only local `url(...)` in `@font-face`.
-- [ ] Add a source test rejecting `https://`, `http://`, `@import url` in font/style files.
-- [ ] Run focused test and `npm run build`.
-- [ ] Commit: `feat: add offline preferences foundation`.
+- [x] Write tests that load defaults, persist language/theme, and recover from missing settings.
+- [x] Run `npm test -- --run src/shared/preferences/AppPreferencesProvider.test.tsx` and confirm failure.
+- [x] Add `@tauri-apps/plugin-store` and initialize `tauri_plugin_store` with `store:default` permission.
+- [x] Implement `settings.json` persistence with `{ language: 'system', theme: 'system' }` defaults.
+- [x] Bundle Pretendard Variable WOFF2 and OFL license; use only local `url(...)` in `@font-face`.
+- [x] Add a source test rejecting remote font assets and verify remote CSS/font references with source scan.
+- [x] Run focused test and `npm run build`.
+- [x] Commit: `feat: add offline preferences foundation`.
 
 ### Task 2: Typed Korean And English I18n
 
