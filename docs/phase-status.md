@@ -32,10 +32,11 @@ Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 impleme
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
 | 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
 | 전체 UI 사용성 개선 | 구현 완료 | `docs/archive/specs/0012-ui-usability-improvement.md` | `docs/archive/plans/phase-9-ui-usability-improvement.md` | `docs/implemented/ui-usability-improvement.md` | 저장소 라이브러리와 5개 작업 공간, 새 백업, 조건부 진행 표시 구현 완료. native 시각 검증은 남아 있음. |
+| 사용자 경험·다국어·로컬 연동 | 설계·계획 완료, 구현 전 | `docs/specs/0013-user-experience-localization.md` | `docs/plans/phase-10-user-experience-localization.md` | 없음 | 한국어/영어, 오프라인 폰트, stable navigation, 다중 저장소 관리, Finder/File Explorer 연동, 백업 진입점 분리. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
-- `docs/specs/0012-ui-usability-improvement.md`: 설계 확정, 사용자 문서 검토 후 구현 계획 작성
+- `docs/specs/0013-user-experience-localization.md`: Phase 10 구현 기준
 
 ## 보관된 완료 설계 문서
 
@@ -55,7 +56,7 @@ Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 impleme
 
 ## 현재 진행 계획
 
-- Phase 9 계획은 `docs/archive/plans/phase-9-ui-usability-improvement.md`로 보관 완료
+- `docs/plans/phase-10-user-experience-localization.md`: Task 1부터 구현 예정
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
@@ -93,18 +94,19 @@ Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 impleme
 
 ### 현재 활성 작업
 
-Phase 9 Task 1~2 저장소 registry/store와 library/Tauri command 구현 및 리뷰를 완료하고 Task 3을 진행한다.
+Phase 10 사용자 경험·다국어·로컬 데스크톱 연동을 구현한다.
 
-### 현재 작업: Phase 9 UI 사용성 개선
+### 현재 작업: Phase 10 사용자 경험·다국어
 
-- 현재 기능을 유지한 채 저장소 라이브러리, 앱 셸, 화면 연결과 데스크톱 창 크기 대응을 개선
-- `docs/plans/phase-9-ui-usability-improvement.md`의 Task 3부터 TDD로 구현
+- 한국어/영어와 시스템 언어 설정
+- 저장소가 없어도 유지되는 5개 작업 공간과 Settings
+- Pretendard 로컬 번들과 네트워크 없는 실행
+- 다중 저장소 관리와 Finder/File Explorer 연동
+- 상단 새 백업과 Home 상황별 백업 분리
 
-### Phase 9 이후 계획 후보
+### Phase 10 이후 계획 후보
 
-Phase 9 완료 후 아래 중 하나를 선택해 현재 Phase만 상세화한다.
-
-1. 릴리스 패키징 및 기본 실행 테스트 강화
+1. 릴리스 패키징, 서명, 설치 파일과 기본 실행 테스트
 2. 스냅샷 삭제 / 블록 정리
 3. 파일 감시 / 자동 스냅샷
 
@@ -119,6 +121,6 @@ Phase 9 완료 후 아래 중 하나를 선택해 현재 Phase만 상세화한�
 
 ## 즉시 다음 작업
 
-1. Phase 9 계획의 Task 3 TypeScript 저장소 library 계약을 구현한다.
-2. Task 3 완료 후 기존 UI를 바꾸기 전에 backend와 TypeScript 계약을 고정한다.
-3. Snapshot 삭제/GC와 release packaging은 이후 독립 Phase로 유지한다.
+1. Phase 10 Task 1 preferences store와 오프라인 폰트를 구현한다.
+2. Task 2 타입 기반 한국어/영어 번역 기반을 구현한다.
+3. 배포 준비는 Phase 10 완료 후 독립 Phase로 시작한다.

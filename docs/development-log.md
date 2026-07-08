@@ -482,3 +482,16 @@
 - `npm test -- --run`: UI 테스트 34개 통과.
 - `npm run build`, `git diff --check`: 통과.
 - native macOS/Windows smoke test와 시각·키보드·zoom 검증은 이번 정적 검증에서 수행하지 않았다.
+
+## 2026-07-08
+
+### Phase 10 사용자 경험·다국어 기획
+
+- 배포 준비 전에 사용자 경험과 세부 기능을 보완하는 Phase 10을 분리했다.
+- 저장소 유무와 관계없이 Home, Files, Snapshots, Statistics, Settings를 유지하고 화면 내부에서 필요한 저장소 동작을 안내하기로 했다.
+- 한국어/영어, 시스템 언어, Tauri Store 설정 저장과 Pretendard 로컬 WOFF2 번들을 범위에 포함했다.
+- 상단 저장소 메뉴는 빠른 전환, Settings의 Repositories는 검색·정렬·이름 변경·재연결·등록 해제를 담당하도록 구분했다.
+- Tauri Opener를 사용한 Finder/File Explorer 표시, 경로 복사, 복원 폴더 열기를 계획했다.
+- 상단 `새 백업`은 빈 source로 시작하고 Home은 `첫 백업 만들기` 또는 최근 source 기반 `다시 백업`으로 구분한다.
+- Rust 오류 전체 번역, 실제 저장소 삭제, 자동 백업, 배포·서명은 이번 Phase에서 제외했다.
+- 설계는 `docs/specs/0013-user-experience-localization.md`, 구현 계획은 `docs/plans/phase-10-user-experience-localization.md`에 기록했다.
