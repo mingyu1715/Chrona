@@ -1,9 +1,13 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { AppShell } from './AppShell';
 import { OperationBar, type ActiveOperation } from './OperationBar';
+import { I18nProvider } from '../shared/i18n/I18nProvider';
+import { AppPreferencesProvider } from '../shared/preferences/AppPreferencesProvider';
+import type { PreferencesStore } from '../shared/preferences/appPreferences';
 import { createChronaApiMock } from '../test/chronaApiMock';
 
 afterEach(() => cleanup());
@@ -17,9 +21,22 @@ const activeOperation: ActiveOperation = {
   phase: 'storing',
 };
 
+function renderShell(element: ReactElement) {
+  const store: PreferencesStore = {
+    get: vi.fn(async () => null) as unknown as PreferencesStore['get'],
+    set: vi.fn(async () => undefined),
+    save: vi.fn(async () => undefined),
+  };
+  return render(
+    <AppPreferencesProvider store={store}>
+      <I18nProvider>{element}</I18nProvider>
+    </AppPreferencesProvider>,
+  );
+}
+
 describe('AppShell', () => {
   test('shows five navigation destinations without workflow badges', () => {
-    render(<AppShell>Compatibility content</AppShell>);
+    renderShell(<AppShell>Compatibility content</AppShell>);
     const navigation = screen.getByRole('navigation', { name: /primary/i });
 
     for (const name of ['Home', 'Files', 'Snapshots', 'Statistics', 'Settings']) {
@@ -30,7 +47,7 @@ describe('AppShell', () => {
 
   test('changes the selected workspace and exposes it to compatibility content', async () => {
     const user = userEvent.setup();
-    render(
+    renderShell(
       <AppShell>
         {(activeView) => <p>Current workspace: {activeView}</p>}
       </AppShell>,
@@ -45,7 +62,7 @@ describe('AppShell', () => {
   test('supports top-bar theme, settings, and backup actions', async () => {
     const user = userEvent.setup();
     const onNewBackup = vi.fn();
-    render(<AppShell onNewBackup={onNewBackup}>Content</AppShell>);
+    renderShell(<AppShell onNewBackup={onNewBackup}>Content</AppShell>);
 
     await user.click(screen.getByRole('button', { name: /switch to dark mode/i }));
     expect(screen.getByTestId('app-shell')).toHaveAttribute('data-theme', 'dark');
@@ -64,7 +81,7 @@ describe('AppShell', () => {
       repositories: [],
     });
     const user = userEvent.setup();
-    render(<AppShell api={api} />);
+    renderShell(<AppShell api={api} />);
 
     expect(await screen.findByRole('heading', { name: /set up chrona/i })).toBeInTheDocument();
     const navigation = screen.getByRole('navigation', { name: /primary/i });
@@ -77,6 +94,10 @@ describe('AppShell', () => {
     expect(screen.getByRole('heading', { name: /files requires a repository/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create repository/i })).toBeEnabled();
     expect(screen.getByRole('button', { name: /add existing repository/i })).toBeEnabled();
+
+    await user.click(within(navigation).getByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'General' })).toBeEnabled();
   });
 
   test('offers repository relocation when every registration is disconnected', async () => {
@@ -85,7 +106,7 @@ describe('AppShell', () => {
       activeRepositoryId: registration.repositoryId,
       repositories: [{ ...registration, connectionState: 'disconnected' }],
     });
-    render(<AppShell api={api} />);
+    renderShell(<AppShell api={api} />);
 
     expect(await screen.findByRole('button', { name: /locate repository/i })).toBeInTheDocument();
     expect(api.activateRegisteredRepository).not.toHaveBeenCalled();

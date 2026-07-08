@@ -1,17 +1,34 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { AppShell } from '../../app/AppShell';
+import { I18nProvider } from '../../shared/i18n/I18nProvider';
+import { AppPreferencesProvider } from '../../shared/preferences/AppPreferencesProvider';
+import type { PreferencesStore } from '../../shared/preferences/appPreferences';
 import { createChronaApiMock } from '../../test/chronaApiMock';
 import type { OpenedRepository, RepositoryLibrary } from '../../shared/types/chrona';
 
 afterEach(() => cleanup());
 
+function renderShell(element: ReactElement) {
+  const store: PreferencesStore = {
+    get: vi.fn(async () => null) as unknown as PreferencesStore['get'],
+    set: vi.fn(async () => undefined),
+    save: vi.fn(async () => undefined),
+  };
+  return render(
+    <AppPreferencesProvider store={store}>
+      <I18nProvider>{element}</I18nProvider>
+    </AppPreferencesProvider>,
+  );
+}
+
 describe('repository library workspace', () => {
   test('opens the last active repository during bootstrap', async () => {
     const { api } = createChronaApiMock();
-    render(<AppShell api={api}>Workspace</AppShell>);
+    renderShell(<AppShell api={api}>Workspace</AppShell>);
 
     await waitFor(() => {
       expect(api.activateRegisteredRepository).toHaveBeenCalledWith('repo-id');
@@ -27,7 +44,7 @@ describe('repository library workspace', () => {
       repositories: [],
     });
 
-    render(<AppShell api={api}>Workspace</AppShell>);
+    renderShell(<AppShell api={api}>Workspace</AppShell>);
 
     expect(await screen.findByRole('heading', { name: /set up chrona/i }))
       .toBeInTheDocument();
@@ -43,7 +60,7 @@ describe('repository library workspace', () => {
       repositories: [],
     });
 
-    render(<AppShell api={api}>Workspace</AppShell>);
+    renderShell(<AppShell api={api}>Workspace</AppShell>);
     await user.type(await screen.findByLabelText(/repository name/i), 'Project Archive');
     await user.click(screen.getByRole('button', { name: /create in default location/i }));
 
@@ -61,7 +78,7 @@ describe('repository library workspace', () => {
       repositories: [],
     });
 
-    render(<AppShell api={api}>Workspace</AppShell>);
+    renderShell(<AppShell api={api}>Workspace</AppShell>);
     const name = await screen.findByLabelText(/repository name/i);
     expect(api.selectRepositoryParentPath).not.toHaveBeenCalled();
     expect(api.selectExistingRepositoryPath).not.toHaveBeenCalled();
@@ -78,7 +95,7 @@ describe('repository library workspace', () => {
       activeRepositoryId: null,
       repositories: [],
     });
-    render(<AppShell api={api}>Second workspace</AppShell>);
+    renderShell(<AppShell api={api}>Second workspace</AppShell>);
     const existingButtons = await screen.findAllByRole('button', {
       name: /add existing repository/i,
     });
@@ -114,7 +131,7 @@ describe('repository library workspace', () => {
     vi.mocked(api.getRepositoryLibrary).mockResolvedValue(library);
     vi.mocked(api.relinkRegisteredRepository).mockResolvedValue(secondOpened);
 
-    render(<AppShell api={api}>Workspace</AppShell>);
+    renderShell(<AppShell api={api}>Workspace</AppShell>);
     await user.click(await screen.findByRole('button', {
       name: /Chrona Repository repository menu/i,
     }));
@@ -130,7 +147,7 @@ describe('repository library workspace', () => {
   test('removing registration never exposes a delete files action', async () => {
     const { api } = createChronaApiMock();
     const user = userEvent.setup();
-    render(<AppShell api={api}>Workspace</AppShell>);
+    renderShell(<AppShell api={api}>Workspace</AppShell>);
 
     await user.click(await screen.findByRole('button', {
       name: /Chrona Repository repository menu/i,

@@ -143,13 +143,13 @@ interface SettingsPageProps {
 }
 ```
 
-- [ ] Test that General, Repositories, Storage and Repository health remain visible with no repository.
-- [ ] Test General language/theme controls without a repository.
-- [ ] Test Storage and Health render select/setup actions instead of controls when no repository is active.
-- [ ] Split current one-line component into focused section components.
-- [ ] Connect language/theme to AppPreferences rather than AppShell-only state.
-- [ ] Run settings and shell tests.
-- [ ] Commit: `feat: keep settings available without repository`.
+- [x] Test that General, Repositories, Storage and Repository health remain visible with no repository.
+- [x] Test General language/theme controls without a repository.
+- [x] Test Storage and Health render select/setup actions instead of controls when no repository is active.
+- [x] Split current one-line component into focused section components.
+- [x] Connect language/theme to AppPreferences rather than AppShell-only state.
+- [x] Run settings and shell tests.
+- [x] Commit: `feat: keep settings available without repository`.
 
 ### Task 5: Repository Registry Rename And Full Management
 

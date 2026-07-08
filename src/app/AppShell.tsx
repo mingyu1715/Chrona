@@ -1,6 +1,7 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import type { ChronaApi } from '../shared/api/chronaApi';
+import { useAppPreferences } from '../shared/preferences/AppPreferencesProvider';
 import type { Snapshot } from '../shared/types/chrona';
 import { NewBackupDialog } from '../features/backup/NewBackupDialog';
 import { ExplorerPage } from '../features/explorer/ExplorerPage';
@@ -36,7 +37,8 @@ export function AppShell({
   onNewBackup,
 }: AppShellProps) {
   const [activeView, setActiveView] = useState<AppView>(initialView);
-  const [theme, setTheme] = useState<ThemeMode>('light');
+  const { preferences, setTheme } = useAppPreferences();
+  const [systemTheme, setSystemTheme] = useState<ThemeMode>(getSystemTheme);
   const [repositoryMenuOpen, setRepositoryMenuOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
@@ -44,7 +46,17 @@ export function AppShell({
   const [completedSnapshot, setCompletedSnapshot] = useState<Snapshot | null>(null);
   const [homeRefreshKey, setHomeRefreshKey] = useState(0);
   const repositoryLibrary = useRepositoryLibrary(api);
+  const theme = preferences.theme === 'system' ? systemTheme : preferences.theme;
+  const toggleTheme = () => void setTheme(theme === 'light' ? 'dark' : 'light');
   const content = typeof children === 'function' ? children(activeView) : children;
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const update = () => setSystemTheme(media.matches ? 'dark' : 'light');
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const repositorySwitcher = api ? (
     <RepositoryLibraryMenu
       api={api}
@@ -98,7 +110,19 @@ export function AppShell({
   }
 
   let mainContent = content;
-  if (api && repositoryLibrary.activeRepository && activeView === 'home') {
+  if (api && activeView === 'settings') {
+    mainContent = (
+      <SettingsPage
+        api={api}
+        repository={repositoryLibrary.activeRepository}
+        library={repositoryLibrary.library ?? { activeRepositoryId: null, repositories: [] }}
+        onCreateRepository={() => setSetupOpen(true)}
+        onAddExistingRepository={() => void addExistingRepository()}
+        onSelectRepository={(repositoryId) => void repositoryLibrary.activate(repositoryId)}
+        onRemoveRepository={(repositoryId) => void repositoryLibrary.remove(repositoryId)}
+      />
+    );
+  } else if (api && repositoryLibrary.activeRepository && activeView === 'home') {
     mainContent = (
       <HomePage
         api={api}
@@ -125,10 +149,8 @@ export function AppShell({
     );
   } else if (api && repositoryLibrary.activeRepository && activeView === 'statistics') {
     mainContent = <StatisticsPage api={api} repositoryPath={repositoryLibrary.activeRepository.registration.path} onOperationChange={setInternalOperation} />;
-  } else if (api && repositoryLibrary.activeRepository && activeView === 'settings') {
-    mainContent = <SettingsPage api={api} repository={repositoryLibrary.activeRepository} repositories={repositoryLibrary.library?.repositories ?? []} theme={theme} onToggleTheme={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} onRemoveRepository={(id) => void repositoryLibrary.remove(id)} />;
   }
-  if (api && repositoryUnavailable && activeView !== 'home') {
+  if (api && repositoryUnavailable && activeView !== 'home' && activeView !== 'settings') {
     mainContent = (
       <RepositoryRequiredState
         workspace={activeView === 'files' ? 'Files' : activeView === 'snapshots' ? 'Snapshots' : activeView === 'statistics' ? 'Statistics' : 'Settings'}
@@ -147,7 +169,7 @@ export function AppShell({
         repositorySwitcher={repositorySwitcher}
         onNewBackup={newBackupAction}
         primaryActionLabel={primaryActionLabel}
-        onToggleTheme={() => setTheme((current) => current === 'light' ? 'dark' : 'light')}
+        onToggleTheme={toggleTheme}
         onOpenSettings={() => setActiveView('settings')}
       />
       <AppSidebar activeView={activeView} onViewChange={setActiveView} />
@@ -206,3 +228,8 @@ export function AppShell({
 }
 
 export type { ActiveOperation, AppView };
+
+function getSystemTheme(): ThemeMode {
+  if (typeof window === 'undefined' || !window.matchMedia) return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}

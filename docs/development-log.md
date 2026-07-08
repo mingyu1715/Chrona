@@ -518,3 +518,12 @@
 - 상단 기본 동작을 상태에 따라 `Set up repository`, `Locate repository`, `New Backup`으로 구분했다.
 - 저장소 API 없이 앱 셸만 사용하는 기존 화면에서는 `New Backup` 동작을 그대로 유지한다.
 - AppShell·RepositoryLibrary 집중 테스트 12개, UI 전체 테스트 43개와 production build가 통과했다.
+
+### Phase 10 Task 4 저장소 독립 설정 완료
+
+- 활성 저장소가 없어도 General, Repositories, Storage, Repository health 설정 탐색을 유지한다.
+- General에서 시스템·한국어·영어와 시스템·라이트·다크 테마를 선택하고 Tauri Store preferences에 저장한다.
+- 앱 셸의 실제 테마를 저장된 preference와 운영체제 다크 모드 설정에 연결했다.
+- Storage와 Repository health는 활성 저장소가 없으면 저장소 생성·추가·선택 동작을 표시한다.
+- 활성 저장소가 있으면 기존 압축 모드 변경과 무결성 검사 기능을 그대로 제공한다.
+- Settings·AppShell 집중 테스트 10개, UI 전체 테스트 46개와 production build가 통과했다.
