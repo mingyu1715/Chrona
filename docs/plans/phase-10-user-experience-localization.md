@@ -176,13 +176,13 @@ pub fn rename_repository_registration(
 ) -> Result<RepositoryLibrary, ChronaError>;
 ```
 
-- [ ] Test trimmed non-empty names, missing IDs, persistence and unchanged manifest.
-- [ ] Implement store, service and command in that order.
-- [ ] Add TypeScript API and controller action `rename(repositoryId, displayName)`.
-- [ ] Test repository search, recent/name/status sort, activate, rename, relink and registration-only remove.
-- [ ] Keep the top menu limited to quick switching and entry commands.
-- [ ] Run Rust Phase 9 tests and repository library UI tests.
-- [ ] Commit: `feat: add full repository management`.
+- [x] Test trimmed non-empty names, missing IDs, persistence and unchanged manifest.
+- [x] Implement store, service and command in that order.
+- [x] Add TypeScript API and controller action `rename(repositoryId, displayName)`.
+- [x] Test repository search, recent/name/status sort, activate, rename, relink and registration-only remove.
+- [x] Keep the top menu limited to quick switching and entry commands.
+- [x] Run Rust Phase 9 tests and repository library UI tests.
+- [x] Commit: `feat: add full repository management`.
 
 ### Task 6: Cross-Platform Reveal And Copy Actions
 

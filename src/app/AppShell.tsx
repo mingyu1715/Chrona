@@ -109,6 +109,12 @@ export function AppShell({
     if (path) await repositoryLibrary.registerExisting(path);
   }
 
+  async function relinkRepository(repositoryId: string) {
+    if (!api) return;
+    const path = await api.selectExistingRepositoryPath();
+    if (path) await repositoryLibrary.relink(repositoryId, path);
+  }
+
   let mainContent = content;
   if (api && activeView === 'settings') {
     mainContent = (
@@ -119,6 +125,9 @@ export function AppShell({
         onCreateRepository={() => setSetupOpen(true)}
         onAddExistingRepository={() => void addExistingRepository()}
         onSelectRepository={(repositoryId) => void repositoryLibrary.activate(repositoryId)}
+        onRenameRepository={(repositoryId, displayName) =>
+          void repositoryLibrary.rename(repositoryId, displayName)}
+        onRelinkRepository={(repositoryId) => void relinkRepository(repositoryId)}
         onRemoveRepository={(repositoryId) => void repositoryLibrary.remove(repositoryId)}
       />
     );

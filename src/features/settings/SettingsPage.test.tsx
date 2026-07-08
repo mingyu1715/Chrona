@@ -35,6 +35,8 @@ function renderSettings({ withRepository = false } = {}) {
           onCreateRepository={vi.fn()}
           onAddExistingRepository={vi.fn()}
           onSelectRepository={vi.fn()}
+          onRenameRepository={vi.fn()}
+          onRelinkRepository={vi.fn()}
           onRemoveRepository={vi.fn()}
         />
       </I18nProvider>
@@ -96,4 +98,15 @@ test('keeps storage and health controls for an active repository', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Repository health' }));
   expect(screen.getByRole('button', { name: 'Verify repository' })).toBeEnabled();
+});
+
+test('opens full repository management from settings', async () => {
+  const user = userEvent.setup();
+  renderSettings({ withRepository: true });
+
+  await user.click(screen.getByRole('button', { name: 'Repositories' }));
+
+  expect(screen.getByRole('searchbox', { name: 'Search repositories' })).toBeInTheDocument();
+  expect(screen.getByRole('combobox', { name: 'Sort repositories' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Rename Chrona Repository' })).toBeEnabled();
 });

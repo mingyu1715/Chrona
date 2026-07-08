@@ -5,7 +5,6 @@ import {
   HardDrive,
   Plus,
   Settings,
-  Unlink,
 } from 'lucide-react';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
@@ -117,20 +116,6 @@ export function RepositoryLibraryMenu({
               <Settings size={16} aria-hidden="true" />
               Manage repositories
             </button>
-            {active && (
-              <button
-                className="repository-library-menu__remove"
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  void controller.remove(active.repositoryId);
-                  onOpenChange(false);
-                }}
-              >
-                <Unlink size={16} aria-hidden="true" />
-                Remove from Chrona
-              </button>
-            )}
           </div>
         </div>
       )}

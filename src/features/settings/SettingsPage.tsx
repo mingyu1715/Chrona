@@ -8,7 +8,6 @@ import {
   Plus,
   Save,
   Sun,
-  Trash2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -22,6 +21,7 @@ import type {
   OpenedRepository,
   RepositoryLibrary,
 } from '../../shared/types/chrona';
+import { RepositoryManagementPage } from '../repository-library/RepositoryManagementPage';
 import './settings-page.css';
 
 type Section = 'General' | 'Repositories' | 'Storage' | 'Repository health';
@@ -40,6 +40,8 @@ export interface SettingsPageProps {
   onCreateRepository: () => void;
   onAddExistingRepository: () => void;
   onSelectRepository: (repositoryId: string) => void;
+  onRenameRepository: (repositoryId: string, displayName: string) => void;
+  onRelinkRepository: (repositoryId: string) => void;
   onRemoveRepository: (repositoryId: string) => void;
 }
 
@@ -50,6 +52,8 @@ export function SettingsPage({
   onCreateRepository,
   onAddExistingRepository,
   onSelectRepository,
+  onRenameRepository,
+  onRelinkRepository,
   onRemoveRepository,
 }: SettingsPageProps) {
   const [section, setSection] = useState<Section>('General');
@@ -80,13 +84,15 @@ export function SettingsPage({
         <main>
           {section === 'General' && <GeneralSettings />}
           {section === 'Repositories' && (
-            <RepositorySettings
-              repository={repository}
-              library={library}
+            <RepositoryManagementPage
+              repositories={library.repositories}
+              activeRepositoryId={repository?.registration.repositoryId ?? null}
               onCreateRepository={onCreateRepository}
               onAddExistingRepository={onAddExistingRepository}
-              onSelectRepository={onSelectRepository}
-              onRemoveRepository={onRemoveRepository}
+              onActivate={onSelectRepository}
+              onRename={onRenameRepository}
+              onRelink={onRelinkRepository}
+              onRemove={onRemoveRepository}
             />
           )}
           {section === 'Storage' && (
@@ -171,76 +177,6 @@ function GeneralSettings() {
   );
 }
 
-function RepositorySettings({
-  repository,
-  library,
-  onCreateRepository,
-  onAddExistingRepository,
-  onSelectRepository,
-  onRemoveRepository,
-}: Omit<SettingsPageProps, 'api'>) {
-  return (
-    <section className="settings-section" aria-labelledby="settings-repositories-title">
-      <div className="settings-section__heading settings-section__heading--actions">
-        <div className="settings-section__title">
-          <Database size={20} aria-hidden="true" />
-          <div>
-            <h2 id="settings-repositories-title">Repositories</h2>
-            <p>Switch or remove registered repository locations.</p>
-          </div>
-        </div>
-        <RepositorySetupActions
-          onCreateRepository={onCreateRepository}
-          onAddExistingRepository={onAddExistingRepository}
-        />
-      </div>
-
-      {library.repositories.length === 0 ? (
-        <p className="settings-empty">No repositories are registered yet.</p>
-      ) : (
-        <div className="settings-repository-list">
-          {library.repositories.map((item) => {
-            const active = repository?.registration.repositoryId === item.repositoryId;
-            return (
-              <div className="settings-row" key={item.repositoryId}>
-                <span>
-                  <strong>{item.displayName}</strong>
-                  <small>{item.path}</small>
-                </span>
-                <div className="settings-row__actions">
-                  {active ? (
-                    <span className="settings-current">
-                      <CheckCircle2 size={15} aria-hidden="true" />
-                      Active
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={item.connectionState === 'disconnected'}
-                      onClick={() => onSelectRepository(item.repositoryId)}
-                    >
-                      Use repository
-                    </button>
-                  )}
-                  <button
-                    className="settings-icon-button"
-                    type="button"
-                    aria-label={`Remove ${item.displayName} from Chrona`}
-                    title="Remove from Chrona"
-                    onClick={() => onRemoveRepository(item.repositoryId)}
-                  >
-                    <Trash2 size={16} aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-}
-
 function StorageSettings({
   api,
   repository,
@@ -248,7 +184,14 @@ function StorageSettings({
   onCreateRepository,
   onAddExistingRepository,
   onSelectRepository,
-}: Omit<SettingsPageProps, 'onRemoveRepository'>) {
+}: Pick<SettingsPageProps,
+  | 'api'
+  | 'repository'
+  | 'library'
+  | 'onCreateRepository'
+  | 'onAddExistingRepository'
+  | 'onSelectRepository'
+>) {
   const [mode, setMode] = useState<CompressionMode>(
     repository?.manifest.blockStrategy.compressionMode ?? 'standard',
   );
@@ -315,7 +258,14 @@ function RepositoryHealthSettings({
   onCreateRepository,
   onAddExistingRepository,
   onSelectRepository,
-}: Omit<SettingsPageProps, 'onRemoveRepository'>) {
+}: Pick<SettingsPageProps,
+  | 'api'
+  | 'repository'
+  | 'library'
+  | 'onCreateRepository'
+  | 'onAddExistingRepository'
+  | 'onSelectRepository'
+>) {
   const [integrity, setIntegrity] = useState<IntegrityReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 

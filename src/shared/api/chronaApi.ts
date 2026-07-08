@@ -34,6 +34,10 @@ export interface ChronaApi {
   registerExistingRepository(repositoryPath: string): Promise<OpenedRepository>;
   activateRegisteredRepository(repositoryId: string): Promise<OpenedRepository>;
   removeRepositoryRegistration(repositoryId: string): Promise<RepositoryLibrary>;
+  renameRepositoryRegistration(
+    repositoryId: string,
+    displayName: string,
+  ): Promise<RepositoryLibrary>;
   relinkRegisteredRepository(
     repositoryId: string,
     repositoryPath: string,
@@ -105,6 +109,12 @@ export const chronaApi: ChronaApi = {
   },
   removeRepositoryRegistration(repositoryId) {
     return invoke<RepositoryLibrary>('remove_repository_registration', { repositoryId });
+  },
+  renameRepositoryRegistration(repositoryId, displayName) {
+    return invoke<RepositoryLibrary>('rename_repository_registration', {
+      repositoryId,
+      displayName,
+    });
   },
   relinkRegisteredRepository(repositoryId, repositoryPath) {
     return invoke<OpenedRepository>('relink_registered_repository', {

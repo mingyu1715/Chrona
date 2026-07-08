@@ -527,3 +527,12 @@
 - Storage와 Repository health는 활성 저장소가 없으면 저장소 생성·추가·선택 동작을 표시한다.
 - 활성 저장소가 있으면 기존 압축 모드 변경과 무결성 검사 기능을 그대로 제공한다.
 - Settings·AppShell 집중 테스트 10개, UI 전체 테스트 46개와 production build가 통과했다.
+
+### Phase 10 Task 5 전체 저장소 관리 완료
+
+- registry display name을 trim해 저장하고 빈 이름과 없는 repository ID를 거부하는 Rust 경로를 추가했다.
+- 이름 변경은 registry만 수정하며 실제 저장소 폴더명과 `manifest.json`은 변경하지 않는다.
+- Settings의 Repositories에 이름·경로 검색과 최근 사용·이름·연결 상태 정렬을 추가했다.
+- 저장소 활성화, 이름 변경, 연결 위치 찾기, 등록 해제를 한 화면에서 처리한다.
+- 상단 저장소 메뉴에서는 등록 해제를 제거하고 빠른 전환·추가·관리 화면 진입만 유지한다.
+- Rust 전체 테스트 97개, UI 전체 테스트 50개, TypeScript/Vite production build와 rustfmt 검증이 통과했다.

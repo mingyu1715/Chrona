@@ -171,6 +171,31 @@ impl RepositoryRegistryStore {
         Ok(registry)
     }
 
+    pub fn rename(
+        &self,
+        repository_id: &str,
+        display_name: &str,
+    ) -> ChronaResult<RepositoryRegistry> {
+        let mut registry = self.load()?;
+        let registration = registry
+            .repositories
+            .iter_mut()
+            .find(|existing| existing.repository_id == repository_id)
+            .ok_or_else(|| {
+                ChronaError::RepositoryRegistrationNotFound(repository_id.to_string())
+            })?;
+        let display_name = display_name.trim();
+        if display_name.is_empty() {
+            return Err(ChronaError::InvalidRepositoryRegistry(
+                "repository display name cannot be empty".to_string(),
+            ));
+        }
+
+        registration.display_name = display_name.to_string();
+        self.save(&registry)?;
+        Ok(registry)
+    }
+
     fn registry_path(&self) -> PathBuf {
         self.app_data_dir.join(REPOSITORY_REGISTRY_FILE)
     }

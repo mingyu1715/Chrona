@@ -82,6 +82,19 @@ fn remove_repository_registration(
 }
 
 #[tauri::command]
+fn rename_repository_registration(
+    app: tauri::AppHandle,
+    repository_id: String,
+    display_name: String,
+) -> Result<RepositoryLibrary, String> {
+    chrona::commands::repository_library_commands::rename_repository_registration(
+        app,
+        repository_id,
+        display_name,
+    )
+}
+
+#[tauri::command]
 fn relink_registered_repository(
     app: tauri::AppHandle,
     repository_id: String,
@@ -230,6 +243,7 @@ fn main() {
             register_existing_repository,
             activate_registered_repository,
             remove_repository_registration,
+            rename_repository_registration,
             relink_registered_repository,
             set_repository_compression_mode,
             ingest_blocks,

@@ -158,6 +158,15 @@ export function createChronaApiMock() {
     registerExistingRepository: vi.fn(async () => openedRepository),
     activateRegisteredRepository: vi.fn(async () => openedRepository),
     removeRepositoryRegistration: vi.fn(async () => library),
+    renameRepositoryRegistration: vi.fn(async (_repositoryId, displayName) => ({
+      ...library,
+      repositories: library.repositories.map((repository) => ({
+        ...repository,
+        displayName: repository.repositoryId === _repositoryId
+          ? displayName.trim()
+          : repository.displayName,
+      })),
+    })),
     relinkRegisteredRepository: vi.fn(async () => openedRepository),
     setRepositoryCompressionMode: vi.fn(async (_repositoryPath, compressionMode) => ({
       ...manifest,

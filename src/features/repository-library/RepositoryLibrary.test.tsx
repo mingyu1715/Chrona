@@ -144,7 +144,7 @@ describe('repository library workspace', () => {
     expect(openedRepository.registration.repositoryId).toBe('repo-id');
   });
 
-  test('removing registration never exposes a delete files action', async () => {
+  test('keeps destructive repository management out of the quick menu', async () => {
     const { api } = createChronaApiMock();
     const user = userEvent.setup();
     renderShell(<AppShell api={api}>Workspace</AppShell>);
@@ -153,8 +153,10 @@ describe('repository library workspace', () => {
       name: /Chrona Repository repository menu/i,
     }));
     const menu = screen.getByRole('menu');
-    expect(within(menu).getByRole('menuitem', { name: /remove from chrona/i }))
+    expect(within(menu).getByRole('menuitem', { name: /manage repositories/i }))
       .toBeInTheDocument();
+    expect(within(menu).queryByRole('menuitem', { name: /remove from chrona/i }))
+      .not.toBeInTheDocument();
     expect(within(menu).queryByRole('menuitem', { name: /delete files/i }))
       .not.toBeInTheDocument();
   });
