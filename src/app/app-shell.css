@@ -299,6 +299,60 @@
   font-size: 13px;
 }
 
+.repository-required {
+  display: grid;
+  width: min(560px, calc(100% - 48px));
+  min-height: 100%;
+  margin: 0 auto;
+  align-content: center;
+  justify-items: start;
+  gap: 14px;
+  padding: 40px 0;
+}
+
+.repository-required__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--app-sidebar-active);
+  color: var(--app-primary);
+}
+
+.repository-required h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.repository-required p {
+  margin: 6px 0 0;
+  color: var(--app-muted);
+  font-size: 13px;
+}
+
+.repository-required__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.repository-required__actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
 .repository-setup-layer {
   position: absolute;
   z-index: 40;

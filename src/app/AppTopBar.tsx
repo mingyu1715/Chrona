@@ -7,6 +7,7 @@ interface AppTopBarProps {
   theme: ThemeMode;
   repositorySwitcher?: ReactNode;
   onNewBackup?: () => void;
+  primaryActionLabel?: string;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
 }
@@ -15,6 +16,7 @@ export function AppTopBar({
   theme,
   repositorySwitcher,
   onNewBackup,
+  primaryActionLabel = 'New Backup',
   onToggleTheme,
   onOpenSettings,
 }: AppTopBarProps) {
@@ -44,7 +46,7 @@ export function AppTopBar({
           onClick={onNewBackup}
         >
           <Plus size={17} aria-hidden="true" />
-          <span>New Backup</span>
+          <span>{primaryActionLabel}</span>
         </button>
         <button
           className="app-topbar__icon-button"

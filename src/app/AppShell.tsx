@@ -13,6 +13,7 @@ import { SettingsPage } from '../features/settings/SettingsPage';
 import { AppSidebar, type AppView } from './AppSidebar';
 import { AppTopBar, type ThemeMode } from './AppTopBar';
 import { OperationBar, type ActiveOperation } from './OperationBar';
+import { RepositoryRequiredState } from './RepositoryRequiredState';
 import { useRepositoryLibrary } from './useRepositoryLibrary';
 import '../styles/component-workspaces.css';
 import './app-shell.css';
@@ -62,18 +63,39 @@ export function AppShell({
   ) : repositorySwitcherSlot;
 
   const hasRepository = Boolean(repositoryLibrary.activeRepository);
-  const showInitialSetup = Boolean(
+  const repositoryUnavailable = Boolean(
     api && !repositoryLibrary.loading && repositoryLibrary.library && !hasRepository,
   );
+  const disconnected = Boolean(
+    repositoryUnavailable
+    && repositoryLibrary.library?.repositories.length
+    && repositoryLibrary.library.repositories.every(
+      (repository) => repository.connectionState === 'disconnected',
+    ),
+  );
+  const showInitialSetup = repositoryUnavailable && activeView === 'home';
   const newBackupAction = api
     ? () => {
         if (hasRepository) {
           setBackupOpen(true);
           onNewBackup?.();
         }
-        else setSetupOpen(true);
+        else if (disconnected) setRepositoryMenuOpen(true);
+        else {
+          setActiveView('home');
+          setSetupOpen(true);
+        }
       }
     : onNewBackup;
+  const primaryActionLabel = !api || hasRepository
+    ? 'New Backup'
+    : disconnected ? 'Locate repository' : 'Set up repository';
+
+  async function addExistingRepository() {
+    if (!api) return;
+    const path = await api.selectExistingRepositoryPath();
+    if (path) await repositoryLibrary.registerExisting(path);
+  }
 
   let mainContent = content;
   if (api && repositoryLibrary.activeRepository && activeView === 'home') {
@@ -106,6 +128,17 @@ export function AppShell({
   } else if (api && repositoryLibrary.activeRepository && activeView === 'settings') {
     mainContent = <SettingsPage api={api} repository={repositoryLibrary.activeRepository} repositories={repositoryLibrary.library?.repositories ?? []} theme={theme} onToggleTheme={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} onRemoveRepository={(id) => void repositoryLibrary.remove(id)} />;
   }
+  if (api && repositoryUnavailable && activeView !== 'home') {
+    mainContent = (
+      <RepositoryRequiredState
+        workspace={activeView === 'files' ? 'Files' : activeView === 'snapshots' ? 'Snapshots' : activeView === 'statistics' ? 'Statistics' : 'Settings'}
+        disconnected={disconnected}
+        onCreateRepository={() => setSetupOpen(true)}
+        onAddExistingRepository={() => void addExistingRepository()}
+        onLocateRepository={() => setRepositoryMenuOpen(true)}
+      />
+    );
+  }
 
   return (
     <div className="app-shell" data-theme={theme} data-testid="app-shell">
@@ -113,6 +146,7 @@ export function AppShell({
         theme={theme}
         repositorySwitcher={repositorySwitcher}
         onNewBackup={newBackupAction}
+        primaryActionLabel={primaryActionLabel}
         onToggleTheme={() => setTheme((current) => current === 'light' ? 'dark' : 'light')}
         onOpenSettings={() => setActiveView('settings')}
       />

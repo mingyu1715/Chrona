@@ -510,3 +510,11 @@
 - 영어 message key를 기준 타입으로 사용해 한국어 번역 누락이 TypeScript 오류가 되도록 구성했다.
 - interpolation과 날짜·숫자·byte 공통 formatter를 추가했다.
 - i18n 테스트 3개, UI 전체 테스트 41개와 production build가 통과했다.
+
+### Phase 10 Task 3 저장소 상태별 탐색 완료
+
+- 저장소가 없거나 연결이 끊겨도 Home, Files, Snapshots, Statistics, Settings 탐색 항목을 항상 유지한다.
+- 저장소가 필요한 화면에는 생성, 기존 저장소 추가, 연결 위치 찾기 동작을 제공하는 공통 안내 화면을 추가했다.
+- 상단 기본 동작을 상태에 따라 `Set up repository`, `Locate repository`, `New Backup`으로 구분했다.
+- 저장소 API 없이 앱 셸만 사용하는 기존 화면에서는 `New Backup` 동작을 그대로 유지한다.
+- AppShell·RepositoryLibrary 집중 테스트 12개, UI 전체 테스트 43개와 production build가 통과했다.

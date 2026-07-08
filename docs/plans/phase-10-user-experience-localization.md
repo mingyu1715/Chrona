@@ -115,13 +115,13 @@ test('keeps all destinations visible without a repository', async () => {
 });
 ```
 
-- [ ] Write tests for no registration, disconnected registration and active repository states.
-- [ ] Confirm tests fail against the current setup-only override.
-- [ ] Keep all five sidebar destinations stable.
-- [ ] Replace page content with `RepositoryRequiredState` only when the selected page requires a repository.
-- [ ] Change top action by state: `Set up repository`, `Locate repository`, `New Backup`.
-- [ ] Run AppShell and repository library tests.
-- [ ] Commit: `feat: add repository-aware empty states`.
+- [x] Write tests for no registration, disconnected registration and active repository states.
+- [x] Confirm tests fail against the current setup-only override.
+- [x] Keep all five sidebar destinations stable.
+- [x] Replace page content with `RepositoryRequiredState` only when the selected page requires a repository.
+- [x] Change top action by state: `Set up repository`, `Locate repository`, `New Backup`.
+- [x] Run AppShell and repository library tests.
+- [x] Commit: `feat: add repository-aware empty states`.
 
 ### Task 4: Settings Without An Active Repository
 
