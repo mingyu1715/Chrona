@@ -503,3 +503,10 @@
 - Pretendard Variable WOFF2와 OFL 1.1 라이선스를 저장소에 포함하고 CSS에서 로컬 asset만 참조한다.
 - production build에서 약 2.06MB WOFF2가 별도 asset으로 출력되는 것을 확인했다.
 - preferences/offline asset 테스트 4개, UI 전체 테스트 38개, TypeScript/Vite build, Rust check와 format 검증이 통과했다.
+
+### Phase 10 Task 2 한국어·영어 기반 완료
+
+- `system`, `ko`, `en` 설정을 `ko-KR`, `en-US` runtime locale로 해석하는 provider를 추가했다.
+- 영어 message key를 기준 타입으로 사용해 한국어 번역 누락이 TypeScript 오류가 되도록 구성했다.
+- interpolation과 날짜·숫자·byte 공통 formatter를 추가했다.
+- i18n 테스트 3개, UI 전체 테스트 41개와 production build가 통과했다.

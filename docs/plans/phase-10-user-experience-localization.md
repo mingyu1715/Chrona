@@ -84,12 +84,12 @@ export interface I18nValue {
 }
 ```
 
-- [ ] Test system locale resolution, explicit override, English fallback, interpolation and locale formatting.
-- [ ] Confirm the focused test fails because the provider is missing.
-- [ ] Define English keys first and type Korean as `Record<MessageKey, string>`.
-- [ ] Implement provider using preferences and `navigator.language`.
-- [ ] Run `npm test -- --run src/shared/i18n/I18nProvider.test.tsx` and `npm run build`.
-- [ ] Commit: `feat: add typed korean english localization`.
+- [x] Test system locale resolution, explicit override, English fallback, interpolation and locale formatting.
+- [x] Confirm the focused test fails because the provider is missing.
+- [x] Define English keys first and type Korean as `Record<MessageKey, string>`.
+- [x] Implement provider using preferences and `navigator.language`.
+- [x] Run `npm test -- --run src/shared/i18n/I18nProvider.test.tsx` and `npm run build`.
+- [x] Commit: `feat: add typed korean english localization`.
 
 ### Task 3: Stable Navigation And Repository-Required States
 
