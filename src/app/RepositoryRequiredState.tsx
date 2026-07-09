@@ -1,4 +1,5 @@
 import { FolderOpen, HardDrive, Plus } from 'lucide-react';
+import { useI18n } from '../shared/i18n/I18nProvider';
 
 interface RepositoryRequiredStateProps {
   workspace: string;
@@ -15,33 +16,35 @@ export function RepositoryRequiredState({
   onAddExistingRepository,
   onLocateRepository,
 }: RepositoryRequiredStateProps) {
+  const { t } = useI18n();
+
   return (
     <section className="repository-required" aria-labelledby="repository-required-title">
       <span className="repository-required__icon" aria-hidden="true">
         <HardDrive size={22} />
       </span>
       <div>
-        <h1 id="repository-required-title">{workspace} requires a repository</h1>
+        <h1 id="repository-required-title">{t('repository.requiredTitle', { workspace })}</h1>
         <p>
           {disconnected
-            ? 'The registered repository folder is unavailable.'
-            : 'Create a repository or add one that already exists.'}
+            ? t('repository.requiredDisconnected')
+            : t('repository.requiredSetup')}
         </p>
       </div>
       <div className="repository-required__actions">
         {disconnected && onLocateRepository && (
           <button type="button" onClick={onLocateRepository}>
             <FolderOpen size={16} aria-hidden="true" />
-            Locate repository
+            {t('repository.locate')}
           </button>
         )}
         <button type="button" onClick={onCreateRepository}>
           <Plus size={16} aria-hidden="true" />
-          Create repository
+          {t('repository.create')}
         </button>
         <button type="button" onClick={onAddExistingRepository}>
           <FolderOpen size={16} aria-hidden="true" />
-          Add existing repository
+          {t('repository.addExisting')}
         </button>
       </div>
     </section>

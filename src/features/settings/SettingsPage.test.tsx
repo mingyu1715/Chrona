@@ -85,7 +85,7 @@ test('replaces repository-specific settings with setup actions', async () => {
   expect(screen.queryByRole('combobox', { name: 'Compression mode' })).not.toBeInTheDocument();
 
   await user.click(screen.getByRole('button', { name: 'Repository health' }));
-  expect(screen.getByText('Select or set up a repository to verify its health.')).toBeInTheDocument();
+  expect(screen.getByText('Select or set up a repository to check repository health.')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Verify repository' })).not.toBeInTheDocument();
 });
 

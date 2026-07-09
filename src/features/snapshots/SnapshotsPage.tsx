@@ -2,6 +2,7 @@ import { ArchiveRestore, GitCompare, Plus, RefreshCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
+import { useI18n } from '../../shared/i18n/I18nProvider';
 import type { Snapshot, SnapshotIndexItem } from '../../shared/types/chrona';
 import { RestoreSnapshotDialog } from './RestoreSnapshotDialog';
 import { SnapshotComparePanel } from './SnapshotComparePanel';
@@ -14,6 +15,7 @@ interface SnapshotsPageProps {
 }
 
 export function SnapshotsPage({ api, repositoryPath, onNewBackup }: SnapshotsPageProps) {
+  const { t, formatBytes, formatDateTime, formatNumber } = useI18n();
   const [snapshots, setSnapshots] = useState<SnapshotIndexItem[]>([]);
   const [selected, setSelected] = useState<Snapshot | null>(null);
   const [mode, setMode] = useState<'detail' | 'compare'>('detail');
@@ -81,17 +83,17 @@ export function SnapshotsPage({ api, repositoryPath, onNewBackup }: SnapshotsPag
     <div className="snapshots-page">
       <header className="workspace-header snapshots-page__header">
         <div>
-          <h1>Snapshots</h1>
-          <p>Point-in-time backups stored in this repository</p>
+          <h1>{t('snapshots.title')}</h1>
+          <p>{t('snapshots.description')}</p>
         </div>
         <div className="snapshots-page__header-actions">
           <button type="button" disabled={loading} onClick={() => void refresh()}>
             <RefreshCcw size={16} aria-hidden="true" />
-            Refresh
+            {t('common.refresh')}
           </button>
           <button className="workspace-primary-action" type="button" onClick={onNewBackup}>
             <Plus size={16} aria-hidden="true" />
-            New backup
+            {t('backup.new')}
           </button>
         </div>
       </header>
@@ -101,15 +103,15 @@ export function SnapshotsPage({ api, repositoryPath, onNewBackup }: SnapshotsPag
       <div className="snapshots-workspace">
         <aside className="snapshots-list workspace-pane-scroll">
           <div className="snapshots-list__heading">
-            <strong>History</strong>
-            <span>{snapshots.length}</span>
+            <strong>{t('snapshots.history')}</strong>
+            <span>{formatNumber(snapshots.length)}</span>
           </div>
-          <ul aria-label="Snapshot list">
+          <ul aria-label={t('snapshots.list')}>
             {snapshots.map((snapshot) => (
               <li key={snapshot.id}>
                 <button
                   type="button"
-                  aria-label={`Open ${snapshot.name}`}
+                  aria-label={t('snapshots.open', { name: snapshot.name })}
                   aria-current={selected?.id === snapshot.id ? 'true' : undefined}
                   onClick={() => {
                     setMode('detail');
@@ -117,13 +119,13 @@ export function SnapshotsPage({ api, repositoryPath, onNewBackup }: SnapshotsPag
                   }}
                 >
                   <strong>{snapshot.name}</strong>
-                  <span>{formatDate(snapshot.createdAt)}</span>
-                  <small>{snapshot.fileCount.toLocaleString()} files · {formatBytes(snapshot.totalOriginalBytes)}</small>
+                  <span>{formatDateTime(snapshot.createdAt)}</span>
+                  <small>{t('files.fileCount', { count: formatNumber(snapshot.fileCount) })} · {formatBytes(snapshot.totalOriginalBytes)}</small>
                 </button>
               </li>
             ))}
           </ul>
-          {!loading && snapshots.length === 0 && <p>No snapshots</p>}
+          {!loading && snapshots.length === 0 && <p>{t('snapshots.noSnapshots')}</p>}
         </aside>
 
         <main className="snapshots-detail workspace-pane-scroll">
@@ -136,7 +138,7 @@ export function SnapshotsPage({ api, repositoryPath, onNewBackup }: SnapshotsPag
               onRestore={() => setRestoreOpen(true)}
             />
           ) : (
-            <div className="snapshots-detail__empty">{loading ? 'Loading snapshot history' : 'Select a snapshot'}</div>
+            <div className="snapshots-detail__empty">{loading ? t('snapshots.loadingHistory') : t('snapshots.selectSnapshot')}</div>
           )}
         </main>
       </div>
@@ -162,41 +164,33 @@ function SnapshotDetail({
   onCompare: () => void;
   onRestore: () => void;
 }) {
+  const { t, formatBytes, formatDateTime, formatNumber } = useI18n();
+
   return (
     <article className="snapshot-detail-view">
       <header>
         <div>
-          <span>{formatDate(snapshot.createdAt)}</span>
+          <span>{formatDateTime(snapshot.createdAt)}</span>
           <h2>{snapshot.name}</h2>
           <p>{snapshot.sourceRoot}</p>
         </div>
         <div>
-          <button type="button" onClick={onCompare}><GitCompare size={16} aria-hidden="true" />Compare snapshots</button>
-          <button type="button" onClick={onRestore}><ArchiveRestore size={16} aria-hidden="true" />Restore snapshot</button>
+          <button type="button" onClick={onCompare}><GitCompare size={16} aria-hidden="true" />{t('snapshots.compare')}</button>
+          <button type="button" onClick={onRestore}><ArchiveRestore size={16} aria-hidden="true" />{t('snapshots.restoreSnapshot')}</button>
         </div>
       </header>
       <dl>
-        <div><dt>Files</dt><dd>{snapshot.summary.fileCount.toLocaleString()}</dd></div>
-        <div><dt>Logical size</dt><dd>{formatBytes(snapshot.summary.totalOriginalBytes)}</dd></div>
-        <div><dt>New storage</dt><dd>{formatBytes(snapshot.summary.newStoredBytes)}</dd></div>
-        <div><dt>Reused blocks</dt><dd>{snapshot.summary.reusedBlockCount.toLocaleString()}</dd></div>
+        <div><dt>{t('common.files')}</dt><dd>{formatNumber(snapshot.summary.fileCount)}</dd></div>
+        <div><dt>{t('common.logicalSize')}</dt><dd>{formatBytes(snapshot.summary.totalOriginalBytes)}</dd></div>
+        <div><dt>{t('snapshots.newStorage')}</dt><dd>{formatBytes(snapshot.summary.newStoredBytes)}</dd></div>
+        <div><dt>{t('snapshots.reusedBlocks')}</dt><dd>{formatNumber(snapshot.summary.reusedBlockCount)}</dd></div>
       </dl>
       <section>
-        <h3>Files</h3>
+        <h3>{t('common.files')}</h3>
         {snapshot.files.length > 0 ? (
           <ul>{snapshot.files.map((file) => <li key={file.relativePath}><span>{file.relativePath}</span><small>{formatBytes(file.sizeBytes)}</small></li>)}</ul>
-        ) : <p>No files recorded</p>}
+        ) : <p>{t('snapshots.noFiles')}</p>}
       </section>
     </article>
   );
-}
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KiB`;
-  return `${(bytes / 1024 ** 2).toFixed(1)} MiB`;
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }

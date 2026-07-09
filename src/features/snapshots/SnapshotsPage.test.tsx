@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 
@@ -97,6 +97,8 @@ test('restore opens a separate dialog and restores to the selected target', asyn
 
   await user.click(screen.getByRole('button', { name: /choose target/i }));
   await user.click(screen.getByRole('button', { name: /^restore$/i }));
+  const confirmation = screen.getByRole('dialog', { name: /restore presentation ready\?/i });
+  await user.click(within(confirmation).getByRole('button', { name: /^restore$/i }));
   await waitFor(() => {
     expect(api.restoreSnapshot).toHaveBeenCalledWith('/tmp/chrona-repo', 'ready', '/tmp/restore');
   });

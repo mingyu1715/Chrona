@@ -15,6 +15,7 @@ import {
   desktopActions as defaultDesktopActions,
   type DesktopActions,
 } from '../../shared/desktop/desktopActions';
+import { useI18n } from '../../shared/i18n/I18nProvider';
 
 interface RepositoryLibraryMenuProps {
   api: ChronaApi;
@@ -35,6 +36,7 @@ export function RepositoryLibraryMenu({
   onManageRepositories,
   desktopActions = defaultDesktopActions,
 }: RepositoryLibraryMenuProps) {
+  const { t } = useI18n();
   const active = controller.activeRepository?.registration;
   const repositories = controller.library?.repositories ?? [];
 
@@ -59,11 +61,13 @@ export function RepositoryLibraryMenu({
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`${active?.displayName ?? 'Choose repository'} repository menu`}
+        aria-label={t('repository.menuLabel', {
+          name: active?.displayName ?? t('repository.chooseMenuLabel'),
+        })}
         onClick={() => onOpenChange(!open)}
       >
         <HardDrive size={16} aria-hidden="true" />
-        <span>{active?.displayName ?? 'Choose repository'}</span>
+        <span>{active?.displayName ?? t('repository.chooseMenuLabel')}</span>
         <ChevronDown size={15} aria-hidden="true" />
       </button>
 
@@ -79,12 +83,12 @@ export function RepositoryLibraryMenu({
                     type="button"
                     role="menuitem"
                     onClick={() => void relink(repository.repositoryId)}
-                    aria-label={`Locate ${repository.displayName} folder`}
+                    aria-label={t('repository.locateFolder', { name: repository.displayName })}
                   >
                     <FolderSearch size={16} aria-hidden="true" />
                     <span>
                       <strong>{repository.displayName}</strong>
-                      <small>Folder unavailable</small>
+                      <small>{t('repository.folderUnavailable')}</small>
                     </span>
                   </button>
                 );
@@ -105,7 +109,7 @@ export function RepositoryLibraryMenu({
                     <strong>{repository.displayName}</strong>
                     <small>{repository.path}</small>
                   </span>
-                  {isActive && <Check size={16} aria-label="Active repository" />}
+                  {isActive && <Check size={16} aria-label={t('repository.activeLabel')} />}
                 </button>
               );
             })}
@@ -123,7 +127,7 @@ export function RepositoryLibraryMenu({
                   }}
                 >
                   <FolderOpen size={16} aria-hidden="true" />
-                  Show in file explorer
+                  {t('repository.showInExplorer')}
                 </button>
                 <button
                   type="button"
@@ -131,21 +135,21 @@ export function RepositoryLibraryMenu({
                   onClick={() => void desktopActions.copyText(active.path)}
                 >
                   <Copy size={16} aria-hidden="true" />
-                  Copy repository path
+                  {t('repository.copyPath')}
                 </button>
               </>
             )}
             <button type="button" role="menuitem" onClick={onNewRepository}>
               <Plus size={16} aria-hidden="true" />
-              New repository
+              {t('repository.new')}
             </button>
             <button type="button" role="menuitem" onClick={() => void addExisting()}>
               <HardDrive size={16} aria-hidden="true" />
-              Add existing repository
+              {t('repository.addExisting')}
             </button>
             <button type="button" role="menuitem" onClick={onManageRepositories}>
               <Settings size={16} aria-hidden="true" />
-              Manage repositories
+              {t('repository.manage')}
             </button>
           </div>
         </div>

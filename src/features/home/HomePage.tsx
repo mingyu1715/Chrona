@@ -2,6 +2,7 @@ import { BarChart3, Clock3, Folder, Pin, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
+import { useI18n } from '../../shared/i18n/I18nProvider';
 import type { BackupEntryRequest } from '../backup/NewBackupDialog';
 import type {
   AccessNode,
@@ -25,6 +26,7 @@ export function HomePage({
   onNewBackup,
   onOpenStatistics,
 }: HomePageProps) {
+  const { t, formatBytes, formatDateTime, formatNumber } = useI18n();
   const [home, setHome] = useState<HomeSummary | null>(null);
   const [overview, setOverview] = useState<RepositoryStatisticsOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +65,10 @@ export function HomePage({
   }, [home]);
   const recentSourcePath = home?.recentSources.find((item) => item.path)?.path ?? undefined;
   const backupLabel = !overview
-    ? 'New Backup'
+    ? t('backup.new')
     : !overview.hasSnapshot
-      ? 'Create first backup'
-      : recentSourcePath ? 'Back up again' : 'New Backup';
+      ? t('backup.first')
+      : recentSourcePath ? t('backup.repeat') : t('backup.new');
 
   function openBackup() {
     if (!overview?.hasSnapshot) {
@@ -83,7 +85,7 @@ export function HomePage({
     <div className="home-page">
       <header className="workspace-header">
         <div>
-          <h1>Home</h1>
+          <h1>{t('nav.home')}</h1>
           <p>{repositoryPath}</p>
         </div>
         <button className="workspace-primary-action" type="button" onClick={openBackup}>
@@ -97,39 +99,39 @@ export function HomePage({
       <section className="home-overview" aria-labelledby="home-overview-title">
         <div className="home-overview__heading">
           <div>
-            <span>Current repository</span>
-            <h2 id="home-overview-title">Storage overview</h2>
+            <span>{t('home.currentRepository')}</span>
+            <h2 id="home-overview-title">{t('home.storageOverview')}</h2>
           </div>
           <button type="button" onClick={onOpenStatistics}>
             <BarChart3 size={16} aria-hidden="true" />
-            View statistics
+            {t('home.viewStatistics')}
           </button>
         </div>
 
         <dl className="home-overview__metrics">
           <div>
-            <dt>Files</dt>
-            <dd>{overview?.latestFileCount.toLocaleString() ?? '-'}</dd>
+            <dt>{t('common.files')}</dt>
+            <dd>{overview ? formatNumber(overview.latestFileCount) : '-'}</dd>
           </div>
           <div>
-            <dt>Logical size</dt>
+            <dt>{t('common.logicalSize')}</dt>
             <dd>{overview ? formatBytes(overview.latestLogicalBytes) : '-'}</dd>
           </div>
           <div>
-            <dt>Unique blocks</dt>
-            <dd>{overview?.latestUniqueBlockCount.toLocaleString() ?? '-'}</dd>
+            <dt>{t('common.uniqueBlocks')}</dt>
+            <dd>{overview ? formatNumber(overview.latestUniqueBlockCount) : '-'}</dd>
           </div>
           <div>
-            <dt>Last backup</dt>
-            <dd>{formatDate(overview?.latestSnapshotCreatedAt ?? null)}</dd>
+            <dt>{t('home.lastBackup')}</dt>
+            <dd>{overview?.latestSnapshotCreatedAt ? formatDateTime(overview.latestSnapshotCreatedAt) : t('common.noBackups')}</dd>
           </div>
         </dl>
       </section>
 
       <section className="home-recent" aria-labelledby="home-recent-title">
         <div className="home-recent__heading">
-          <h2 id="home-recent-title">Recent work</h2>
-          <span>{recentItems.length} items</span>
+          <h2 id="home-recent-title">{t('home.recentWork')}</h2>
+          <span>{t('home.itemCount', { count: recentItems.length })}</span>
         </div>
         {recentItems.length > 0 ? (
           <ul>
@@ -138,7 +140,7 @@ export function HomePage({
         ) : (
           <div className="home-recent__empty">
             <Clock3 size={19} aria-hidden="true" />
-            <span>No recent sources or snapshots</span>
+            <span>{t('home.noRecent')}</span>
           </div>
         )}
       </section>
@@ -147,6 +149,8 @@ export function HomePage({
 }
 
 function RecentItem({ item }: { item: AccessNode }) {
+  const { t, formatDateTime } = useI18n();
+
   return (
     <li>
       <span className="home-recent__icon" aria-hidden="true">
@@ -156,25 +160,8 @@ function RecentItem({ item }: { item: AccessNode }) {
         <strong>{item.label}</strong>
         <small>{item.path ?? item.lastAction}</small>
       </span>
-      <time dateTime={item.lastAccessedAt}>{formatDate(item.lastAccessedAt)}</time>
-      {item.pinned && <Pin size={15} aria-label="Pinned" />}
+      <time dateTime={item.lastAccessedAt}>{formatDateTime(item.lastAccessedAt)}</time>
+      {item.pinned && <Pin size={15} aria-label={t('common.pinned')} />}
     </li>
   );
-}
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KiB`;
-  if (bytes < 1024 ** 3) return `${(bytes / 1024 ** 2).toFixed(1)} MiB`;
-  return `${(bytes / 1024 ** 3).toFixed(1)} GiB`;
-}
-
-function formatDate(value: string | null) {
-  if (!value) return 'No backups';
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
 }

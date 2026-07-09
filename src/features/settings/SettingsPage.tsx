@@ -56,19 +56,20 @@ export function SettingsPage({
   onRelinkRepository,
   onRemoveRepository,
 }: SettingsPageProps) {
+  const { t } = useI18n();
   const [section, setSection] = useState<Section>('General');
 
   return (
     <div className="settings-page">
       <header className="workspace-header">
         <div>
-          <h1>Settings</h1>
-          <p>Application preferences and repository management</p>
+          <h1>{t('settings.title')}</h1>
+          <p>{t('settings.description')}</p>
         </div>
       </header>
 
       <div className="settings-layout">
-        <nav aria-label="Settings sections">
+        <nav aria-label={t('settings.sections')}>
           {sections.map((name) => (
             <button
               key={name}
@@ -76,7 +77,7 @@ export function SettingsPage({
               aria-current={section === name ? 'page' : undefined}
               onClick={() => setSection(name)}
             >
-              {name}
+              {sectionLabel(t, name)}
             </button>
           ))}
         </nav>
@@ -139,13 +140,13 @@ function GeneralSettings() {
       <div className="settings-section__heading">
         <Languages size={20} aria-hidden="true" />
         <div>
-          <h2 id="settings-general-title">General</h2>
-          <p>Language and appearance apply across Chrona.</p>
+          <h2 id="settings-general-title">{t('settings.general')}</h2>
+          <p>{t('settings.generalDescription')}</p>
         </div>
       </div>
 
       <div className="settings-field">
-        <label htmlFor="settings-language">Language</label>
+        <label htmlFor="settings-language">{t('settings.language')}</label>
         <select
           id="settings-language"
           value={preferences.language}
@@ -158,7 +159,7 @@ function GeneralSettings() {
       </div>
 
       <fieldset className="settings-field">
-        <legend>Theme</legend>
+        <legend>{t('settings.theme')}</legend>
         <div className="settings-segmented">
           {themes.map(({ value, label, icon: Icon }) => (
             <button
@@ -192,6 +193,7 @@ function StorageSettings({
   | 'onAddExistingRepository'
   | 'onSelectRepository'
 >) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<CompressionMode>(
     repository?.manifest.blockStrategy.compressionMode ?? 'standard',
   );
@@ -216,14 +218,14 @@ function StorageSettings({
       <div className="settings-section__heading">
         <Database size={20} aria-hidden="true" />
         <div>
-          <h2 id="settings-storage-title">Storage</h2>
-          <p>Control how new blocks are stored in the active repository.</p>
+          <h2 id="settings-storage-title">{t('settings.storage')}</h2>
+          <p>{t('settings.storageDescription')}</p>
         </div>
       </div>
       {error && <p className="settings-error" role="alert">{error}</p>}
       {!repository ? (
         <RepositorySelectionRequired
-          message="Select or set up a repository to manage storage."
+          message={t('settings.storageRequired')}
           library={library}
           onCreateRepository={onCreateRepository}
           onAddExistingRepository={onAddExistingRepository}
@@ -231,19 +233,19 @@ function StorageSettings({
         />
       ) : (
         <div className="settings-field">
-          <label htmlFor="settings-compression">Compression mode</label>
+          <label htmlFor="settings-compression">{t('settings.compressionMode')}</label>
           <select
             id="settings-compression"
             value={mode}
             onChange={(event) => setMode(event.target.value as CompressionMode)}
           >
-            <option value="standard">Zstd standard</option>
-            <option value="fast">LZ4 fast</option>
-            <option value="off">Off</option>
+            <option value="standard">{t('settings.compressionStandard')}</option>
+            <option value="fast">{t('settings.compressionFast')}</option>
+            <option value="off">{t('common.off')}</option>
           </select>
           <button className="settings-primary-button" type="button" onClick={() => void applyMode()}>
             <Save size={16} aria-hidden="true" />
-            Apply
+            {t('common.apply')}
           </button>
         </div>
       )}
@@ -266,6 +268,7 @@ function RepositoryHealthSettings({
   | 'onAddExistingRepository'
   | 'onSelectRepository'
 >) {
+  const { t } = useI18n();
   const [integrity, setIntegrity] = useState<IntegrityReport | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -284,14 +287,14 @@ function RepositoryHealthSettings({
       <div className="settings-section__heading">
         <CheckCircle2 size={20} aria-hidden="true" />
         <div>
-          <h2 id="settings-health-title">Repository health</h2>
-          <p>Check snapshot metadata and referenced blocks.</p>
+          <h2 id="settings-health-title">{t('settings.health')}</h2>
+          <p>{t('settings.healthDescription')}</p>
         </div>
       </div>
       {error && <p className="settings-error" role="alert">{error}</p>}
       {!repository ? (
         <RepositorySelectionRequired
-          message="Select or set up a repository to verify its health."
+          message={t('settings.healthRequired')}
           library={library}
           onCreateRepository={onCreateRepository}
           onAddExistingRepository={onAddExistingRepository}
@@ -301,7 +304,7 @@ function RepositoryHealthSettings({
         <div className="settings-health-actions">
           <button className="settings-primary-button" type="button" onClick={() => void verify()}>
             <CheckCircle2 size={16} aria-hidden="true" />
-            Verify repository
+            {t('settings.verifyRepository')}
           </button>
           {integrity && (
             <p role="status">
@@ -323,20 +326,22 @@ function RepositorySelectionRequired({
 }: Pick<SettingsPageProps, 'library' | 'onCreateRepository' | 'onAddExistingRepository' | 'onSelectRepository'> & {
   message: string;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="settings-required">
       <p>{message}</p>
       {library.repositories.length > 0 && (
         <label>
-          Repository
+          {t('common.repository')}
           <select
-            aria-label="Select repository"
+            aria-label={t('settings.selectRepository')}
             defaultValue=""
             onChange={(event) => {
               if (event.target.value) onSelectRepository(event.target.value);
             }}
           >
-            <option value="" disabled>Choose a repository</option>
+            <option value="" disabled>{t('settings.chooseRepository')}</option>
             {library.repositories.map((item) => (
               <option
                 key={item.repositoryId}
@@ -361,16 +366,28 @@ function RepositorySetupActions({
   onCreateRepository,
   onAddExistingRepository,
 }: Pick<SettingsPageProps, 'onCreateRepository' | 'onAddExistingRepository'>) {
+  const { t } = useI18n();
+
   return (
     <div className="settings-setup-actions">
       <button type="button" onClick={onCreateRepository}>
         <Plus size={16} aria-hidden="true" />
-        Create repository
+        {t('repository.create')}
       </button>
       <button type="button" onClick={onAddExistingRepository}>
         <FolderPlus size={16} aria-hidden="true" />
-        Add existing repository
+        {t('repository.addExisting')}
       </button>
     </div>
   );
+}
+
+function sectionLabel(
+  t: (key: 'settings.general' | 'repository.managementTitle' | 'settings.storage' | 'settings.health') => string,
+  section: Section,
+) {
+  if (section === 'General') return t('settings.general');
+  if (section === 'Repositories') return t('repository.managementTitle');
+  if (section === 'Storage') return t('settings.storage');
+  return t('settings.health');
 }

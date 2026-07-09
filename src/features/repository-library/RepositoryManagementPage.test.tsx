@@ -89,8 +89,12 @@ test('renames and removes only the selected registration', async () => {
   expect(actions.onRename).toHaveBeenCalledWith('repo-id', 'School Archive');
 
   await user.click(screen.getByRole('button', { name: 'Remove Project Files from Chrona' }));
-  expect(actions.onRemove).toHaveBeenCalledWith('projects-id');
+  expect(actions.onRemove).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog', { name: 'Remove Project Files?' })).toBeInTheDocument();
   expect(screen.queryByText(/delete files/i)).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole('button', { name: 'Remove' }));
+  expect(actions.onRemove).toHaveBeenCalledWith('projects-id');
 });
 
 test('reveals and copies a registered repository path', async () => {

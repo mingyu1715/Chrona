@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { GitCompare, ListTree } from 'lucide-react';
 
 import { chronaApi, type ChronaApi } from '../../shared/api/chronaApi';
+import { useI18n } from '../../shared/i18n/I18nProvider';
 import type { SnapshotComparison, SnapshotIndexItem } from '../../shared/types/chrona';
 
 interface SnapshotComparePanelProps {
@@ -17,6 +18,7 @@ export function SnapshotComparePanel({
   snapshots,
   disabled = false,
 }: SnapshotComparePanelProps) {
+  const { t, formatBytes, formatNumber } = useI18n();
   const [baseSnapshotId, setBaseSnapshotId] = useState('');
   const [targetSnapshotId, setTargetSnapshotId] = useState('');
   const [comparison, setComparison] = useState<SnapshotComparison | null>(null);
@@ -43,8 +45,8 @@ export function SnapshotComparePanel({
   }, [snapshots]);
 
   const selectedPairLabel = useMemo(() => {
-    const base = snapshots.find((snapshot) => snapshot.id === baseSnapshotId)?.name ?? 'Base';
-    const target = snapshots.find((snapshot) => snapshot.id === targetSnapshotId)?.name ?? 'Target';
+    const base = snapshots.find((snapshot) => snapshot.id === baseSnapshotId)?.name ?? t('compare.base');
+    const target = snapshots.find((snapshot) => snapshot.id === targetSnapshotId)?.name ?? t('compare.target');
     return `${base} → ${target}`;
   }, [baseSnapshotId, snapshots, targetSnapshotId]);
 
@@ -89,12 +91,12 @@ export function SnapshotComparePanel({
     <section className="snapshot-compare" aria-labelledby="snapshot-compare-heading">
       <div className="snapshot-detail-header">
         <GitCompare size={18} />
-        <h3 id="snapshot-compare-heading">Compare snapshots</h3>
+        <h3 id="snapshot-compare-heading">{t('compare.title')}</h3>
       </div>
 
       <div className="compare-controls">
         <label className="field">
-          <span>Base snapshot</span>
+          <span>{t('compare.base')}</span>
           <select
             value={baseSnapshotId}
             onChange={(event) => setBaseSnapshotId(event.target.value)}
@@ -109,7 +111,7 @@ export function SnapshotComparePanel({
         </label>
 
         <label className="field">
-          <span>Target snapshot</span>
+          <span>{t('compare.target')}</span>
           <select
             value={targetSnapshotId}
             onChange={(event) => setTargetSnapshotId(event.target.value)}
@@ -126,9 +128,9 @@ export function SnapshotComparePanel({
         <div className="compare-action">
           <button type="button" disabled={!canCompare} onClick={compareSnapshots}>
             <GitCompare size={16} />
-            Compare Snapshots
+            {t('compare.action')}
           </button>
-          <small>{snapshots.length >= 2 ? selectedPairLabel : 'Need at least two snapshots'}</small>
+          <small>{snapshots.length >= 2 ? selectedPairLabel : t('compare.needTwo')}</small>
         </div>
       </div>
 
@@ -142,28 +144,28 @@ export function SnapshotComparePanel({
         <>
           <dl className="result-grid compact-grid compare-summary">
             <div>
-              <dt>Added</dt>
-              <dd>{comparison.summary.addedFileCount} added</dd>
+              <dt>{t('compare.added')}</dt>
+              <dd>{t('compare.addedCount', { count: formatNumber(comparison.summary.addedFileCount) })}</dd>
             </div>
             <div>
-              <dt>Deleted</dt>
-              <dd>{comparison.summary.deletedFileCount} deleted</dd>
+              <dt>{t('compare.deleted')}</dt>
+              <dd>{t('compare.deletedCount', { count: formatNumber(comparison.summary.deletedFileCount) })}</dd>
             </div>
             <div>
-              <dt>Modified</dt>
-              <dd>{comparison.summary.modifiedFileCount} modified</dd>
+              <dt>{t('compare.modified')}</dt>
+              <dd>{t('compare.modifiedCount', { count: formatNumber(comparison.summary.modifiedFileCount) })}</dd>
             </div>
             <div>
-              <dt>Unchanged</dt>
-              <dd>{comparison.summary.unchangedFileCount} unchanged</dd>
+              <dt>{t('compare.unchanged')}</dt>
+              <dd>{t('compare.unchangedCount', { count: formatNumber(comparison.summary.unchangedFileCount) })}</dd>
             </div>
             <div>
-              <dt>Before / after</dt>
+              <dt>{t('compare.beforeAfter')}</dt>
               <dd>{formatBytes(comparison.summary.totalBeforeBytes)} → {formatBytes(comparison.summary.totalAfterBytes)}</dd>
             </div>
             <div>
-              <dt>Block refs</dt>
-              <dd>{comparison.summary.sharedBlockReferences} shared refs</dd>
+              <dt>{t('compare.blockRefs')}</dt>
+              <dd>{t('compare.sharedRefs', { count: formatNumber(comparison.summary.sharedBlockReferences) })}</dd>
             </div>
           </dl>
 
@@ -175,7 +177,10 @@ export function SnapshotComparePanel({
                   <span className={`change-pill change-pill-${file.changeType}`}>
                     {file.changeType}
                   </span>
-                  {file.blocks.addedBlockReferences} added / {file.blocks.removedBlockReferences} removed
+                  {t('compare.refsAddedRemoved', {
+                    added: formatNumber(file.blocks.addedBlockReferences),
+                    removed: formatNumber(file.blocks.removedBlockReferences),
+                  })}
                 </small>
               </li>
             ))}
@@ -185,21 +190,11 @@ export function SnapshotComparePanel({
         <div className="empty-state empty-state-compact compare-empty">
           <span><ListTree size={20} /></span>
           <div>
-            <strong>No comparison yet</strong>
-            <p>Select two snapshots and compare their file/block references.</p>
+            <strong>{t('compare.noComparison')}</strong>
+            <p>{t('compare.emptyDescription')}</p>
           </div>
         </div>
       )}
     </section>
   );
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) {
-    return `${bytes.toLocaleString()} bytes`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KiB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
 }

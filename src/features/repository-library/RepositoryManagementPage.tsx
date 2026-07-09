@@ -18,6 +18,8 @@ import {
   desktopActions as defaultDesktopActions,
   type DesktopActions,
 } from '../../shared/desktop/desktopActions';
+import { useI18n } from '../../shared/i18n/I18nProvider';
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 
 type RepositorySort = 'recent' | 'name' | 'status';
 
@@ -44,10 +46,12 @@ export function RepositoryManagementPage({
   onRemove,
   desktopActions = defaultDesktopActions,
 }: RepositoryManagementPageProps) {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<RepositorySort>('recent');
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState('');
+  const [pendingRemoval, setPendingRemoval] = useState<RepositoryLibraryItem | null>(null);
 
   const visibleRepositories = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -84,18 +88,18 @@ export function RepositoryManagementPage({
         <div className="settings-section__title">
           <Database size={20} aria-hidden="true" />
           <div>
-            <h2 id="settings-repositories-title">Repositories</h2>
-            <p>Find, switch, rename, or reconnect registered locations.</p>
+            <h2 id="settings-repositories-title">{t('repository.managementTitle')}</h2>
+            <p>{t('repository.managementDescription')}</p>
           </div>
         </div>
         <div className="settings-setup-actions">
           <button type="button" onClick={onCreateRepository}>
             <Plus size={16} aria-hidden="true" />
-            Create repository
+            {t('repository.create')}
           </button>
           <button type="button" onClick={onAddExistingRepository}>
             <FolderPlus size={16} aria-hidden="true" />
-            Add existing repository
+            {t('repository.addExisting')}
           </button>
         </div>
       </div>
@@ -103,33 +107,33 @@ export function RepositoryManagementPage({
       <div className="repository-management__toolbar">
         <label className="repository-management__search">
           <Search size={16} aria-hidden="true" />
-          <span className="sr-only">Search repositories</span>
+          <span className="sr-only">{t('repository.searchLabel')}</span>
           <input
             type="search"
-            aria-label="Search repositories"
+            aria-label={t('repository.searchLabel')}
             value={query}
-            placeholder="Search name or path"
+            placeholder={t('repository.searchPlaceholder')}
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
         <label>
-          <span className="sr-only">Sort repositories</span>
+          <span className="sr-only">{t('repository.sortLabel')}</span>
           <select
-            aria-label="Sort repositories"
+            aria-label={t('repository.sortLabel')}
             value={sort}
             onChange={(event) => setSort(event.target.value as RepositorySort)}
           >
-            <option value="recent">Recently used</option>
-            <option value="name">Name</option>
-            <option value="status">Connection status</option>
+            <option value="recent">{t('repository.sortRecent')}</option>
+            <option value="name">{t('common.name')}</option>
+            <option value="status">{t('repository.sortStatus')}</option>
           </select>
         </label>
       </div>
 
       {repositories.length === 0 ? (
-        <p className="settings-empty">No repositories are registered yet.</p>
+        <p className="settings-empty">{t('repository.empty')}</p>
       ) : visibleRepositories.length === 0 ? (
-        <p className="settings-empty">No repositories match this search.</p>
+        <p className="settings-empty">{t('repository.noMatches')}</p>
       ) : (
         <ul className="settings-repository-list">
           {visibleRepositories.map((repository) => {
@@ -141,9 +145,9 @@ export function RepositoryManagementPage({
                 <div className="settings-row__identity">
                   {renaming ? (
                     <label className="repository-management__rename">
-                      <span>Repository name</span>
+                      <span>{t('repository.name')}</span>
                       <input
-                        aria-label="Repository name"
+                        aria-label={t('repository.name')}
                         value={draftName}
                         autoFocus
                         onChange={(event) => setDraftName(event.target.value)}
@@ -169,13 +173,13 @@ export function RepositoryManagementPage({
                         disabled={!draftName.trim()}
                         onClick={() => saveName(repository.repositoryId)}
                       >
-                        Save name
+                        {t('repository.saveName')}
                       </button>
                       <button
                         className="settings-icon-button"
                         type="button"
-                        aria-label="Cancel rename"
-                        title="Cancel"
+                        aria-label={t('repository.cancelRename')}
+                        title={t('common.cancel')}
                         onClick={() => setRenamingId(null)}
                       >
                         <X size={16} aria-hidden="true" />
@@ -188,8 +192,8 @@ export function RepositoryManagementPage({
                           <button
                             className="settings-icon-button"
                             type="button"
-                            aria-label={`Show ${repository.displayName} in file explorer`}
-                            title="Show in Finder or File Explorer"
+                            aria-label={t('repository.showNamedInExplorer', { name: repository.displayName })}
+                            title={t('backup.showInExplorerTitle')}
                             onClick={() => void desktopActions.revealPath(repository.path)}
                           >
                             <FolderOpen size={16} aria-hidden="true" />
@@ -197,8 +201,8 @@ export function RepositoryManagementPage({
                           <button
                             className="settings-icon-button"
                             type="button"
-                            aria-label={`Copy ${repository.displayName} path`}
-                            title="Copy path"
+                            aria-label={t('repository.copyNamedPath', { name: repository.displayName })}
+                            title={t('common.copyPath')}
                             onClick={() => void desktopActions.copyText(repository.path)}
                           >
                             <Copy size={16} aria-hidden="true" />
@@ -208,31 +212,31 @@ export function RepositoryManagementPage({
                       {active ? (
                         <span className="settings-current">
                           <CheckCircle2 size={15} aria-hidden="true" />
-                          Active
+                          {t('common.active')}
                         </span>
                       ) : repository.connectionState === 'connected' ? (
                         <button
                           type="button"
-                          aria-label={`Use ${repository.displayName}`}
+                          aria-label={t('repository.useNamed', { name: repository.displayName })}
                           onClick={() => onActivate(repository.repositoryId)}
                         >
-                          Use
+                          {t('common.use')}
                         </button>
                       ) : (
                         <button
                           type="button"
-                          aria-label={`Locate ${repository.displayName} folder`}
+                          aria-label={t('repository.locateFolder', { name: repository.displayName })}
                           onClick={() => onRelink(repository.repositoryId)}
                         >
                           <FolderSearch size={16} aria-hidden="true" />
-                          Locate
+                          {t('common.locate')}
                         </button>
                       )}
                       <button
                         className="settings-icon-button"
                         type="button"
-                        aria-label={`Rename ${repository.displayName}`}
-                        title="Rename"
+                        aria-label={t('repository.renameNamed', { name: repository.displayName })}
+                        title={t('common.rename')}
                         onClick={() => beginRename(repository)}
                       >
                         <Pencil size={16} aria-hidden="true" />
@@ -240,9 +244,9 @@ export function RepositoryManagementPage({
                       <button
                         className="settings-icon-button"
                         type="button"
-                        aria-label={`Remove ${repository.displayName} from Chrona`}
-                        title="Remove from Chrona"
-                        onClick={() => onRemove(repository.repositoryId)}
+                        aria-label={t('repository.removeNamed', { name: repository.displayName })}
+                        title={t('repository.removeNamed', { name: repository.displayName })}
+                        onClick={() => setPendingRemoval(repository)}
                       >
                         <Trash2 size={16} aria-hidden="true" />
                       </button>
@@ -253,6 +257,21 @@ export function RepositoryManagementPage({
             );
           })}
         </ul>
+      )}
+      {pendingRemoval && (
+        <ConfirmDialog
+          title={t('repository.removeTitle', { name: pendingRemoval.displayName })}
+          description={t('repository.removeDescription')}
+          confirmLabel={t('common.remove')}
+          cancelLabel={t('common.cancel')}
+          intent="danger"
+          returnFocusSelector={`[aria-label="Remove ${pendingRemoval.displayName} from Chrona"]`}
+          onCancel={() => setPendingRemoval(null)}
+          onConfirm={() => {
+            onRemove(pendingRemoval.repositoryId);
+            setPendingRemoval(null);
+          }}
+        />
       )}
     </section>
   );

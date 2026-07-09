@@ -21,6 +21,19 @@ export interface I18nValue {
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
+const defaultI18n: I18nValue = {
+  locale: 'en-US',
+  t(key, values = {}) {
+    let message: string = englishMessages[key];
+    for (const [name, replacement] of Object.entries(values)) {
+      message = message.replaceAll(`{${name}}`, String(replacement));
+    }
+    return message;
+  },
+  formatBytes: (bytes) => formatBytesValue('en-US', bytes),
+  formatDateTime: (date) => formatDateTimeValue('en-US', date),
+  formatNumber: (number) => formatNumberValue('en-US', number),
+};
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { preferences } = useAppPreferences();
@@ -34,12 +47,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return {
       locale,
       t(key, values = {}) {
-        const template = messages[key] ?? englishMessages[key];
-        return Object.entries(values).reduce(
-          (message, [name, replacement]) =>
-            message.replaceAll(`{${name}}`, String(replacement)),
-          template,
-        );
+        let message: string = messages[key] ?? englishMessages[key];
+        for (const [name, replacement] of Object.entries(values)) {
+          message = message.replaceAll(`{${name}}`, String(replacement));
+        }
+        return message;
       },
       formatBytes: (bytes) => formatBytesValue(locale, bytes),
       formatDateTime: (date) => formatDateTimeValue(locale, date),
@@ -52,6 +64,5 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
 export function useI18n() {
   const value = useContext(I18nContext);
-  if (!value) throw new Error('useI18n must be used inside I18nProvider');
-  return value;
+  return value ?? defaultI18n;
 }

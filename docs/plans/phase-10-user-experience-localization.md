@@ -271,13 +271,13 @@ interface NewBackupDialogProps {
 - Create: `src/shared/ui/ConfirmDialog.tsx`
 - Create: `src/shared/ui/ConfirmDialog.test.tsx`
 
-- [ ] Add a test that scans active TSX files for unmanaged user-facing literals using an explicit allowlist.
-- [ ] Replace active English literals with message keys; do not translate metadata values or paths.
-- [ ] Add confirmation dialogs for registration removal and restore.
-- [ ] Add Escape close, opener focus return and busy double-submit protection tests.
-- [ ] Ensure empty data and zero search results have different messages/actions.
-- [ ] Run `npm test -- --run` and `npm run build`.
-- [ ] Commit: `feat: localize and refine desktop workflows`.
+- [x] Add a test that scans active TSX files for unmanaged user-facing literals using an explicit allowlist.
+- [x] Replace active English literals with message keys; do not translate metadata values or paths.
+- [x] Add confirmation dialogs for registration removal and restore.
+- [x] Add Escape close, opener focus return and busy double-submit protection tests.
+- [x] Ensure empty data and zero search results have different messages/actions.
+- [x] Run `npm test -- --run` and `npm run build`.
+- [x] Commit: `feat: localize and refine desktop workflows`.
 
 ### Task 10: Offline And Cross-Platform Verification
 

@@ -5,6 +5,7 @@ import {
   desktopActions as defaultDesktopActions,
   type DesktopActions,
 } from '../../shared/desktop/desktopActions';
+import { useI18n } from '../../shared/i18n/I18nProvider';
 import type {
   FileInspectionReport,
   FileInspectionVersion,
@@ -25,6 +26,7 @@ export function FileInspectorPanel({
   error,
   desktopActions = defaultDesktopActions,
 }: FileInspectorPanelProps) {
+  const { t, formatDateTime, formatNumber } = useI18n();
   const defaultVersionId = useMemo(() => newestAvailableVersionId(report), [report]);
   const [selectedVersionId, setSelectedVersionId] = useState(defaultVersionId);
 
@@ -34,11 +36,11 @@ export function FileInspectorPanel({
 
   if (!selectedPath) {
     return (
-      <section className="file-inspector file-inspector-placeholder" aria-label="File inspector">
+      <section className="file-inspector file-inspector-placeholder" aria-label={t('inspector.label')}>
         <FileSearch size={24} aria-hidden="true" />
         <div>
-          <strong>Select a file to inspect</strong>
-          <p>Choose a recorded path to view its blocks and snapshot history.</p>
+          <strong>{t('inspector.selectFile')}</strong>
+          <p>{t('inspector.selectDescription')}</p>
         </div>
       </section>
     );
@@ -46,10 +48,10 @@ export function FileInspectorPanel({
 
   if (loading) {
     return (
-      <section className="file-inspector file-inspector-placeholder" aria-label="File inspector">
+      <section className="file-inspector file-inspector-placeholder" aria-label={t('inspector.label')}>
         <LoaderCircle size={24} aria-hidden="true" />
         <div>
-          <strong>Loading file history</strong>
+          <strong>{t('inspector.loadingHistory')}</strong>
           <p title={selectedPath}>{selectedPath}</p>
         </div>
       </section>
@@ -58,10 +60,10 @@ export function FileInspectorPanel({
 
   if (error) {
     return (
-      <section className="file-inspector file-inspector-placeholder file-inspector-error" aria-label="File inspector">
+      <section className="file-inspector file-inspector-placeholder file-inspector-error" aria-label={t('inspector.label')}>
         <AlertTriangle size={24} aria-hidden="true" />
         <div>
-          <strong>File inspection failed</strong>
+          <strong>{t('inspector.failed')}</strong>
           <p>{error}</p>
         </div>
       </section>
@@ -79,10 +81,10 @@ export function FileInspectorPanel({
   const currentSourcePath = report.currentSourcePath;
 
   return (
-    <section className="file-inspector" aria-label="File inspector">
+    <section className="file-inspector" aria-label={t('inspector.label')}>
       <header className="file-inspector-header">
         <div>
-          <span className="section-kicker">File Inspector</span>
+          <span className="section-kicker">{t('inspector.kicker')}</span>
           <h3>{report.fileName}</h3>
           <p title={report.relativePath}>{report.relativePath}</p>
         </div>
@@ -92,42 +94,42 @@ export function FileInspectorPanel({
       </header>
 
       <dl className="file-inspector-summary">
-        <div><dt>Versions</dt><dd>{report.versionCount.toLocaleString()}</dd></div>
-        <div><dt>First seen</dt><dd>{formatDate(report.firstSeenAt)}</dd></div>
-        <div><dt>Last seen</dt><dd>{formatDate(report.lastSeenAt)}</dd></div>
+        <div><dt>{t('inspector.versions')}</dt><dd>{formatNumber(report.versionCount)}</dd></div>
+        <div><dt>{t('inspector.firstSeen')}</dt><dd>{formatDateTime(report.firstSeenAt)}</dd></div>
+        <div><dt>{t('inspector.lastSeen')}</dt><dd>{formatDateTime(report.lastSeenAt)}</dd></div>
       </dl>
 
       <div className="file-source-location" data-available={currentSourcePath ? 'true' : 'false'}>
         <div>
-          <strong>Original file</strong>
+          <strong>{t('inspector.originalFile')}</strong>
           {currentSourcePath ? (
             <p title={currentSourcePath}>{currentSourcePath}</p>
           ) : (
-            <p>Original file unavailable</p>
+            <p>{t('inspector.originalUnavailable')}</p>
           )}
         </div>
         {currentSourcePath && (
           <button
             type="button"
-            aria-label="Reveal original"
-            title="Reveal original"
+            aria-label={t('inspector.revealOriginal')}
+            title={t('inspector.revealOriginal')}
             onClick={() => void desktopActions.revealPath(currentSourcePath)}
           >
             <FolderSearch size={15} aria-hidden="true" />
-            Reveal original
+            {t('inspector.revealOriginal')}
           </button>
         )}
       </div>
 
       <label className="file-inspector-version">
-        <span>Snapshot version</span>
+        <span>{t('inspector.snapshotVersion')}</span>
         <select
           value={selectedVersion?.snapshotId ?? ''}
           onChange={(event) => setSelectedVersionId(event.target.value)}
         >
           {report.versions.map((version) => (
             <option key={version.snapshotId} value={version.snapshotId}>
-              {version.snapshotName} · {version.state} · {formatDate(version.snapshotCreatedAt)}
+              {version.snapshotName} · {version.state} · {formatDateTime(version.snapshotCreatedAt)}
             </option>
           ))}
         </select>
@@ -140,7 +142,7 @@ export function FileInspectorPanel({
       <div className="file-history-section">
         <div className="file-inspector-section-heading">
           <History size={16} aria-hidden="true" />
-          <strong>Snapshot history</strong>
+          <strong>{t('inspector.snapshotHistory')}</strong>
         </div>
         <ol className="file-history">
           {report.versions.map((version) => (
@@ -161,19 +163,23 @@ export function FileInspectorPanel({
 }
 
 function VersionBlocks({ version }: { version: FileInspectionVersion }) {
+  const { t, formatBytes, formatNumber } = useI18n();
+
   return (
     <div className="file-block-section">
       <div className="file-inspector-section-heading">
         <Blocks size={16} aria-hidden="true" />
-        <strong>Block sequence</strong>
+        <strong>{t('inspector.blockSequence')}</strong>
         <span>
-          {version.totalBlockReferences.toLocaleString()} references ·{' '}
-          {version.uniqueBlockCount.toLocaleString()} unique
+          {t('inspector.blockReferences', {
+            references: formatNumber(version.totalBlockReferences),
+            unique: formatNumber(version.uniqueBlockCount),
+          })}
         </span>
       </div>
 
       {version.blocks.length === 0 ? (
-        <p className="file-block-empty">No blocks in this snapshot.</p>
+        <p className="file-block-empty">{t('inspector.noBlocks')}</p>
       ) : (
         <ol className="file-block-map">
           {version.blocks.map((block) => (
@@ -182,15 +188,18 @@ function VersionBlocks({ version }: { version: FileInspectionVersion }) {
               className={`file-block-item file-block-item-${block.encoding}`}
             >
               <div className="file-block-title">
-                <strong>Block {block.index}</strong>
+                <strong>{t('inspector.block', { index: block.index })}</strong>
                 <span>{block.encoding}</span>
               </div>
               <code title={block.hash}>{block.hash.slice(0, 12)}</code>
               <dl>
-                <div><dt>Logical</dt><dd>{formatBytes(block.sizeBytes)}</dd></div>
-                <div><dt>Stored</dt><dd>{formatOptionalBytes(block.storedSizeBytes)}</dd></div>
+                <div><dt>{t('inspector.logical')}</dt><dd>{formatBytes(block.sizeBytes)}</dd></div>
+                <div><dt>{t('inspector.stored')}</dt><dd>{formatOptionalBytes(block.storedSizeBytes, formatBytes, t)}</dd></div>
               </dl>
-              <small>{block.storageState} · seen in {block.seenInVersionCount} versions</small>
+              <small>{t('inspector.seenVersions', {
+                state: block.storageState,
+                count: formatNumber(block.seenInVersionCount),
+              })}</small>
               {block.issue && <p title={block.issue}>{block.issue}</p>}
             </li>
           ))}
@@ -207,22 +216,10 @@ function newestAvailableVersionId(report: FileInspectionReport | null): string {
     ?? '';
 }
 
-function formatOptionalBytes(value: number | null): string {
-  return value === null ? 'Unavailable' : formatBytes(value);
-}
-
-function formatBytes(value: number): string {
-  if (value < 1024) return `${value.toLocaleString()} B`;
-  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KiB`;
-  return `${(value / (1024 * 1024)).toFixed(1)} MiB`;
-}
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+function formatOptionalBytes(
+  value: number | null,
+  formatBytes: (bytes: number) => string,
+  t: (key: 'common.unavailable') => string,
+): string {
+  return value === null ? t('common.unavailable') : formatBytes(value);
 }

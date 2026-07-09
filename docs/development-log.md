@@ -563,3 +563,16 @@
 - Files 상세 패널에 `Reveal original` 동작을 추가해 macOS Finder와 Windows File Explorer로 원본 위치를 열 수 있게 했다.
 - 복원 완료 후 `Open restore folder` 동작은 기존 Task 6 구현을 유지하고 Snapshot 테스트로 회귀 검증했다.
 - Rust 전체 테스트 101개, UI 전체 테스트 61개, 관련 Explorer/Snapshot 테스트 11개, rustfmt와 TypeScript/Vite production build가 통과했다.
+
+## 2026-07-09
+
+### Phase 10 Task 9 활성 UI 다국어화와 상호작용 상태 정리 완료
+
+- 활성 화면의 직접 렌더링 영어 문구를 typed i18n message key로 옮기고 한국어·영어 번역 사전을 확장했다.
+- 경로, snapshot 이름, repository 이름처럼 사용자가 만든 값이나 metadata 값은 번역하지 않고 그대로 표시한다.
+- active TSX 파일에서 관리되지 않는 JSX text, `aria-label`, `title`, `placeholder` 문자열을 감지하는 스캔 테스트를 추가했다.
+- 저장소 등록 해제와 snapshot 복원에 확인 대화상자를 추가해 실수로 실행되는 파괴적·고비용 동작을 줄였다.
+- 확인 대화상자는 Escape 닫기, opener focus 복귀, async confirm 중 중복 제출 방지를 테스트로 검증했다.
+- 저장소가 아예 없는 empty state와 검색 결과가 0개인 상태를 서로 다른 메시지와 동작으로 구분했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 64개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.

@@ -7,6 +7,7 @@ import {
   desktopActions as defaultDesktopActions,
   type DesktopActions,
 } from '../../shared/desktop/desktopActions';
+import { useI18n } from '../../shared/i18n/I18nProvider';
 import type { Snapshot } from '../../shared/types/chrona';
 import './new-backup-dialog.css';
 
@@ -38,18 +39,19 @@ export function NewBackupDialog({
   onCompleted,
   desktopActions = defaultDesktopActions,
 }: NewBackupDialogProps) {
+  const { t } = useI18n();
   const [sourcePath, setSourcePath] = useState(
     entryPoint === 'repeat' ? initialSourcePath ?? '' : '',
   );
-  const [backupName, setBackupName] = useState(defaultBackupName);
+  const [backupName, setBackupName] = useState(() => defaultBackupName(t));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setSourcePath(entryPoint === 'repeat' ? initialSourcePath ?? '' : '');
-    setBackupName(defaultBackupName());
+    setBackupName(defaultBackupName(t));
     setError(null);
-  }, [entryPoint, initialSourcePath]);
+  }, [entryPoint, initialSourcePath, t]);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -58,7 +60,7 @@ export function NewBackupDialog({
       if (!active) return;
       onOperationChange({
         kind: 'backup',
-        label: 'Creating backup',
+        label: t('backup.creating'),
         currentFile: progress.currentFile,
         processedBytes: progress.totalBytesProcessed,
         totalBytes: progress.totalBytes,
@@ -85,7 +87,7 @@ export function NewBackupDialog({
     setError(null);
     onOperationChange({
       kind: 'backup',
-      label: 'Creating backup',
+      label: t('backup.creating'),
       currentFile: null,
       processedBytes: 0,
       totalBytes: 0,
@@ -127,38 +129,38 @@ export function NewBackupDialog({
         <header>
           <h1 id="backup-dialog-title">
             {entryPoint === 'first-backup'
-              ? 'Create first backup'
-              : entryPoint === 'repeat' ? 'Back up again' : 'New Backup'}
+              ? t('backup.first')
+              : entryPoint === 'repeat' ? t('backup.repeat') : t('backup.new')}
           </h1>
-          <button type="button" aria-label="Close new backup" title="Close" disabled={busy} onClick={onClose}>
+          <button type="button" aria-label={t('backup.closeNew')} title={t('common.close')} disabled={busy} onClick={onClose}>
             <X size={18} aria-hidden="true" />
           </button>
         </header>
 
         <div className="backup-dialog__body">
           <label>
-            <span>Source path</span>
+            <span>{t('backup.sourcePath')}</span>
             <input
               value={sourcePath}
-              placeholder="Select a file or folder"
+              placeholder={t('backup.selectSourcePlaceholder')}
               onChange={(event) => setSourcePath(event.target.value)}
             />
           </label>
           <div className="backup-dialog__source-actions">
             <button type="button" disabled={busy} onClick={() => void chooseSource(api.selectSourceFilePath)}>
               <File size={16} aria-hidden="true" />
-              Choose File
+              {t('backup.chooseFile')}
             </button>
             <button type="button" disabled={busy} onClick={() => void chooseSource(api.selectSourceFolderPath)}>
               <FolderOpen size={16} aria-hidden="true" />
-              Choose Folder
+              {t('backup.chooseFolder')}
             </button>
             {sourcePath.trim() && (
               <>
                 <button
                   type="button"
-                  aria-label="Show source in file explorer"
-                  title="Show in Finder or File Explorer"
+                  aria-label={t('backup.showSourceInExplorer')}
+                  title={t('backup.showInExplorerTitle')}
                   disabled={busy}
                   onClick={() => void desktopActions.revealPath(sourcePath.trim())}
                 >
@@ -166,8 +168,8 @@ export function NewBackupDialog({
                 </button>
                 <button
                   type="button"
-                  aria-label="Copy source path"
-                  title="Copy path"
+                  aria-label={t('backup.copySourcePath')}
+                  title={t('common.copyPath')}
                   disabled={busy}
                   onClick={() => void desktopActions.copyText(sourcePath.trim())}
                 >
@@ -177,7 +179,7 @@ export function NewBackupDialog({
             )}
           </div>
           <label>
-            <span>Backup name</span>
+            <span>{t('backup.name')}</span>
             <input
               value={backupName}
               onChange={(event) => setBackupName(event.target.value)}
@@ -187,14 +189,14 @@ export function NewBackupDialog({
         </div>
 
         <footer>
-          <button type="button" disabled={busy} onClick={onClose}>Cancel</button>
+          <button type="button" disabled={busy} onClick={onClose}>{t('common.cancel')}</button>
           <button
             className="backup-dialog__start"
             type="button"
             disabled={busy || !sourcePath.trim() || !backupName.trim()}
             onClick={() => void startBackup()}
           >
-            Start Backup
+            {t('backup.start')}
           </button>
         </footer>
       </section>
@@ -202,7 +204,7 @@ export function NewBackupDialog({
   );
 }
 
-function defaultBackupName() {
+function defaultBackupName(t: (key: 'backup.defaultName', values: { date: string; time: string }) => string) {
   const now = new Date();
   const date = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
     .map((part) => String(part).padStart(2, '0'))
@@ -210,5 +212,5 @@ function defaultBackupName() {
   const time = [now.getHours(), now.getMinutes()]
     .map((part) => String(part).padStart(2, '0'))
     .join('-');
-  return `Backup ${date} ${time}`;
+  return t('backup.defaultName', { date, time });
 }

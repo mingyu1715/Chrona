@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useState } from 'react';
 
 import type { ChronaApi } from '../shared/api/chronaApi';
+import { useI18n } from '../shared/i18n/I18nProvider';
 import { useAppPreferences } from '../shared/preferences/AppPreferencesProvider';
 import type { Snapshot } from '../shared/types/chrona';
 import {
@@ -49,6 +50,7 @@ export function AppShell({
   const [completedSnapshot, setCompletedSnapshot] = useState<Snapshot | null>(null);
   const [homeRefreshKey, setHomeRefreshKey] = useState(0);
   const repositoryLibrary = useRepositoryLibrary(api);
+  const { t } = useI18n();
   const theme = preferences.theme === 'system' ? systemTheme : preferences.theme;
   const toggleTheme = () => void setTheme(theme === 'light' ? 'dark' : 'light');
   const content = typeof children === 'function' ? children(activeView) : children;
@@ -103,8 +105,8 @@ export function AppShell({
       }
     : onNewBackup;
   const primaryActionLabel = !api || hasRepository
-    ? 'New Backup'
-    : disconnected ? 'Locate repository' : 'Set up repository';
+    ? t('backup.new')
+    : disconnected ? t('repository.locate') : t('repository.setup');
 
   async function addExistingRepository() {
     if (!api) return;
@@ -165,7 +167,13 @@ export function AppShell({
   if (api && repositoryUnavailable && activeView !== 'home' && activeView !== 'settings') {
     mainContent = (
       <RepositoryRequiredState
-        workspace={activeView === 'files' ? 'Files' : activeView === 'snapshots' ? 'Snapshots' : activeView === 'statistics' ? 'Statistics' : 'Settings'}
+        workspace={activeView === 'files'
+          ? t('nav.files')
+          : activeView === 'snapshots'
+            ? t('nav.snapshots')
+            : activeView === 'statistics'
+              ? t('nav.statistics')
+              : t('nav.settings')}
         disconnected={disconnected}
         onCreateRepository={() => setSetupOpen(true)}
         onAddExistingRepository={() => void addExistingRepository()}
@@ -187,7 +195,7 @@ export function AppShell({
       <AppSidebar activeView={activeView} onViewChange={setActiveView} />
       <main className="app-shell__content" data-active-view={activeView}>
         {api && repositoryLibrary.loading && !repositoryLibrary.library ? (
-          <div className="app-shell__bootstrap" role="status">Opening repository...</div>
+          <div className="app-shell__bootstrap" role="status">{t('app.loadingRepository')}</div>
         ) : api && showInitialSetup ? (
           <RepositorySetupDialog api={api} controller={repositoryLibrary} />
         ) : mainContent}
@@ -217,7 +225,7 @@ export function AppShell({
       )}
       {completedSnapshot && (
         <div className="app-shell__notice" role="status">
-          <span>Backup complete: <strong>{completedSnapshot.name}</strong></span>
+          <span>{t('app.backupComplete')} <strong>{completedSnapshot.name}</strong></span>
           <button
             type="button"
             onClick={() => {
@@ -225,15 +233,15 @@ export function AppShell({
               setCompletedSnapshot(null);
             }}
           >
-            View snapshot
+            {t('app.viewSnapshot')}
           </button>
           <button
             className="app-shell__notice-close"
             type="button"
-            aria-label="Dismiss backup result"
+            aria-label={t('app.dismissBackupResult')}
             onClick={() => setCompletedSnapshot(null)}
           >
-            Close
+            {t('common.close')}
           </button>
         </div>
       )}

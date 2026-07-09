@@ -6,6 +6,8 @@ import {
   desktopActions as defaultDesktopActions,
   type DesktopActions,
 } from '../../shared/desktop/desktopActions';
+import { useI18n } from '../../shared/i18n/I18nProvider';
+import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import type { RestoreReport, Snapshot } from '../../shared/types/chrona';
 
 interface RestoreSnapshotDialogProps {
@@ -23,9 +25,11 @@ export function RestoreSnapshotDialog({
   onClose,
   desktopActions = defaultDesktopActions,
 }: RestoreSnapshotDialogProps) {
+  const { t, formatBytes, formatNumber } = useI18n();
   const [targetPath, setTargetPath] = useState('');
   const [report, setReport] = useState<RestoreReport | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function chooseTarget() {
@@ -38,10 +42,16 @@ export function RestoreSnapshotDialog({
 
   async function restore() {
     if (!targetPath.trim() || busy) return;
+    setConfirmOpen(true);
+  }
+
+  async function confirmRestore() {
+    if (!targetPath.trim() || busy) return;
     setBusy(true);
     setError(null);
     try {
       setReport(await api.restoreSnapshot(repositoryPath, snapshot.id, targetPath.trim()));
+      setConfirmOpen(false);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
     } finally {
@@ -51,43 +61,43 @@ export function RestoreSnapshotDialog({
 
   return (
     <div className="snapshot-dialog-layer">
-      <section className="snapshot-restore-dialog" role="dialog" aria-modal="true" aria-label={`Restore ${snapshot.name}`}>
+      <section className="snapshot-restore-dialog" role="dialog" aria-modal="true" aria-label={t('restore.title', { name: snapshot.name })}>
         <header>
-          <h1>Restore {snapshot.name}</h1>
-          <button type="button" aria-label="Close restore" title="Close" disabled={busy} onClick={onClose}>
+          <h1>{t('restore.title', { name: snapshot.name })}</h1>
+          <button type="button" aria-label={t('restore.close')} title={t('common.close')} disabled={busy} onClick={onClose}>
             <X size={18} aria-hidden="true" />
           </button>
         </header>
         <div className="snapshot-restore-dialog__body">
           <label>
-            <span>Restore target</span>
-            <input value={targetPath} placeholder="Choose an empty folder" onChange={(event) => setTargetPath(event.target.value)} />
+            <span>{t('restore.target')}</span>
+            <input value={targetPath} placeholder={t('restore.targetPlaceholder')} onChange={(event) => setTargetPath(event.target.value)} />
           </label>
           <button type="button" disabled={busy} onClick={() => void chooseTarget()}>
             <FolderOpen size={16} aria-hidden="true" />
-            Choose target
+            {t('restore.chooseTarget')}
           </button>
           {error && <p role="alert">{error}</p>}
           {report && (
             <div className="snapshot-restore-dialog__result">
               <dl>
-                <div><dt>Files</dt><dd>{report.restoredFileCount.toLocaleString()}</dd></div>
-                <div><dt>Bytes</dt><dd>{formatBytes(report.restoredBytes)}</dd></div>
-                <div><dt>Blocks</dt><dd>{report.restoredBlockCount.toLocaleString()}</dd></div>
+                <div><dt>{t('common.files')}</dt><dd>{formatNumber(report.restoredFileCount)}</dd></div>
+                <div><dt>{t('common.bytes')}</dt><dd>{formatBytes(report.restoredBytes)}</dd></div>
+                <div><dt>{t('common.blocks')}</dt><dd>{formatNumber(report.restoredBlockCount)}</dd></div>
               </dl>
               <div>
                 <button
                   type="button"
-                  aria-label="Open restore folder"
+                  aria-label={t('restore.openFolder')}
                   onClick={() => void desktopActions.openPath(report.targetPath)}
                 >
                   <FolderOpen size={16} aria-hidden="true" />
-                  Open restore folder
+                  {t('restore.openFolder')}
                 </button>
                 <button
                   type="button"
-                  aria-label="Copy restore folder path"
-                  title="Copy path"
+                  aria-label={t('restore.copyFolderPath')}
+                  title={t('common.copyPath')}
                   onClick={() => void desktopActions.copyText(report.targetPath)}
                 >
                   <Copy size={16} aria-hidden="true" />
@@ -97,18 +107,23 @@ export function RestoreSnapshotDialog({
           )}
         </div>
         <footer>
-          <button type="button" disabled={busy} onClick={onClose}>Cancel</button>
+          <button type="button" disabled={busy} onClick={onClose}>{t('common.cancel')}</button>
           <button className="snapshot-restore-dialog__confirm" type="button" disabled={busy || !targetPath.trim()} onClick={() => void restore()}>
-            Restore
+            {t('common.restore')}
           </button>
         </footer>
       </section>
+      {confirmOpen && (
+        <ConfirmDialog
+          title={t('restore.confirmTitle', { name: snapshot.name })}
+          description={t('restore.confirmDescription')}
+          confirmLabel={t('common.restore')}
+          cancelLabel={t('common.cancel')}
+          returnFocusSelector=".snapshot-restore-dialog__confirm"
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={confirmRestore}
+        />
+      )}
     </div>
   );
-}
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KiB`;
-  return `${(bytes / 1024 ** 2).toFixed(1)} MiB`;
 }

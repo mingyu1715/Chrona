@@ -1,5 +1,6 @@
 import { AlertTriangle, BarChart3, Database, RefreshCw } from 'lucide-react';
 
+import { useI18n } from '../../shared/i18n/I18nProvider';
 import type {
   RepositoryStatisticsProgress,
   RepositoryStatisticsReport,
@@ -22,16 +23,18 @@ export function StatisticsDashboard({
   error,
   onAnalyze,
 }: StatisticsDashboardProps) {
+  const { t } = useI18n();
+
   return (
     <div className="statistics-dashboard">
       <div className="statistics-runbar">
         <div>
-          <strong>Repository storage analysis</strong>
-          <p>Scans snapshot metadata and final physical block files on demand.</p>
+          <strong>{t('statistics.runbarTitle')}</strong>
+          <p>{t('statistics.runbarDescription')}</p>
         </div>
         <button type="button" disabled={!repositoryOpen || loading} onClick={onAnalyze}>
           {loading ? <RefreshCw className="spin" size={16} /> : <BarChart3 size={16} />}
-          {report ? 'Refresh analysis' : 'Analyze repository'}
+          {report ? t('statistics.refreshAnalysis') : t('statistics.analyzeRepository')}
         </button>
       </div>
 
@@ -42,11 +45,11 @@ export function StatisticsDashboard({
         <div className="statistics-empty">
           <Database size={22} aria-hidden="true" />
           <div>
-            <strong>{repositoryOpen ? 'No analysis yet' : 'No repository open'}</strong>
+            <strong>{repositoryOpen ? t('statistics.noAnalysis') : t('statistics.noRepositoryOpen')}</strong>
             <p>
               {repositoryOpen
-                ? 'Run analysis to compare logical history with physical storage.'
-                : 'Open a repository before running storage analysis.'}
+                ? t('statistics.runAnalysisDescription')
+                : t('statistics.openRepositoryDescription')}
             </p>
           </div>
         </div>
@@ -58,6 +61,7 @@ export function StatisticsDashboard({
 }
 
 function StatisticsProgress({ progress }: { progress: RepositoryStatisticsProgress }) {
+  const { formatNumber } = useI18n();
   const isBlocks = progress.phase === 'blocks';
   const current = isBlocks ? progress.processedBlocks : progress.processedSnapshots;
   const total = isBlocks ? progress.totalBlocks : progress.totalSnapshots;
@@ -67,7 +71,7 @@ function StatisticsProgress({ progress }: { progress: RepositoryStatisticsProgre
     <div className="statistics-progress" aria-live="polite">
       <div>
         <strong>{formatLabel(progress.phase)}</strong>
-        <span>{formatLabel(progress.phase)} {current.toLocaleString()} / {total.toLocaleString()}</span>
+        <span>{formatLabel(progress.phase)} {formatNumber(current)} / {formatNumber(total)}</span>
       </div>
       <progress max={100} value={ratio}>{ratio.toFixed(0)}%</progress>
     </div>
@@ -75,6 +79,7 @@ function StatisticsProgress({ progress }: { progress: RepositoryStatisticsProgre
 }
 
 function StatisticsReportView({ report }: { report: RepositoryStatisticsReport }) {
+  const { t, formatBytes, formatNumber } = useI18n();
   const storage = report.storage;
   const maxTrendBytes = Math.max(
     1,
@@ -84,48 +89,48 @@ function StatisticsReportView({ report }: { report: RepositoryStatisticsReport }
   return (
     <div className="statistics-report">
       <dl className="statistics-primary-metrics">
-        <Metric label="History logical" value={formatBytes(storage.retainedLogicalBytes)} />
-        <Metric label="Unique raw blocks" value={formatBytes(storage.referencedUniqueRawBytes)} />
-        <Metric label="Physical storage" value={formatBytes(storage.allPhysicalBytes)} />
+        <Metric label={t('statistics.historyLogical')} value={formatBytes(storage.retainedLogicalBytes)} />
+        <Metric label={t('statistics.uniqueRawBlocks')} value={formatBytes(storage.referencedUniqueRawBytes)} />
+        <Metric label={t('statistics.physicalStorage')} value={formatBytes(storage.allPhysicalBytes)} />
         <Metric
-          label="Storage reduction"
+          label={t('statistics.storageReduction')}
           value={storage.storageEfficiencyPercent === null
-            ? 'Unavailable'
+            ? t('common.unavailable')
             : `${storage.storageEfficiencyPercent.toFixed(1)}%`}
         />
       </dl>
 
       <div className="statistics-detail-grid">
         <section className="statistics-section" aria-labelledby="statistics-savings-heading">
-          <h3 id="statistics-savings-heading">Storage savings</h3>
+          <h3 id="statistics-savings-heading">{t('statistics.storageSavings')}</h3>
           <dl className="statistics-row-list">
-            <Metric label="Dedup saved" value={formatBytes(storage.dedupSavedBytes)} />
-            <Metric label="Compression saved" value={formatBytes(storage.compressionSavedBytes)} />
-            <Metric label="Referenced unique" value={storage.referencedUniqueBlockCount.toLocaleString()} />
-            <Metric label="Block references" value={storage.totalBlockReferences.toLocaleString()} />
+            <Metric label={t('statistics.dedupSaved')} value={formatBytes(storage.dedupSavedBytes)} />
+            <Metric label={t('statistics.compressionSaved')} value={formatBytes(storage.compressionSavedBytes)} />
+            <Metric label={t('statistics.referencedUnique')} value={formatNumber(storage.referencedUniqueBlockCount)} />
+            <Metric label={t('statistics.blockReferences')} value={formatNumber(storage.totalBlockReferences)} />
           </dl>
         </section>
 
         <section className="statistics-section" aria-labelledby="statistics-physical-heading">
-          <h3 id="statistics-physical-heading">Physical blocks</h3>
+          <h3 id="statistics-physical-heading">{t('statistics.physicalBlocks')}</h3>
           <dl className="statistics-row-list">
-            <Metric label="All physical blocks" value={storage.allPhysicalBlockCount.toLocaleString()} />
-            <Metric label="Referenced blocks" value={storage.referencedPhysicalBlockCount.toLocaleString()} />
-            <Metric label="Unreferenced blocks" value={`${storage.unreferencedBlockCount.toLocaleString()} · ${formatBytes(storage.unreferencedBytes)}`} />
-            <Metric label="Missing referenced" value={storage.missingReferencedBlockCount.toLocaleString()} />
+            <Metric label={t('statistics.allPhysicalBlocks')} value={formatNumber(storage.allPhysicalBlockCount)} />
+            <Metric label={t('statistics.referencedBlocks')} value={formatNumber(storage.referencedPhysicalBlockCount)} />
+            <Metric label={t('statistics.unreferencedBlocks')} value={`${formatNumber(storage.unreferencedBlockCount)} · ${formatBytes(storage.unreferencedBytes)}`} />
+            <Metric label={t('statistics.missingReferenced')} value={formatNumber(storage.missingReferencedBlockCount)} />
           </dl>
         </section>
       </div>
 
       <div className="statistics-detail-grid statistics-visual-grid">
         <section className="statistics-section" aria-labelledby="statistics-trend-heading">
-          <h3 id="statistics-trend-heading">Snapshot trend</h3>
-          <ol className="statistics-trend" aria-label="Snapshot trend">
+          <h3 id="statistics-trend-heading">{t('statistics.snapshotTrend')}</h3>
+          <ol className="statistics-trend" aria-label={t('statistics.snapshotTrend')}>
             {report.snapshotTrend.map((point) => (
               <li key={point.snapshotId}>
                 <div>
                   <strong>{point.snapshotName}</strong>
-                  <span>{point.fileCount.toLocaleString()} files · {formatBytes(point.logicalBytes)}</span>
+                  <span>{t('files.fileCount', { count: formatNumber(point.fileCount) })} · {formatBytes(point.logicalBytes)}</span>
                 </div>
                 <span className="statistics-trend-track" aria-hidden="true">
                   <span style={{ width: `${Math.max(4, (point.logicalBytes / maxTrendBytes) * 100)}%` }} />
@@ -136,7 +141,7 @@ function StatisticsReportView({ report }: { report: RepositoryStatisticsReport }
         </section>
 
         <section className="statistics-section" aria-labelledby="statistics-encoding-heading">
-          <h3 id="statistics-encoding-heading">Encoding distribution</h3>
+          <h3 id="statistics-encoding-heading">{t('statistics.encodingDistribution')}</h3>
           <ul className="statistics-encodings">
             <EncodingRow label="Raw" count={report.encodings.rawBlockCount} bytes={report.encodings.rawPhysicalBytes} />
             <EncodingRow label="Zstd" count={report.encodings.zstdBlockCount} bytes={report.encodings.zstdPhysicalBytes} />
@@ -150,7 +155,7 @@ function StatisticsReportView({ report }: { report: RepositoryStatisticsReport }
 
       {report.issues.length > 0 && (
         <section className="statistics-issues" aria-labelledby="statistics-issues-heading">
-          <h3 id="statistics-issues-heading"><AlertTriangle size={17} />Analysis issues</h3>
+          <h3 id="statistics-issues-heading"><AlertTriangle size={17} />{t('statistics.analysisIssues')}</h3>
           <ul>
             {report.issues.map((issue, index) => (
               <li key={`${issue.kind}-${issue.hash ?? issue.path ?? index}`}>
@@ -178,10 +183,12 @@ function EncodingRow({
   count: number;
   bytes: number;
 }) {
+  const { formatBytes, formatNumber } = useI18n();
+
   return (
     <li>
       <span>{label}</span>
-      <strong>{count.toLocaleString()} · {formatBytes(bytes)}</strong>
+      <strong>{formatNumber(count)} · {formatBytes(bytes)}</strong>
     </li>
   );
 }
@@ -189,15 +196,4 @@ function EncodingRow({
 function formatLabel(value: string): string {
   const spaced = value.replace(/([a-z])([A-Z])/g, '$1 $2');
   return `${spaced.charAt(0).toUpperCase()}${spaced.slice(1)}`;
-}
-
-function formatBytes(bytes: number): string {
-  const units = ['bytes', 'KiB', 'MiB', 'GiB', 'TiB'];
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return unit === 0 ? `${value.toLocaleString()} bytes` : `${value.toFixed(1)} ${units[unit]}`;
 }
