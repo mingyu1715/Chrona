@@ -289,6 +289,7 @@ export function createChronaApiMock() {
       firstSeenAt: '2026-06-27T00:00:00Z',
       lastSeenAt: '2026-06-27T00:00:00Z',
       latestState: 'added' as const,
+      currentSourcePath: '/tmp/source/notes.md',
       versions: [
         {
           snapshotId: 'latest',

@@ -38,6 +38,7 @@ pub struct FileInspectionReport {
     pub first_seen_at: String,
     pub last_seen_at: String,
     pub latest_state: FileVersionState,
+    pub current_source_path: Option<String>,
     pub versions: Vec<FileInspectionVersion>,
 }
 

@@ -2,6 +2,7 @@ import { FileSearch, RefreshCcw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
+import type { DesktopActions } from '../../shared/desktop/desktopActions';
 import type {
   FileInspectionReport,
   FileKind,
@@ -15,9 +16,10 @@ import './explorer-page.css';
 interface ExplorerPageProps {
   api: ChronaApi;
   repositoryPath: string;
+  desktopActions?: DesktopActions;
 }
 
-export function ExplorerPage({ api, repositoryPath }: ExplorerPageProps) {
+export function ExplorerPage({ api, repositoryPath, desktopActions }: ExplorerPageProps) {
   const [report, setReport] = useState<RepositoryInventoryReport | null>(null);
   const [query, setQuery] = useState('');
   const [kindFilter, setKindFilter] = useState<FileKind | 'all'>('all');
@@ -179,6 +181,7 @@ export function ExplorerPage({ api, repositoryPath }: ExplorerPageProps) {
             report={inspection}
             loading={inspectionLoading}
             error={inspectionError}
+            desktopActions={desktopActions}
           />
         </div>
       </div>

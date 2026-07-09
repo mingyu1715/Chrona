@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { FileInspectionReport } from '../../shared/types/chrona';
 import { FileInspectorPanel } from './FileInspectorPanel';
@@ -17,6 +17,7 @@ function inspectionReport(): FileInspectionReport {
     firstSeenAt: '2026-06-27T00:00:00Z',
     lastSeenAt: '2026-06-30T00:00:00Z',
     latestState: 'modified',
+    currentSourcePath: null,
     versions: [
       {
         snapshotId: 'snapshot-latest',
@@ -96,6 +97,13 @@ function inspectionReport(): FileInspectionReport {
   };
 }
 
+function inspectionReportWithCurrentSourcePath(path: string | null): FileInspectionReport {
+  return {
+    ...inspectionReport(),
+    currentSourcePath: path,
+  } as FileInspectionReport;
+}
+
 describe('FileInspectorPanel', () => {
   test('prompts for a file before selection', () => {
     render(
@@ -125,6 +133,42 @@ describe('FileInspectorPanel', () => {
     expect(screen.getByText(/seen in 2 versions/i)).toBeInTheDocument();
     expect(screen.getByText('deleted')).toBeInTheDocument();
     expect(screen.getByText(/block 1/i)).toBeInTheDocument();
+  });
+
+  test('reveals the original file when a current source path exists', async () => {
+    const user = userEvent.setup();
+    const desktopActions = {
+      revealPath: vi.fn(async () => undefined),
+      openPath: vi.fn(async () => undefined),
+      copyText: vi.fn(async () => undefined),
+    };
+    render(
+      <FileInspectorPanel
+        selectedPath="notes.txt"
+        report={inspectionReportWithCurrentSourcePath('/tmp/source/notes.txt')}
+        loading={false}
+        error={null}
+        desktopActions={desktopActions}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Reveal original' }));
+
+    expect(desktopActions.revealPath).toHaveBeenCalledWith('/tmp/source/notes.txt');
+  });
+
+  test('shows a non-actionable original missing state when no current source path exists', () => {
+    render(
+      <FileInspectorPanel
+        selectedPath="notes.txt"
+        report={inspectionReportWithCurrentSourcePath(null)}
+        loading={false}
+        error={null}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Reveal original' })).not.toBeInTheDocument();
+    expect(screen.getByText(/original file unavailable/i)).toBeInTheDocument();
   });
 
   test('switches the block sequence without another backend request', async () => {

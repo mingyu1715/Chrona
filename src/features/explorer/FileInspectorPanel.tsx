@@ -1,6 +1,10 @@
-import { AlertTriangle, Blocks, FileSearch, History, LoaderCircle } from 'lucide-react';
+import { AlertTriangle, Blocks, FileSearch, FolderSearch, History, LoaderCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import {
+  desktopActions as defaultDesktopActions,
+  type DesktopActions,
+} from '../../shared/desktop/desktopActions';
 import type {
   FileInspectionReport,
   FileInspectionVersion,
@@ -11,6 +15,7 @@ interface FileInspectorPanelProps {
   report: FileInspectionReport | null;
   loading: boolean;
   error: string | null;
+  desktopActions?: DesktopActions;
 }
 
 export function FileInspectorPanel({
@@ -18,6 +23,7 @@ export function FileInspectorPanel({
   report,
   loading,
   error,
+  desktopActions = defaultDesktopActions,
 }: FileInspectorPanelProps) {
   const defaultVersionId = useMemo(() => newestAvailableVersionId(report), [report]);
   const [selectedVersionId, setSelectedVersionId] = useState(defaultVersionId);
@@ -70,6 +76,7 @@ export function FileInspectorPanel({
     (version) => version.snapshotId === selectedVersionId,
   ) ?? report.versions.find((version) => version.snapshotId === defaultVersionId)
     ?? report.versions[0];
+  const currentSourcePath = report.currentSourcePath;
 
   return (
     <section className="file-inspector" aria-label="File inspector">
@@ -89,6 +96,28 @@ export function FileInspectorPanel({
         <div><dt>First seen</dt><dd>{formatDate(report.firstSeenAt)}</dd></div>
         <div><dt>Last seen</dt><dd>{formatDate(report.lastSeenAt)}</dd></div>
       </dl>
+
+      <div className="file-source-location" data-available={currentSourcePath ? 'true' : 'false'}>
+        <div>
+          <strong>Original file</strong>
+          {currentSourcePath ? (
+            <p title={currentSourcePath}>{currentSourcePath}</p>
+          ) : (
+            <p>Original file unavailable</p>
+          )}
+        </div>
+        {currentSourcePath && (
+          <button
+            type="button"
+            aria-label="Reveal original"
+            title="Reveal original"
+            onClick={() => void desktopActions.revealPath(currentSourcePath)}
+          >
+            <FolderSearch size={15} aria-hidden="true" />
+            Reveal original
+          </button>
+        )}
+      </div>
 
       <label className="file-inspector-version">
         <span>Snapshot version</span>

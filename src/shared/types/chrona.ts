@@ -377,6 +377,7 @@ export interface FileInspectionReport {
   firstSeenAt: string;
   lastSeenAt: string;
   latestState: FileVersionState;
+  currentSourcePath: string | null;
   versions: FileInspectionVersion[];
 }
 

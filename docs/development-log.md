@@ -554,3 +554,12 @@
 - 최근 source path가 없으면 반복 진입이어도 빈 source 선택 상태로 시작한다.
 - 모든 진입점은 기존 단일 `createSnapshot` 호출 경로를 공유한다.
 - UI 전체 테스트 58개와 TypeScript/Vite production build가 통과했다.
+
+### Phase 10 Task 8 원본 파일 위치 연결 완료
+
+- file inspector 응답에만 `currentSourcePath`를 추가하고 snapshot metadata에는 저장하지 않도록 경계를 유지했다.
+- 현재 source root와 metadata relative path를 조합해 원본 파일이 실제 존재할 때만 절대 경로를 반환한다.
+- source 파일이 삭제되었거나 source root가 사라진 경우에는 inspector에서 비동작 상태로 표시한다.
+- Files 상세 패널에 `Reveal original` 동작을 추가해 macOS Finder와 Windows File Explorer로 원본 위치를 열 수 있게 했다.
+- 복원 완료 후 `Open restore folder` 동작은 기존 Task 6 구현을 유지하고 Snapshot 테스트로 회귀 검증했다.
+- Rust 전체 테스트 101개, UI 전체 테스트 61개, 관련 Explorer/Snapshot 테스트 11개, rustfmt와 TypeScript/Vite production build가 통과했다.

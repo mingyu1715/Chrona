@@ -255,13 +255,13 @@ interface NewBackupDialogProps {
 
 **Contract:** `FileInspectionReport.currentSourcePath: string | null` is an absolute runtime path and is never persisted in snapshot metadata.
 
-- [ ] Test existing source path, deleted source file and missing source root.
-- [ ] Add `current_source_path` only to the command response.
-- [ ] Show `Reveal original` only when non-null.
-- [ ] Show a non-actionable current-original-missing state otherwise.
-- [ ] Add `Open restored folder` after successful restore.
-- [ ] Run Phase 7 Rust tests and Explorer/Snapshot tests.
-- [ ] Commit: `feat: connect files to desktop locations`.
+- [x] Test existing source path, deleted source file and missing source root.
+- [x] Add `current_source_path` only to the command response.
+- [x] Show `Reveal original` only when non-null.
+- [x] Show a non-actionable current-original-missing state otherwise.
+- [x] Add `Open restored folder` after successful restore.
+- [x] Run Phase 7 Rust tests and Explorer/Snapshot tests.
+- [x] Commit: `feat: connect files to desktop locations`.
 
 ### Task 9: Localize Active UI And Refine Interaction States
 
