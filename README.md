@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed the Phase 8 repository statistics dashboard.
+Chrona has completed Phase 10 user experience, localization, and local desktop integration work.
 
 Implemented:
 
@@ -52,11 +52,18 @@ Implemented:
 - Separate all, referenced, unreferenced, and missing block storage values
 - Separate dedup and compression savings calculations
 - Raw/Zstd/LZ4 distribution, snapshot trend, and scan progress
+- Korean and English UI with system-language fallback
+- Offline local Pretendard font bundle
+- Stable Home, Files, Snapshots, Statistics, and Settings navigation without an active repository
+- Full repository management with search, sort, rename, relink, switch, reveal, copy, and registration removal
+- Finder/File Explorer reveal/open actions for repositories, sources, original files, and restore targets
+- Separate global, first-backup, and repeat-backup entry points
+- Confirmation dialogs for registration removal and snapshot restore
 
 Not implemented yet:
 
 - Auto-repair and block garbage collection
-- Packaged `.app` release
+- Packaged `.app` release, signing, and Windows native verification
 
 ## Tech Stack
 

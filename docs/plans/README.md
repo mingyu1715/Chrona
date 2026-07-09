@@ -10,11 +10,11 @@
 
 ## 현재 구현 계획
 
-- Phase 10 사용자 경험·다국어·로컬 연동: `docs/plans/phase-10-user-experience-localization.md`
+- 없음
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
-- Phase 10 사용자 경험·다국어·로컬 연동: `docs/specs/0013-user-experience-localization.md`
+- 없음
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 
@@ -33,6 +33,7 @@
 - Phase 7 파일 검사기 / 파일 블록 지도: `docs/archive/plans/phase-7-file-inspector-block-map.md`
 - Phase 8 저장소 통계 대시보드: `docs/archive/plans/phase-8-repository-statistics-dashboard.md`
 - Phase 9 UI 사용성 개선: `docs/archive/plans/phase-9-ui-usability-improvement.md`
+- Phase 10 사용자 경험·다국어·로컬 연동: `docs/archive/plans/phase-10-user-experience-localization.md`
 
 ## 보관된 완료 설계
 
@@ -48,6 +49,7 @@
 - 저장소 통계 대시보드: `docs/archive/specs/0010-repository-statistics-dashboard.md`
 - 파일 검사기 / 파일 블록 지도: `docs/archive/specs/0011-file-inspector-block-map.md`
 - Phase 9 UI 사용성 개선: `docs/archive/specs/0012-ui-usability-improvement.md`
+- Phase 10 사용자 경험·다국어·로컬 연동: `docs/archive/specs/0013-user-experience-localization.md`
 
 ## 설계와 상세 계획이 모두 없는 후보
 

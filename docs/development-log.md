@@ -576,3 +576,21 @@
 - 저장소가 아예 없는 empty state와 검색 결과가 0개인 상태를 서로 다른 메시지와 동작으로 구분했다.
 - `npm test -- --run` 결과 UI 테스트 21개 파일, 64개 테스트가 통과했다.
 - `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+
+## 2026-07-10
+
+### Phase 10 Task 10 완료 검증과 문서 정리
+
+- 완료된 Phase 10 설계 문서와 구현 계획을 `docs/archive/`로 보관했다.
+- `docs/implemented/user-experience-localization.md`를 추가해 사용자 경험·다국어·로컬 연동 구현 범위와 검증 결과를 기록했다.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check`가 통과했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트 101개가 통과했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 64개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `git diff --check`가 통과했다.
+- 런타임 소스와 production output에서 원격 font, 원격 CSS, 원격 fetch/link/import 패턴이 없음을 확인했다.
+- production output의 `https://react.dev/errors/...` 문자열은 React minified error 안내 문자열로 확인했다.
+- Browser smoke로 960×640, 1100×800, 1440×900에서 한국어·영어 설정 화면의 horizontal overflow와 control clipping 후보가 없음을 확인했다.
+- macOS native dev launch에서 `target/debug/chrona` 실행과 `chrona` 프로세스를 확인했다.
+- macOS 실행 중 `TSM AdjustCapsLockLED...`, `IMKCFRunLoopWakeUpReliable` 입력기 로그가 관찰됐으나 Chrona panic이나 테스트 실패로 이어지지는 않았다.
+- Windows native 실행과 100%/125% 배율 검증은 현재 macOS 환경에서 수행하지 못했으며, 릴리스 패키징 전 별도 Windows 환경에서 확인해야 한다.

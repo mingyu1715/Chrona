@@ -6,7 +6,7 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 
 ## 현재 상태
 
-현재는 Phase 8 저장소 통계 대시보드까지 완료된 상태입니다.
+현재는 Phase 10 사용자 경험·다국어·로컬 데스크톱 연동까지 완료된 상태입니다.
 
 구현됨:
 
@@ -52,11 +52,18 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 - 전체·참조·미참조·누락 block 저장량 구분
 - 중복 제거 절감량과 압축 절감량의 분리 계산
 - raw/Zstd/LZ4 분포, Snapshot 변화 추이, 분석 progress
+- 한국어·영어 UI와 시스템 언어 fallback
+- 오프라인 실행을 위한 Pretendard 로컬 폰트 번들
+- 활성 저장소가 없어도 유지되는 Home, Files, Snapshots, Statistics, Settings 탐색
+- 검색, 정렬, 이름 변경, relink, 전환, 폴더 표시, 경로 복사, 등록 해제를 포함한 저장소 관리
+- 저장소, source, 원본 파일, 복원 대상에 대한 Finder/File Explorer 열기 동작
+- 상단 새 백업, 첫 백업, 다시 백업 진입점 분리
+- 저장소 등록 해제와 Snapshot 복원 확인 대화상자
 
 아직 구현되지 않음:
 
 - 자동 복구와 block garbage collection
-- 패키징된 `.app` 릴리스
+- 패키징된 `.app` 릴리스, 서명, Windows native 검증
 
 ## 기술 스택
 
