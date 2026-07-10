@@ -251,6 +251,32 @@
   padding: 0;
 }
 
+.settings-toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 75;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 44px));
+  min-height: 38px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: 0 12px 32px var(--app-shadow);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.settings-toast svg {
+  flex: 0 0 auto;
+  color: var(--app-success);
+}
+
 .settings-required {
   display: grid;
   justify-items: start;
@@ -274,11 +300,11 @@
 .settings-layout main .settings-primary-button {
   border-color: var(--app-accent);
   background: var(--app-accent);
-  color: white;
+  color: var(--app-on-primary);
 }
 
 .settings-error {
-  color: var(--app-danger, #c73a3a) !important;
+  color: var(--app-danger) !important;
 }
 
 @media (max-width: 1050px) {

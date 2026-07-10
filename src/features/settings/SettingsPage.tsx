@@ -198,17 +198,28 @@ function StorageSettings({
     repository?.manifest.blockStrategy.compressionMode ?? 'standard',
   );
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setMode(repository?.manifest.blockStrategy.compressionMode ?? 'standard');
+    setSaved(false);
+    setError(null);
   }, [repository]);
+
+  useEffect(() => {
+    if (!saved) return undefined;
+    const timeout = window.setTimeout(() => setSaved(false), 2600);
+    return () => window.clearTimeout(timeout);
+  }, [saved]);
 
   async function applyMode() {
     if (!repository) return;
     try {
       setError(null);
       await api.setRepositoryCompressionMode(repository.registration.path, mode);
+      setSaved(true);
     } catch (caught) {
+      setSaved(false);
       setError(caught instanceof Error ? caught.message : String(caught));
     }
   }
@@ -237,7 +248,10 @@ function StorageSettings({
           <select
             id="settings-compression"
             value={mode}
-            onChange={(event) => setMode(event.target.value as CompressionMode)}
+            onChange={(event) => {
+              setMode(event.target.value as CompressionMode);
+              setSaved(false);
+            }}
           >
             <option value="standard">{t('settings.compressionStandard')}</option>
             <option value="fast">{t('settings.compressionFast')}</option>
@@ -247,6 +261,12 @@ function StorageSettings({
             <Save size={16} aria-hidden="true" />
             {t('common.apply')}
           </button>
+          {saved && (
+            <p className="settings-toast" role="status" aria-label={t('settings.compressionSaved')}>
+              <CheckCircle2 size={16} aria-hidden="true" />
+              {t('settings.compressionSaved')}
+            </p>
+          )}
         </div>
       )}
     </section>

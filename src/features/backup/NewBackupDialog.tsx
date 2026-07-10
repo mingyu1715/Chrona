@@ -1,5 +1,5 @@
 import { Copy, File, FolderOpen, FolderSearch, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { ActiveOperation } from '../../app/OperationBar';
 import type { ChronaApi } from '../../shared/api/chronaApi';
@@ -19,6 +19,7 @@ interface NewBackupDialogProps {
   onClose: () => void;
   onOperationChange: (operation: ActiveOperation | null) => void;
   onCompleted: (snapshot: Snapshot) => void;
+  onFailed?: (message: string) => void;
   desktopActions?: DesktopActions;
 }
 
@@ -37,6 +38,7 @@ export function NewBackupDialog({
   onClose,
   onOperationChange,
   onCompleted,
+  onFailed,
   desktopActions = defaultDesktopActions,
 }: NewBackupDialogProps) {
   const { t } = useI18n();
@@ -44,46 +46,26 @@ export function NewBackupDialog({
     entryPoint === 'repeat' ? initialSourcePath ?? '' : '',
   );
   const [backupName, setBackupName] = useState(() => defaultBackupName(t));
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const launchedRef = useRef(false);
 
   useEffect(() => {
     setSourcePath(entryPoint === 'repeat' ? initialSourcePath ?? '' : '');
     setBackupName(defaultBackupName(t));
     setError(null);
+    launchedRef.current = false;
   }, [entryPoint, initialSourcePath, t]);
-
-  useEffect(() => {
-    let unlisten: (() => void) | undefined;
-    let active = true;
-    api.onBlockIngestProgress((progress) => {
-      if (!active) return;
-      onOperationChange({
-        kind: 'backup',
-        label: t('backup.creating'),
-        currentFile: progress.currentFile,
-        processedBytes: progress.totalBytesProcessed,
-        totalBytes: progress.totalBytes,
-        phase: progress.phase,
-      });
-    }).then((cleanup) => {
-      unlisten = cleanup;
-    }).catch(() => undefined);
-
-    return () => {
-      active = false;
-      unlisten?.();
-    };
-  }, [api, onOperationChange]);
 
   async function chooseSource(select: () => Promise<string | null>) {
     const selected = await select();
     if (selected) setSourcePath(selected);
   }
 
-  async function startBackup() {
-    if (!sourcePath.trim() || !backupName.trim() || busy) return;
-    setBusy(true);
+  function startBackup() {
+    const nextSourcePath = sourcePath.trim();
+    const nextBackupName = backupName.trim();
+    if (!nextSourcePath || !nextBackupName || launchedRef.current) return;
+    launchedRef.current = true;
     setError(null);
     onOperationChange({
       kind: 'backup',
@@ -94,12 +76,23 @@ export function NewBackupDialog({
       phase: 'scanning',
     });
 
+    let request: Promise<Snapshot>;
     try {
-      const snapshot = await api.createSnapshot(
+      request = api.createSnapshot(
         repositoryPath,
-        sourcePath.trim(),
-        backupName.trim(),
+        nextSourcePath,
+        nextBackupName,
       );
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : String(caught);
+      launchedRef.current = false;
+      setError(message);
+      onOperationChange(null);
+      return;
+    }
+
+    onClose();
+    void request.then((snapshot) => {
       void api.recordAccessEvent(repositoryPath, {
         key: `snapshot:${snapshot.id}`,
         kind: 'snapshot',
@@ -114,13 +107,11 @@ export function NewBackupDialog({
       }).catch(() => undefined);
       onOperationChange(null);
       onCompleted(snapshot);
-      onClose();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
+    }).catch((caught) => {
+      const message = caught instanceof Error ? caught.message : String(caught);
       onOperationChange(null);
-    } finally {
-      setBusy(false);
-    }
+      onFailed?.(message);
+    });
   }
 
   return (
@@ -132,7 +123,7 @@ export function NewBackupDialog({
               ? t('backup.first')
               : entryPoint === 'repeat' ? t('backup.repeat') : t('backup.new')}
           </h1>
-          <button type="button" aria-label={t('backup.closeNew')} title={t('common.close')} disabled={busy} onClick={onClose}>
+          <button type="button" aria-label={t('backup.closeNew')} title={t('common.close')} onClick={onClose}>
             <X size={18} aria-hidden="true" />
           </button>
         </header>
@@ -147,11 +138,11 @@ export function NewBackupDialog({
             />
           </label>
           <div className="backup-dialog__source-actions">
-            <button type="button" disabled={busy} onClick={() => void chooseSource(api.selectSourceFilePath)}>
+            <button type="button" onClick={() => void chooseSource(api.selectSourceFilePath)}>
               <File size={16} aria-hidden="true" />
               {t('backup.chooseFile')}
             </button>
-            <button type="button" disabled={busy} onClick={() => void chooseSource(api.selectSourceFolderPath)}>
+            <button type="button" onClick={() => void chooseSource(api.selectSourceFolderPath)}>
               <FolderOpen size={16} aria-hidden="true" />
               {t('backup.chooseFolder')}
             </button>
@@ -161,7 +152,6 @@ export function NewBackupDialog({
                   type="button"
                   aria-label={t('backup.showSourceInExplorer')}
                   title={t('backup.showInExplorerTitle')}
-                  disabled={busy}
                   onClick={() => void desktopActions.revealPath(sourcePath.trim())}
                 >
                   <FolderSearch size={16} aria-hidden="true" />
@@ -170,7 +160,6 @@ export function NewBackupDialog({
                   type="button"
                   aria-label={t('backup.copySourcePath')}
                   title={t('common.copyPath')}
-                  disabled={busy}
                   onClick={() => void desktopActions.copyText(sourcePath.trim())}
                 >
                   <Copy size={16} aria-hidden="true" />
@@ -189,11 +178,11 @@ export function NewBackupDialog({
         </div>
 
         <footer>
-          <button type="button" disabled={busy} onClick={onClose}>{t('common.cancel')}</button>
+          <button type="button" onClick={onClose}>{t('common.cancel')}</button>
           <button
             className="backup-dialog__start"
             type="button"
-            disabled={busy || !sourcePath.trim() || !backupName.trim()}
+            disabled={!sourcePath.trim() || !backupName.trim()}
             onClick={() => void startBackup()}
           >
             {t('backup.start')}

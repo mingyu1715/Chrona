@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 
-import type { Snapshot } from '../../shared/types/chrona';
+import type { RestoreReport, Snapshot } from '../../shared/types/chrona';
 import { createChronaApiMock } from '../../test/chronaApiMock';
 import { RestoreSnapshotDialog } from './RestoreSnapshotDialog';
 
@@ -30,16 +30,16 @@ const snapshot: Snapshot = {
   files: [],
 };
 
-test('opens the restore folder only after restore completes', async () => {
+test('starts restore in the background after confirmation', async () => {
   const { api } = createChronaApiMock();
   const user = userEvent.setup();
-  const desktopActions = {
-    revealPath: vi.fn(async () => undefined),
-    openPath: vi.fn(async () => undefined),
-    copyText: vi.fn(async () => undefined),
-  };
+  const request = deferred<RestoreReport>();
+  const onClose = vi.fn();
+  const onOperationChange = vi.fn();
+  const onCompleted = vi.fn();
   vi.mocked(api.selectRestoreTargetPath).mockResolvedValue('/tmp/restore');
-  vi.mocked(api.restoreSnapshot).mockResolvedValue({
+  vi.mocked(api.restoreSnapshot).mockReturnValue(request.promise);
+  const report: RestoreReport = {
     schemaVersion: 1,
     snapshotId: snapshot.id,
     targetPath: '/tmp/restore',
@@ -47,20 +47,19 @@ test('opens the restore folder only after restore completes', async () => {
     restoredBytes: 4,
     restoredBlockCount: 1,
     files: [],
-  });
+  };
 
   render(
     <RestoreSnapshotDialog
       api={api}
       repositoryPath="/tmp/repository"
       snapshot={snapshot}
-      desktopActions={desktopActions}
-      onClose={vi.fn()}
+      onClose={onClose}
+      onOperationChange={onOperationChange}
+      onCompleted={onCompleted}
     />,
   );
 
-  expect(screen.queryByRole('button', { name: 'Open restore folder' }))
-    .not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Choose target' }));
   await user.click(screen.getByRole('button', { name: 'Restore' }));
   expect(api.restoreSnapshot).not.toHaveBeenCalled();
@@ -68,8 +67,29 @@ test('opens the restore folder only after restore completes', async () => {
   expect(confirmation).toBeInTheDocument();
 
   await user.click(within(confirmation).getByRole('button', { name: 'Restore' }));
-  await waitFor(() => expect(api.restoreSnapshot).toHaveBeenCalledOnce());
-  await user.click(screen.getByRole('button', { name: 'Open restore folder' }));
+  expect(api.restoreSnapshot).toHaveBeenCalledWith('/tmp/repository', snapshot.id, '/tmp/restore');
+  expect(onClose).toHaveBeenCalledOnce();
+  expect(onOperationChange).toHaveBeenLastCalledWith({
+    kind: 'restore',
+    label: 'Restoring snapshot',
+    currentFile: 'School files',
+    processedBytes: 0,
+    totalBytes: 0,
+    phase: '/tmp/restore',
+  });
+  expect(onCompleted).not.toHaveBeenCalled();
 
-  expect(desktopActions.openPath).toHaveBeenCalledWith('/tmp/restore');
+  request.resolve(report);
+  await waitFor(() => expect(onCompleted).toHaveBeenCalledWith(report));
+  expect(onOperationChange).toHaveBeenLastCalledWith(null);
 });
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((innerResolve, innerReject) => {
+    resolve = innerResolve;
+    reject = innerReject;
+  });
+  return { promise, resolve, reject };
+}

@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 
 import { NewBackupDialog } from './NewBackupDialog';
-import type { ActiveOperation } from '../../app/OperationBar';
 import { createChronaApiMock } from '../../test/chronaApiMock';
 import type { Snapshot } from '../../shared/types/chrona';
 
@@ -65,47 +64,43 @@ test('creates one snapshot from the selected source', async () => {
   expect(onCompleted).toHaveBeenCalledWith(snapshot);
 });
 
-test('maps block progress to the application operation bar', async () => {
-  const { api, emitProgress } = createChronaApiMock();
-  const onOperationChange = vi.fn<(operation: ActiveOperation | null) => void>();
+test('starts backup in the background without locking the dialog controls', async () => {
+  const { api } = createChronaApiMock();
+  const user = userEvent.setup();
+  const request = deferred<Snapshot>();
+  const onClose = vi.fn();
+  const onCompleted = vi.fn();
+  vi.mocked(api.createSnapshot).mockReturnValue(request.promise);
 
   render(
     <NewBackupDialog
       api={api}
       repositoryPath="/tmp/chrona-repo"
       entryPoint="global"
-      onClose={vi.fn()}
-      onOperationChange={onOperationChange}
-      onCompleted={vi.fn()}
+      onClose={onClose}
+      onOperationChange={vi.fn()}
+      onCompleted={onCompleted}
     />,
   );
 
-  await waitFor(() => expect(api.onBlockIngestProgress).toHaveBeenCalledOnce());
-  emitProgress({
-    operationId: 'op-1',
-    phase: 'storing',
-    currentFile: 'reports/final.docx',
-    processedFiles: 1,
-    totalFiles: 2,
-    currentFileBytesProcessed: 256,
-    currentFileSizeBytes: 512,
-    totalBytesProcessed: 768,
-    totalBytes: 1024,
-  });
+  await user.click(screen.getByRole('button', { name: /choose folder/i }));
+  await user.click(screen.getByRole('button', { name: /^start backup$/i }));
 
-  expect(onOperationChange).toHaveBeenLastCalledWith({
-    kind: 'backup',
-    label: 'Creating backup',
-    currentFile: 'reports/final.docx',
-    processedBytes: 768,
-    totalBytes: 1024,
-    phase: 'storing',
-  });
+  expect(api.createSnapshot).toHaveBeenCalledOnce();
+  expect(onClose).toHaveBeenCalledOnce();
+  expect(screen.getByRole('button', { name: /close new backup/i })).toBeEnabled();
+  expect(screen.getByRole('button', { name: /^cancel$/i })).toBeEnabled();
+  expect(onCompleted).not.toHaveBeenCalled();
+
+  request.resolve(snapshot);
+  await waitFor(() => expect(onCompleted).toHaveBeenCalledWith(snapshot));
 });
 
-test('keeps the selected source and error visible when backup fails', async () => {
+test('reports a background backup failure after dismissing the dialog', async () => {
   const { api } = createChronaApiMock();
   const user = userEvent.setup();
+  const onClose = vi.fn();
+  const onFailed = vi.fn();
   vi.mocked(api.createSnapshot).mockRejectedValue(new Error('backup failed'));
 
   render(
@@ -113,18 +108,19 @@ test('keeps the selected source and error visible when backup fails', async () =
       api={api}
       repositoryPath="/tmp/chrona-repo"
       entryPoint="global"
-      onClose={vi.fn()}
+      onClose={onClose}
       onOperationChange={vi.fn()}
       onCompleted={vi.fn()}
+      onFailed={onFailed}
     />,
   );
 
   await user.click(screen.getByRole('button', { name: /choose folder/i }));
   await user.click(screen.getByRole('button', { name: /^start backup$/i }));
 
-  expect(await screen.findByRole('alert')).toHaveTextContent('backup failed');
-  expect(screen.getByRole('textbox', { name: 'Source path' }))
-    .toHaveValue('/picked/source-folder');
+  expect(onClose).toHaveBeenCalledOnce();
+  await waitFor(() => expect(onFailed).toHaveBeenCalledWith('backup failed'));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 
 test('offers desktop actions only after a source is selected', async () => {
@@ -195,3 +191,13 @@ test('falls back to source selection when repeat entry has no recent path', () =
   expect(screen.getByRole('textbox', { name: 'Source path' })).toHaveValue('');
   expect(screen.getByRole('button', { name: 'Choose Folder' })).toBeEnabled();
 });
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((innerResolve, innerReject) => {
+    resolve = innerResolve;
+    reject = innerReject;
+  });
+  return { promise, resolve, reject };
+}

@@ -52,11 +52,15 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - File Inspector / Block Map
 - Repository Statistics Dashboard
 - 사용자 경험·한국어/영어·오프라인 로컬 연동
+- 백업 생성과 스냅샷 복원을 하단 진행 표시 기반 백그라운드 작업으로 전환
+- 저장소 내부 백업 대상 관리와 소스별 파일/스냅샷 묶음
+- 원본 위치 시점 복원, 안전 스냅샷 생성, 초과 파일 격리
 - README, 개발 로그, 구현 기록 문서
 
 ### 다음 구현 후보
 
 - 릴리스 패키징, 서명, 설치 파일과 기본 실행 테스트
+- 복원 preview와 충돌 해결 UX
 
 ### 아직 세부 계획 없음
 
@@ -96,6 +100,7 @@ Tauri Commands
   ├─ restore_snapshot
   ├─ verify_repository
   ├─ get_repository_inventory
+  ├─ list_sources / register_source
   └─ get_statistics
 
 Rust Core
@@ -105,6 +110,7 @@ Rust Core
   ├─ BlockHasher
   ├─ BlockStore
   ├─ SnapshotStore
+  ├─ SourceStore
   ├─ SnapshotService
   ├─ DiffService
   ├─ RestoreService
@@ -138,6 +144,7 @@ chrona-repository/
   indexes/
     snapshot-index.json
     access-index.json
+    source-index.json
   logs/
 ```
 
@@ -148,6 +155,7 @@ chrona-repository/
 - `snapshots/`: snapshot JSON 저장
 - `indexes/snapshot-index.json`: snapshot 목록 index
 - `indexes/access-index.json`: Home/adaptive navigation 접근 기록
+- `indexes/source-index.json`: 저장소 안에서 관리하는 백업 대상 목록
 - `logs/`: 예약된 디렉터리. structured app log는 아직 구현하지 않음
 
 아직 구현되지 않은 저장 구조:

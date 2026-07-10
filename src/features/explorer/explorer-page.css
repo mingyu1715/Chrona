@@ -59,7 +59,7 @@
 
 .explorer-filters {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(120px, 0.35fr));
+  grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(120px, 0.35fr));
   gap: 8px;
   margin-bottom: 12px;
 }

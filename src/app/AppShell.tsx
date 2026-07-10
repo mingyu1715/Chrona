@@ -3,7 +3,13 @@ import { type ReactNode, useEffect, useState } from 'react';
 import type { ChronaApi } from '../shared/api/chronaApi';
 import { useI18n } from '../shared/i18n/I18nProvider';
 import { useAppPreferences } from '../shared/preferences/AppPreferencesProvider';
-import type { Snapshot } from '../shared/types/chrona';
+import type {
+  RepositoryStatisticsProgress,
+  RepositoryStatisticsReport,
+  OriginalLocationRestoreReport,
+  RestoreReport,
+  Snapshot,
+} from '../shared/types/chrona';
 import {
   type BackupEntryRequest,
   NewBackupDialog,
@@ -32,6 +38,22 @@ interface AppShellProps {
   onNewBackup?: () => void;
 }
 
+interface StatisticsAnalysisState {
+  repositoryPath: string | null;
+  report: RepositoryStatisticsReport | null;
+  progress: RepositoryStatisticsProgress | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const emptyStatisticsAnalysis: StatisticsAnalysisState = {
+  repositoryPath: null,
+  report: null,
+  progress: null,
+  loading: false,
+  error: null,
+};
+
 export function AppShell({
   children,
   api,
@@ -48,7 +70,11 @@ export function AppShell({
   const [backupRequest, setBackupRequest] = useState<BackupEntryRequest | null>(null);
   const [internalOperation, setInternalOperation] = useState<ActiveOperation | null>(null);
   const [completedSnapshot, setCompletedSnapshot] = useState<Snapshot | null>(null);
+  const [completedRestore, setCompletedRestore] = useState<RestoreReport | OriginalLocationRestoreReport | null>(null);
+  const [operationError, setOperationError] = useState<string | null>(null);
+  const [statisticsAnalysis, setStatisticsAnalysis] = useState<StatisticsAnalysisState>(emptyStatisticsAnalysis);
   const [homeRefreshKey, setHomeRefreshKey] = useState(0);
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
   const repositoryLibrary = useRepositoryLibrary(api);
   const { t } = useI18n();
   const theme = preferences.theme === 'system' ? systemTheme : preferences.theme;
@@ -62,6 +88,61 @@ export function AppShell({
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+
+  useEffect(() => {
+    if (!api) return;
+    let unlisten: (() => void) | undefined;
+    let active = true;
+    api.onBlockIngestProgress((progress) => {
+      if (!active) return;
+      setInternalOperation({
+        kind: 'backup',
+        label: t('backup.creating'),
+        currentFile: progress.currentFile,
+        processedBytes: progress.totalBytesProcessed,
+        totalBytes: progress.totalBytes,
+        phase: progress.phase,
+      });
+    }).then((cleanup) => {
+      unlisten = cleanup;
+    }).catch(() => undefined);
+
+    return () => {
+      active = false;
+      unlisten?.();
+    };
+  }, [api, t]);
+
+  useEffect(() => {
+    if (!api) return;
+    let unlisten: (() => void) | undefined;
+    let active = true;
+    api.onRepositoryStatisticsProgress((progress) => {
+      if (!active) return;
+      setStatisticsAnalysis((current) => ({
+        ...current,
+        progress,
+      }));
+      setInternalOperation(statisticsOperationFromProgress(progress, t));
+    }).then((cleanup) => {
+      unlisten = cleanup;
+    }).catch(() => undefined);
+
+    return () => {
+      active = false;
+      unlisten?.();
+    };
+  }, [api, t]);
+
+  const activeRepositoryPath = repositoryLibrary.activeRepository?.registration.path ?? null;
+
+  useEffect(() => {
+    setStatisticsAnalysis((current) => {
+      if (current.repositoryPath === activeRepositoryPath) return current;
+      return { ...emptyStatisticsAnalysis, repositoryPath: activeRepositoryPath };
+    });
+    setSelectedSourceId(null);
+  }, [activeRepositoryPath]);
   const repositorySwitcher = api ? (
     <RepositoryLibraryMenu
       api={api}
@@ -91,8 +172,12 @@ export function AppShell({
     ),
   );
   const showInitialSetup = repositoryUnavailable && activeView === 'home';
+  const displayedOperation = activeOperation ?? internalOperation;
+  const repositoryWriteActive = displayedOperation?.kind === 'backup'
+    || displayedOperation?.kind === 'restore';
   const newBackupAction = api
     ? () => {
+        if (repositoryWriteActive) return;
         if (hasRepository) {
           setBackupRequest({ entryPoint: 'global' });
           onNewBackup?.();
@@ -120,6 +205,48 @@ export function AppShell({
     if (path) await repositoryLibrary.relink(repositoryId, path);
   }
 
+  async function analyzeStatistics() {
+    if (!api || !activeRepositoryPath) return;
+    const repositoryPath = activeRepositoryPath;
+    setStatisticsAnalysis((current) => ({
+      repositoryPath,
+      report: current.repositoryPath === repositoryPath ? current.report : null,
+      progress: null,
+      loading: true,
+      error: null,
+    }));
+    setInternalOperation({
+      kind: 'statistics',
+      label: t('statistics.analyzing'),
+      currentFile: null,
+      processedBytes: 0,
+      totalBytes: 0,
+      phase: t('statistics.starting'),
+      progressPercent: 0,
+      amountText: t('statistics.starting'),
+    });
+    try {
+      const report = await api.analyzeRepositoryStatistics(repositoryPath);
+      setStatisticsAnalysis({
+        repositoryPath,
+        report,
+        progress: null,
+        loading: false,
+        error: null,
+      });
+    } catch (caught) {
+      setStatisticsAnalysis((current) => ({
+        repositoryPath,
+        report: current.repositoryPath === repositoryPath ? current.report : null,
+        progress: null,
+        loading: false,
+        error: caught instanceof Error ? caught.message : String(caught),
+      }));
+    } finally {
+      setInternalOperation((current) => current?.kind === 'statistics' ? null : current);
+    }
+  }
+
   let mainContent = content;
   if (api && activeView === 'settings') {
     mainContent = (
@@ -142,8 +269,14 @@ export function AppShell({
         api={api}
         repositoryPath={repositoryLibrary.activeRepository.registration.path}
         refreshKey={homeRefreshKey}
-        onNewBackup={setBackupRequest}
+        onNewBackup={(request) => {
+          if (!repositoryWriteActive) setBackupRequest(request);
+        }}
         onOpenStatistics={() => setActiveView('statistics')}
+        onSelectSource={(sourceId, target) => {
+          setSelectedSourceId(sourceId);
+          setActiveView(target);
+        }}
       />
     );
   } else if (api && repositoryLibrary.activeRepository && activeView === 'files') {
@@ -151,6 +284,8 @@ export function AppShell({
       <ExplorerPage
         api={api}
         repositoryPath={repositoryLibrary.activeRepository.registration.path}
+        selectedSourceId={selectedSourceId}
+        onSelectSourceId={setSelectedSourceId}
       />
     );
   } else if (api && repositoryLibrary.activeRepository && activeView === 'snapshots') {
@@ -158,11 +293,26 @@ export function AppShell({
       <SnapshotsPage
         api={api}
         repositoryPath={repositoryLibrary.activeRepository.registration.path}
-        onNewBackup={() => setBackupRequest({ entryPoint: 'global' })}
+        selectedSourceId={selectedSourceId}
+        onSelectSourceId={setSelectedSourceId}
+        onNewBackup={(request = { entryPoint: 'global' }) => {
+          if (!repositoryWriteActive) setBackupRequest(request);
+        }}
+        onOperationChange={setInternalOperation}
+        onRestoreCompleted={setCompletedRestore}
+        onRestoreFailed={setOperationError}
       />
     );
   } else if (api && repositoryLibrary.activeRepository && activeView === 'statistics') {
-    mainContent = <StatisticsPage api={api} repositoryPath={repositoryLibrary.activeRepository.registration.path} onOperationChange={setInternalOperation} />;
+    mainContent = (
+      <StatisticsPage
+        report={statisticsAnalysis.report}
+        progress={statisticsAnalysis.progress}
+        loading={statisticsAnalysis.loading}
+        error={statisticsAnalysis.error}
+        onAnalyze={() => void analyzeStatistics()}
+      />
+    );
   }
   if (api && repositoryUnavailable && activeView !== 'home' && activeView !== 'settings') {
     mainContent = (
@@ -187,7 +337,7 @@ export function AppShell({
       <AppTopBar
         theme={theme}
         repositorySwitcher={repositorySwitcher}
-        onNewBackup={newBackupAction}
+        onNewBackup={repositoryWriteActive ? undefined : newBackupAction}
         primaryActionLabel={primaryActionLabel}
         onToggleTheme={toggleTheme}
         onOpenSettings={() => setActiveView('settings')}
@@ -200,7 +350,7 @@ export function AppShell({
           <RepositorySetupDialog api={api} controller={repositoryLibrary} />
         ) : mainContent}
       </main>
-      <OperationBar operation={activeOperation ?? internalOperation} />
+      <OperationBar operation={displayedOperation} />
       {api && setupOpen && !showInitialSetup && (
         <RepositorySetupDialog
           api={api}
@@ -218,9 +368,12 @@ export function AppShell({
           onClose={() => setBackupRequest(null)}
           onOperationChange={setInternalOperation}
           onCompleted={(snapshot) => {
+            setOperationError(null);
             setCompletedSnapshot(snapshot);
+            setSelectedSourceId(snapshot.sourceId ?? null);
             setHomeRefreshKey((current) => current + 1);
           }}
+          onFailed={setOperationError}
         />
       )}
       {completedSnapshot && (
@@ -245,8 +398,38 @@ export function AppShell({
           </button>
         </div>
       )}
+      {completedRestore && (
+        <div className="app-shell__notice" role="status">
+          <span>{t('app.restoreComplete')} <strong>{restoreResultPath(completedRestore)}</strong></span>
+          <button
+            className="app-shell__notice-close"
+            type="button"
+            aria-label={t('app.dismissOperationResult')}
+            onClick={() => setCompletedRestore(null)}
+          >
+            {t('common.close')}
+          </button>
+        </div>
+      )}
+      {operationError && (
+        <div className="app-shell__notice app-shell__notice--error" role="alert">
+          <span>{t('app.operationFailed')} <strong>{operationError}</strong></span>
+          <button
+            className="app-shell__notice-close"
+            type="button"
+            aria-label={t('app.dismissOperationResult')}
+            onClick={() => setOperationError(null)}
+          >
+            {t('common.close')}
+          </button>
+        </div>
+      )}
     </div>
   );
+}
+
+function restoreResultPath(report: RestoreReport | OriginalLocationRestoreReport) {
+  return 'targetPath' in report ? report.targetPath : report.sourcePath;
 }
 
 export type { ActiveOperation, AppView };
@@ -254,4 +437,26 @@ export type { ActiveOperation, AppView };
 function getSystemTheme(): ThemeMode {
   if (typeof window === 'undefined' || !window.matchMedia) return 'light';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function statisticsOperationFromProgress(
+  progress: RepositoryStatisticsProgress,
+  t: ReturnType<typeof useI18n>['t'],
+): ActiveOperation {
+  const blocks = progress.phase === 'blocks';
+  const current = blocks ? progress.processedBlocks : progress.processedSnapshots;
+  const total = blocks ? progress.totalBlocks : progress.totalSnapshots;
+  const phase = blocks
+    ? t('statistics.blocksProgress', { current, total })
+    : t('statistics.snapshotsProgress', { current, total });
+  return {
+    kind: 'statistics',
+    label: t('statistics.analyzing'),
+    currentFile: null,
+    processedBytes: 0,
+    totalBytes: 0,
+    phase,
+    progressPercent: total > 0 ? Math.min(100, Math.round((current / total) * 100)) : undefined,
+    amountText: phase,
+  };
 }

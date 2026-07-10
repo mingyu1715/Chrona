@@ -44,6 +44,12 @@ pub enum ChronaError {
     RepositoryAlreadyRegistered(String),
     #[error("RepositoryRegistrationNotFound: {0}")]
     RepositoryRegistrationNotFound(String),
+    #[error("InvalidSourceIndex: {0}")]
+    InvalidSourceIndex(String),
+    #[error("SourceAlreadyRegistered: {0}")]
+    SourceAlreadyRegistered(String),
+    #[error("SourceNotFound: {0}")]
+    SourceNotFound(String),
     #[error("UnsafeRestoreTarget: {0}")]
     UnsafeRestoreTarget(String),
     #[error("MissingBlock: {0}")]

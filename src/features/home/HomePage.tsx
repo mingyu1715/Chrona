@@ -6,6 +6,7 @@ import { useI18n } from '../../shared/i18n/I18nProvider';
 import type { BackupEntryRequest } from '../backup/NewBackupDialog';
 import type {
   AccessNode,
+  BackupSource,
   HomeSummary,
   RepositoryStatisticsOverview,
 } from '../../shared/types/chrona';
@@ -17,6 +18,7 @@ interface HomePageProps {
   refreshKey?: number;
   onNewBackup: (request: BackupEntryRequest) => void;
   onOpenStatistics: () => void;
+  onSelectSource?: (sourceId: string, target: 'files' | 'snapshots') => void;
 }
 
 export function HomePage({
@@ -25,10 +27,12 @@ export function HomePage({
   refreshKey = 0,
   onNewBackup,
   onOpenStatistics,
+  onSelectSource,
 }: HomePageProps) {
   const { t, formatBytes, formatDateTime, formatNumber } = useI18n();
   const [home, setHome] = useState<HomeSummary | null>(null);
   const [overview, setOverview] = useState<RepositoryStatisticsOverview | null>(null);
+  const [sources, setSources] = useState<BackupSource[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,10 +42,12 @@ export function HomePage({
     Promise.all([
       api.getHomeSummary(repositoryPath),
       api.getRepositoryStatisticsOverview(repositoryPath),
-    ]).then(([nextHome, nextOverview]) => {
+      api.listSources(repositoryPath),
+    ]).then(([nextHome, nextOverview, sourceIndex]) => {
       if (!active) return;
       setHome(nextHome);
       setOverview(nextOverview);
+      setSources(sourceIndex.sources);
     }).catch((caught) => {
       if (active) setError(caught instanceof Error ? caught.message : String(caught));
     });
@@ -128,6 +134,33 @@ export function HomePage({
         </dl>
       </section>
 
+      <section className="home-sources" aria-labelledby="home-sources-title">
+        <div className="home-recent__heading">
+          <h2 id="home-sources-title">{t('sources.title')}</h2>
+          <span>{t('sources.count', { count: sources.length })}</span>
+        </div>
+        {sources.length > 0 ? (
+          <ul>
+            {sources.map((source) => (
+              <SourceItem
+                key={source.id}
+                source={source}
+                onOpen={() => onSelectSource?.(source.id, 'snapshots')}
+                onBackup={() => onNewBackup({
+                  entryPoint: 'repeat',
+                  initialSourcePath: source.path,
+                })}
+              />
+            ))}
+          </ul>
+        ) : (
+          <div className="home-recent__empty">
+            <Folder size={19} aria-hidden="true" />
+            <span>{t('sources.noSources')}</span>
+          </div>
+        )}
+      </section>
+
       <section className="home-recent" aria-labelledby="home-recent-title">
         <div className="home-recent__heading">
           <h2 id="home-recent-title">{t('home.recentWork')}</h2>
@@ -145,6 +178,55 @@ export function HomePage({
         )}
       </section>
     </div>
+  );
+}
+
+function SourceItem({
+  source,
+  onOpen,
+  onBackup,
+}: {
+  source: BackupSource;
+  onOpen: () => void;
+  onBackup: () => void;
+}) {
+  const { t, formatDateTime, formatNumber } = useI18n();
+  const statusLabel = source.status === 'missing'
+    ? t('sources.status.missing')
+    : t('sources.status.available');
+
+  return (
+    <li className="home-source">
+      <button
+        className="home-source__main"
+        type="button"
+        aria-label={t('sources.openSnapshots', { name: source.displayName })}
+        onClick={onOpen}
+      >
+        <span className="home-recent__icon" aria-hidden="true">
+          <Folder size={17} />
+        </span>
+        <span className="home-source__label">
+          <strong>{source.displayName}</strong>
+          <small>{source.path}</small>
+        </span>
+        <span className="home-source__meta">
+          <span data-status={source.status}>{statusLabel}</span>
+          <small>
+            {source.latestSnapshotAt
+              ? formatDateTime(source.latestSnapshotAt)
+              : t('common.noBackups')}
+          </small>
+        </span>
+        <span className="home-source__count">
+          {t('sources.snapshotCount', { count: formatNumber(source.snapshotCount) })}
+        </span>
+      </button>
+      <button className="home-source__backup" type="button" onClick={onBackup}>
+        <Plus size={15} aria-hidden="true" />
+        {t('sources.backupSource', { name: source.displayName })}
+      </button>
+    </li>
   );
 }
 

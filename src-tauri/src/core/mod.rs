@@ -19,4 +19,5 @@ pub mod restore_service;
 pub mod scanner;
 pub mod snapshot_service;
 pub mod snapshot_store;
+pub mod source_store;
 pub mod statistics_service;

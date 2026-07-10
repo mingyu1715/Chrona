@@ -7,4 +7,5 @@ pub mod repository_commands;
 pub mod repository_library_commands;
 pub mod restore_commands;
 pub mod snapshot_commands;
+pub mod source_commands;
 pub mod statistics_commands;

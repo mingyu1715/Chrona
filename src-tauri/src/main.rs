@@ -6,8 +6,9 @@ use chrona::models::integrity::IntegrityReport;
 use chrona::models::inventory::RepositoryInventoryReport;
 use chrona::models::repository::{CompressionMode, RepositoryManifest};
 use chrona::models::repository_registry::{OpenedRepository, RepositoryLibrary};
-use chrona::models::restore::RestoreReport;
+use chrona::models::restore::{OriginalLocationRestoreReport, RestoreReport};
 use chrona::models::snapshot::{Snapshot, SnapshotIndexItem};
+use chrona::models::source::{BackupSource, SourceIndex};
 use chrona::models::statistics::{RepositoryStatisticsOverview, RepositoryStatisticsReport};
 
 #[tauri::command]
@@ -119,27 +120,36 @@ fn set_repository_compression_mode(
 }
 
 #[tauri::command]
-fn ingest_blocks(
+async fn ingest_blocks(
     app: tauri::AppHandle,
     repository_path: String,
     source_path: String,
 ) -> Result<BlockIngestSummary, String> {
-    chrona::commands::block_commands::ingest_blocks(app, repository_path, source_path)
+    chrona::commands::block_commands::ingest_blocks(app, repository_path, source_path).await
 }
 
 #[tauri::command]
-fn create_snapshot(
+async fn create_snapshot(
     app: tauri::AppHandle,
     repository_path: String,
     source_path: String,
     name: String,
 ) -> Result<Snapshot, String> {
     chrona::commands::snapshot_commands::create_snapshot(app, repository_path, source_path, name)
+        .await
 }
 
 #[tauri::command]
 fn list_snapshots(repository_path: String) -> Result<Vec<SnapshotIndexItem>, String> {
     chrona::commands::snapshot_commands::list_snapshots(repository_path)
+}
+
+#[tauri::command]
+fn delete_snapshot(
+    repository_path: String,
+    snapshot_id: String,
+) -> Result<Vec<SnapshotIndexItem>, String> {
+    chrona::commands::snapshot_commands::delete_snapshot(repository_path, snapshot_id)
 }
 
 #[tauri::command]
@@ -158,6 +168,30 @@ fn compare_snapshots(
         base_snapshot_id,
         target_snapshot_id,
     )
+}
+
+#[tauri::command]
+fn list_sources(repository_path: String) -> Result<SourceIndex, String> {
+    chrona::commands::source_commands::list_sources(repository_path)
+}
+
+#[tauri::command]
+fn register_source(repository_path: String, source_path: String) -> Result<BackupSource, String> {
+    chrona::commands::source_commands::register_source(repository_path, source_path)
+}
+
+#[tauri::command]
+fn rename_source(
+    repository_path: String,
+    source_id: String,
+    display_name: String,
+) -> Result<SourceIndex, String> {
+    chrona::commands::source_commands::rename_source(repository_path, source_id, display_name)
+}
+
+#[tauri::command]
+fn remove_source(repository_path: String, source_id: String) -> Result<SourceIndex, String> {
+    chrona::commands::source_commands::remove_source(repository_path, source_id)
 }
 
 #[tauri::command]
@@ -186,17 +220,32 @@ fn clear_access_history(repository_path: String) -> Result<AccessHistorySummary,
 }
 
 #[tauri::command]
-fn restore_snapshot(
+async fn restore_snapshot(
     repository_path: String,
     snapshot_id: String,
     target_path: String,
 ) -> Result<RestoreReport, String> {
     chrona::commands::restore_commands::restore_snapshot(repository_path, snapshot_id, target_path)
+        .await
 }
 
 #[tauri::command]
-fn verify_repository(repository_path: String) -> Result<IntegrityReport, String> {
-    chrona::commands::integrity_commands::verify_repository(repository_path)
+async fn restore_snapshot_to_source(
+    repository_path: String,
+    source_id: String,
+    snapshot_id: String,
+) -> Result<OriginalLocationRestoreReport, String> {
+    chrona::commands::restore_commands::restore_snapshot_to_source(
+        repository_path,
+        source_id,
+        snapshot_id,
+    )
+    .await
+}
+
+#[tauri::command]
+async fn verify_repository(repository_path: String) -> Result<IntegrityReport, String> {
+    chrona::commands::integrity_commands::verify_repository(repository_path).await
 }
 
 #[tauri::command]
@@ -208,10 +257,12 @@ fn get_repository_inventory(repository_path: String) -> Result<RepositoryInvento
 fn inspect_repository_file(
     repository_path: String,
     relative_path: String,
+    source_id: Option<String>,
 ) -> Result<FileInspectionReport, String> {
     chrona::commands::file_inspector_commands::inspect_repository_file(
         repository_path,
         relative_path,
+        source_id,
     )
 }
 
@@ -251,14 +302,20 @@ fn main() {
             ingest_blocks,
             create_snapshot,
             list_snapshots,
+            delete_snapshot,
             get_snapshot,
             compare_snapshots,
+            list_sources,
+            register_source,
+            rename_source,
+            remove_source,
             record_access_event,
             get_home_summary,
             pin_access_item,
             unpin_access_item,
             clear_access_history,
             restore_snapshot,
+            restore_snapshot_to_source,
             verify_repository,
             get_repository_inventory,
             inspect_repository_file,

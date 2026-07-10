@@ -104,7 +104,7 @@
 
 .backup-dialog__error {
   margin: 0;
-  color: #b33a3a;
+  color: var(--app-danger);
   font-size: 12px;
 }
 
@@ -117,7 +117,7 @@
 .backup-dialog > footer .backup-dialog__start {
   border-color: var(--app-primary);
   background: var(--app-primary);
-  color: #ffffff;
+  color: var(--app-on-primary);
 }
 
 .backup-dialog button:disabled {

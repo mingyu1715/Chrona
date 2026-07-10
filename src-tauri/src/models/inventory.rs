@@ -31,6 +31,8 @@ pub struct FileKindStat {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct InventoryFileEntry {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_id: Option<String>,
     pub relative_path: String,
     pub file_name: String,
     pub extension: Option<String>,

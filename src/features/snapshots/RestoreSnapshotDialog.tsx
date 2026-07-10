@@ -1,11 +1,8 @@
-import { Copy, FolderOpen, X } from 'lucide-react';
+import { FolderOpen, X } from 'lucide-react';
 import { useState } from 'react';
 
+import type { ActiveOperation } from '../../app/OperationBar';
 import type { ChronaApi } from '../../shared/api/chronaApi';
-import {
-  desktopActions as defaultDesktopActions,
-  type DesktopActions,
-} from '../../shared/desktop/desktopActions';
 import { useI18n } from '../../shared/i18n/I18nProvider';
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog';
 import type { RestoreReport, Snapshot } from '../../shared/types/chrona';
@@ -15,7 +12,9 @@ interface RestoreSnapshotDialogProps {
   repositoryPath: string;
   snapshot: Snapshot;
   onClose: () => void;
-  desktopActions?: DesktopActions;
+  onOperationChange?: (operation: ActiveOperation | null) => void;
+  onCompleted?: (report: RestoreReport) => void;
+  onFailed?: (message: string) => void;
 }
 
 export function RestoreSnapshotDialog({
@@ -23,12 +22,12 @@ export function RestoreSnapshotDialog({
   repositoryPath,
   snapshot,
   onClose,
-  desktopActions = defaultDesktopActions,
+  onOperationChange,
+  onCompleted,
+  onFailed,
 }: RestoreSnapshotDialogProps) {
-  const { t, formatBytes, formatNumber } = useI18n();
+  const { t } = useI18n();
   const [targetPath, setTargetPath] = useState('');
-  const [report, setReport] = useState<RestoreReport | null>(null);
-  const [busy, setBusy] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,27 +35,39 @@ export function RestoreSnapshotDialog({
     const selected = await api.selectRestoreTargetPath();
     if (selected) {
       setTargetPath(selected);
-      setReport(null);
+      setError(null);
     }
   }
 
   async function restore() {
-    if (!targetPath.trim() || busy) return;
+    if (!targetPath.trim()) return;
     setConfirmOpen(true);
   }
 
-  async function confirmRestore() {
-    if (!targetPath.trim() || busy) return;
-    setBusy(true);
+  function confirmRestore() {
+    const nextTargetPath = targetPath.trim();
+    if (!nextTargetPath) return;
     setError(null);
-    try {
-      setReport(await api.restoreSnapshot(repositoryPath, snapshot.id, targetPath.trim()));
-      setConfirmOpen(false);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : String(caught));
-    } finally {
-      setBusy(false);
-    }
+    setConfirmOpen(false);
+    onOperationChange?.({
+      kind: 'restore',
+      label: t('restore.restoring'),
+      currentFile: snapshot.name,
+      processedBytes: 0,
+      totalBytes: 0,
+      phase: nextTargetPath,
+    });
+    onClose();
+    void api.restoreSnapshot(repositoryPath, snapshot.id, nextTargetPath)
+      .then((report) => {
+        onOperationChange?.(null);
+        onCompleted?.(report);
+      })
+      .catch((caught) => {
+        const message = caught instanceof Error ? caught.message : String(caught);
+        onOperationChange?.(null);
+        onFailed?.(message);
+      });
   }
 
   return (
@@ -64,7 +75,7 @@ export function RestoreSnapshotDialog({
       <section className="snapshot-restore-dialog" role="dialog" aria-modal="true" aria-label={t('restore.title', { name: snapshot.name })}>
         <header>
           <h1>{t('restore.title', { name: snapshot.name })}</h1>
-          <button type="button" aria-label={t('restore.close')} title={t('common.close')} disabled={busy} onClick={onClose}>
+          <button type="button" aria-label={t('restore.close')} title={t('common.close')} onClick={onClose}>
             <X size={18} aria-hidden="true" />
           </button>
         </header>
@@ -73,42 +84,15 @@ export function RestoreSnapshotDialog({
             <span>{t('restore.target')}</span>
             <input value={targetPath} placeholder={t('restore.targetPlaceholder')} onChange={(event) => setTargetPath(event.target.value)} />
           </label>
-          <button type="button" disabled={busy} onClick={() => void chooseTarget()}>
+          <button type="button" onClick={() => void chooseTarget()}>
             <FolderOpen size={16} aria-hidden="true" />
             {t('restore.chooseTarget')}
           </button>
           {error && <p role="alert">{error}</p>}
-          {report && (
-            <div className="snapshot-restore-dialog__result">
-              <dl>
-                <div><dt>{t('common.files')}</dt><dd>{formatNumber(report.restoredFileCount)}</dd></div>
-                <div><dt>{t('common.bytes')}</dt><dd>{formatBytes(report.restoredBytes)}</dd></div>
-                <div><dt>{t('common.blocks')}</dt><dd>{formatNumber(report.restoredBlockCount)}</dd></div>
-              </dl>
-              <div>
-                <button
-                  type="button"
-                  aria-label={t('restore.openFolder')}
-                  onClick={() => void desktopActions.openPath(report.targetPath)}
-                >
-                  <FolderOpen size={16} aria-hidden="true" />
-                  {t('restore.openFolder')}
-                </button>
-                <button
-                  type="button"
-                  aria-label={t('restore.copyFolderPath')}
-                  title={t('common.copyPath')}
-                  onClick={() => void desktopActions.copyText(report.targetPath)}
-                >
-                  <Copy size={16} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
         <footer>
-          <button type="button" disabled={busy} onClick={onClose}>{t('common.cancel')}</button>
-          <button className="snapshot-restore-dialog__confirm" type="button" disabled={busy || !targetPath.trim()} onClick={() => void restore()}>
+          <button type="button" onClick={onClose}>{t('common.cancel')}</button>
+          <button className="snapshot-restore-dialog__confirm" type="button" disabled={!targetPath.trim()} onClick={() => void restore()}>
             {t('common.restore')}
           </button>
         </footer>

@@ -1,5 +1,7 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
@@ -21,6 +23,8 @@ const activeOperation: ActiveOperation = {
   phase: 'storing',
 };
 
+const appShellCss = readFileSync(join(process.cwd(), 'src/app/app-shell.css'), 'utf8');
+
 function renderShell(element: ReactElement) {
   const store: PreferencesStore = {
     get: vi.fn(async () => null) as unknown as PreferencesStore['get'],
@@ -35,6 +39,14 @@ function renderShell(element: ReactElement) {
 }
 
 describe('AppShell', () => {
+  test('maps shared workspace color tokens to the active shell theme', () => {
+    expect(appShellCss).toContain('--page: var(--app-page);');
+    expect(appShellCss).toContain('--surface: var(--app-surface);');
+    expect(appShellCss).toContain('--text: var(--app-text);');
+    expect(appShellCss).toContain('--text-muted: var(--app-muted);');
+    expect(appShellCss).toContain('--border: var(--app-border);');
+  });
+
   test('shows five navigation destinations without workflow badges', () => {
     renderShell(<AppShell>Compatibility content</AppShell>);
     const navigation = screen.getByRole('navigation', { name: /primary/i });
@@ -110,6 +122,62 @@ describe('AppShell', () => {
 
     expect(await screen.findByRole('button', { name: /locate repository/i })).toBeInTheDocument();
     expect(api.activateRegisteredRepository).not.toHaveBeenCalled();
+  });
+
+  test('keeps backup progress in the bottom bar after the backup dialog closes', async () => {
+    const { api, emitProgress } = createChronaApiMock();
+    renderShell(<AppShell api={api} />);
+
+    await waitFor(() => expect(api.onBlockIngestProgress).toHaveBeenCalledOnce());
+    emitProgress({
+      operationId: 'op-1',
+      phase: 'storing',
+      currentFile: 'reports/final.docx',
+      processedFiles: 1,
+      totalFiles: 2,
+      currentFileBytesProcessed: 256,
+      currentFileSizeBytes: 512,
+      totalBytesProcessed: 768,
+      totalBytes: 1024,
+    });
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('reports/final.docx'));
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '75');
+  });
+
+  test('keeps statistics analysis results after navigating away and back', async () => {
+    const { api } = createChronaApiMock();
+    const user = userEvent.setup();
+    renderShell(<AppShell api={api} />);
+
+    await user.click(screen.getByRole('button', { name: 'Statistics' }));
+    await user.click(await screen.findByRole('button', { name: /analyze repository/i }));
+    expect(await screen.findByText('Dedup saved')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Files' }));
+    await user.click(screen.getByRole('button', { name: 'Statistics' }));
+
+    expect(screen.getByText('Dedup saved')).toBeInTheDocument();
+    expect(api.analyzeRepositoryStatistics).toHaveBeenCalledOnce();
+  });
+
+  test('maps repository statistics progress to the bottom progress bar', async () => {
+    const { api, emitStatisticsProgress } = createChronaApiMock();
+    const user = userEvent.setup();
+    renderShell(<AppShell api={api} />);
+
+    await waitFor(() => expect(api.onRepositoryStatisticsProgress).toHaveBeenCalledOnce());
+    await user.click(screen.getByRole('button', { name: 'Files' }));
+    emitStatisticsProgress({
+      phase: 'blocks',
+      processedSnapshots: 2,
+      totalSnapshots: 2,
+      processedBlocks: 4,
+      totalBlocks: 10,
+    });
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Blocks 4 / 10'));
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '40');
   });
 });
 

@@ -105,6 +105,7 @@ export interface Snapshot {
   schemaVersion: number;
   id: string;
   name: string;
+  sourceId?: string | null;
   createdAt: string;
   sourceRoot: string;
   summary: SnapshotSummary;
@@ -114,11 +115,31 @@ export interface Snapshot {
 export interface SnapshotIndexItem {
   id: string;
   name: string;
+  sourceId?: string | null;
   createdAt: string;
   sourceRoot: string;
   fileCount: number;
   totalOriginalBytes: number;
   newStoredBytes: number;
+}
+
+export type SourceStatus = 'available' | 'missing';
+
+export interface BackupSource {
+  id: string;
+  displayName: string;
+  path: string;
+  createdAt: string;
+  updatedAt: string;
+  latestSnapshotId: string | null;
+  latestSnapshotAt: string | null;
+  snapshotCount: number;
+  status: SourceStatus;
+}
+
+export interface SourceIndex {
+  schemaVersion: number;
+  sources: BackupSource[];
 }
 
 export type SnapshotChangeType = 'added' | 'deleted' | 'modified' | 'unchanged';
@@ -186,6 +207,26 @@ export interface RestoreReport {
   files: RestoreFileResult[];
 }
 
+export interface QuarantinedFileResult {
+  relativePath: string;
+  quarantinePath: string;
+}
+
+export interface OriginalLocationRestoreReport {
+  schemaVersion: number;
+  snapshotId: string;
+  sourceId: string;
+  sourcePath: string;
+  safetySnapshotId: string;
+  operationId: string;
+  restoredFileCount: number;
+  restoredBytes: number;
+  restoredBlockCount: number;
+  quarantinedFileCount: number;
+  files: RestoreFileResult[];
+  quarantinedFiles: QuarantinedFileResult[];
+}
+
 export type IntegrityStatus = 'healthy' | 'warning' | 'failed';
 
 export type IntegrityIssueSeverity = 'warning' | 'error';
@@ -236,6 +277,7 @@ export interface FileKindStat {
 }
 
 export interface InventoryFileEntry {
+  sourceId?: string | null;
   relativePath: string;
   fileName: string;
   extension: string | null;

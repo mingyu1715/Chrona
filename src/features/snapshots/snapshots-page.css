@@ -25,7 +25,7 @@
   font-weight: 650;
   cursor: pointer;
 }
-.snapshots-page__header-actions .workspace-primary-action { background: var(--app-primary); color: #fff; border-color: var(--app-primary); }
+.snapshots-page__header-actions .workspace-primary-action { background: var(--app-primary); color: var(--app-on-primary); border-color: var(--app-primary); }
 
 .snapshots-workspace {
   display: grid;
@@ -37,8 +37,44 @@
 .snapshots-list { border-right: 1px solid var(--app-border); background: var(--app-surface); }
 .snapshots-list__heading { display: flex; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--app-border); font-size: 12px; }
 .snapshots-list__heading span { color: var(--app-muted); }
+.snapshots-source-filter {
+  display: grid;
+  gap: 5px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--app-border);
+}
+.snapshots-source-filter span {
+  color: var(--app-muted);
+  font-size: 10px;
+}
+.snapshots-source-filter select {
+  width: 100%;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--app-border);
+  border-radius: 5px;
+  background: var(--app-page);
+  color: var(--app-text);
+  font: inherit;
+  font-size: 12px;
+}
 .snapshots-list ul { margin: 0; padding: 0; list-style: none; }
 .snapshots-list li { border-bottom: 1px solid var(--app-border); }
+.snapshots-list__group {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--app-page);
+  color: var(--app-muted);
+  font-size: 11px;
+}
+.snapshots-list__group strong {
+  overflow: hidden;
+  color: var(--app-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .snapshots-list li button { display: grid; width: 100%; gap: 4px; padding: 12px 14px; border: 0; background: transparent; color: var(--app-text); font: inherit; text-align: left; cursor: pointer; }
 .snapshots-list li button[aria-current='true'] { background: var(--app-sidebar-active); }
 .snapshots-list li span, .snapshots-list li small { color: var(--app-muted); font-size: 11px; }
@@ -47,10 +83,13 @@
 .snapshots-detail__empty { display: grid; min-height: 100%; place-items: center; color: var(--app-muted); font-size: 12px; }
 
 .snapshot-detail-view > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--app-border); }
+.snapshot-detail-view > header > div:first-child { min-width: 0; }
 .snapshot-detail-view > header span, .snapshot-detail-view > header p { color: var(--app-muted); font-size: 11px; }
 .snapshot-detail-view > header h2 { margin: 4px 0; font-size: 20px; }
-.snapshot-detail-view > header p { margin: 0; }
-.snapshot-detail-view > header > div:last-child { display: flex; gap: 7px; }
+.snapshot-detail-view > header p { overflow: hidden; margin: 0; text-overflow: ellipsis; white-space: nowrap; }
+.snapshot-detail-view > header > div:last-child { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: 7px; max-width: min(420px, 46%); }
+.snapshot-detail-view header button { max-width: 180px; height: auto; min-height: 35px; line-height: 1.2; white-space: normal; }
+.snapshot-detail-view header button svg { flex: 0 0 auto; }
 .snapshot-detail-view > dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 18px 0 24px; border-top: 1px solid var(--app-border); border-bottom: 1px solid var(--app-border); }
 .snapshot-detail-view > dl div { padding: 14px; border-right: 1px solid var(--app-border); }
 .snapshot-detail-view > dl div:last-child { border-right: 0; }
@@ -76,4 +115,4 @@
 .snapshot-restore-dialog__body dl div { padding: 10px; border: 1px solid var(--app-border); }
 .snapshot-restore-dialog__body dd { margin: 4px 0 0; font-weight: 700; }
 .snapshot-restore-dialog > footer { justify-content: flex-end; gap: 8px; border-top: 1px solid var(--app-border); }
-.snapshot-restore-dialog > footer .snapshot-restore-dialog__confirm { border-color: var(--app-primary); background: var(--app-primary); color: #fff; }
+.snapshot-restore-dialog > footer .snapshot-restore-dialog__confirm { border-color: var(--app-primary); background: var(--app-primary); color: var(--app-on-primary); }

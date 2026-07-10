@@ -33,6 +33,9 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 | 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
 | 전체 UI 사용성 개선 | 구현 완료 | `docs/archive/specs/0012-ui-usability-improvement.md` | `docs/archive/plans/phase-9-ui-usability-improvement.md` | `docs/implemented/ui-usability-improvement.md` | 저장소 라이브러리와 5개 작업 공간, 새 백업, 조건부 진행 표시 구현 완료. native 시각 검증은 남아 있음. |
 | 사용자 경험·다국어·로컬 연동 | 구현 완료 | `docs/archive/specs/0013-user-experience-localization.md` | `docs/archive/plans/phase-10-user-experience-localization.md` | `docs/implemented/user-experience-localization.md` | 한국어/영어, 오프라인 폰트, stable navigation, 다중 저장소 관리, Finder/File Explorer 연동, 백업 진입점 분리. Windows native 검증은 릴리스 전 별도 수행 필요. |
+| 백그라운드 작업 / 비차단 UX | 구현 완료 | `docs/archive/specs/0014-background-operations.md` | `docs/archive/plans/phase-11-background-operations.md` | `docs/implemented/background-operations.md` | 백업 생성과 복원을 하단 진행 표시 기반 백그라운드 작업으로 전환 완료. |
+| 백업 대상 관리 / 소스별 묶음 | 현재 브랜치 구현 완료 | 없음 | `docs/plans/phase-12-source-management-mvp.md` | 예정 | 저장소 내부 `source-index.json`, snapshot `sourceId`, Home 대상 목록, Files/Snapshots 대상 필터와 그룹 구현 완료. 병합 후 archive/implemented 정리 예정. |
+| 원본 위치 시점 복원 | 현재 브랜치 구현 완료 | 없음 | `docs/plans/phase-13-original-location-restore.md` | 예정 | 안전 스냅샷 생성, sourceId 검증, 원본 파일 교체, 초과 파일 격리, Snapshots UI 진입점 구현 완료. 병합 후 archive/implemented 정리 예정. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
@@ -55,10 +58,12 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 | `docs/archive/specs/0011-file-inspector-block-map.md` | 구현 완료 | 파일 이력, ordered block map, physical metadata 조회 완료 | Phase 7 계획 보관 완료 |
 | `docs/archive/specs/0012-ui-usability-improvement.md` | 구현 완료 | 저장소 라이브러리와 작업 공간 UI 완료 | Phase 9 계획 보관 완료 |
 | `docs/archive/specs/0013-user-experience-localization.md` | 구현 완료 | 다국어, 오프라인 폰트, 로컬 데스크톱 연동 완료 | Phase 10 계획 보관 완료 |
+| `docs/archive/specs/0014-background-operations.md` | 구현 완료 | 백업 생성과 복원을 백그라운드 작업으로 전환 완료 | Phase 11 계획 보관 완료 |
 
 ## 현재 진행 계획
 
-현재 없음.
+- Phase 12 백업 대상 관리 MVP: `docs/plans/phase-12-source-management-mvp.md`
+- Phase 13 원본 위치 시점 복원: `docs/plans/phase-13-original-location-restore.md`
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
@@ -95,16 +100,20 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 - Phase 8: 저장소 통계 대시보드
 - Phase 9: 전체 UI 사용성 개선
 - Phase 10: 사용자 경험·다국어·로컬 데스크톱 연동
+- Phase 11: 백그라운드 작업 / 비차단 UX
+- Phase 12: 백업 대상 관리 / 소스별 묶음
+- Phase 13: 원본 위치 시점 복원
 
 ### 현재 활성 작업
 
-현재 활성 구현 계획은 없다.
+- Phase 12 백업 대상 관리 MVP와 Phase 13 원본 위치 시점 복원은 현재 브랜치에서 구현 완료 상태이며, 병합 후 구현 기록 작성과 계획 보관을 진행한다.
 
 ### 다음 계획 후보
 
 1. 릴리스 패키징, 서명, 설치 파일과 기본 실행 테스트
 2. 스냅샷 삭제 / 블록 정리
 3. 파일 감시 / 자동 스냅샷
+4. 복원 preview와 충돌 해결 UX
 
 ### 향후 작업
 
@@ -117,6 +126,6 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 
 ## 즉시 다음 작업
 
-1. 릴리스 패키징과 서명 준비 계획을 별도 문서로 수립한다.
-2. Windows native 실행, 100%/125% 배율, File Explorer reveal/open 동작을 검증한다.
-3. 이후 스냅샷 삭제/블록 정리 또는 파일 감시/자동 스냅샷 중 다음 기능을 선택한다.
+1. Phase 12/13 브랜치를 전체 검증하고 병합한 뒤 구현 기록을 작성하고 계획 문서를 archive로 이동한다.
+2. Windows native 실행, 100%/125% 배율, File Explorer reveal/open 동작과 원본 위치 복원 격리 폴더를 검증한다.
+3. 릴리스 패키징과 서명 준비 계획을 별도 문서로 수립한다.

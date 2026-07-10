@@ -25,6 +25,7 @@ impl FileInspectorService {
         &self,
         repository_path: &Path,
         relative_path: &str,
+        source_id: Option<&str>,
     ) -> ChronaResult<FileInspectionReport> {
         RepositoryManager::open(repository_path)?;
         metadata_relative_path_to_path_buf(relative_path)?;
@@ -41,6 +42,11 @@ impl FileInspectorService {
 
         for item in snapshot_items.iter().rev() {
             let snapshot = snapshot_store.get_snapshot(&item.id)?;
+            if let Some(expected_source_id) = source_id {
+                if snapshot.source_id.as_deref() != Some(expected_source_id) {
+                    continue;
+                }
+            }
             let snapshot_source_root = snapshot.source_root.clone();
             let current_file = snapshot
                 .files

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, test, vi } from 'vitest';
 
 import { HomePage } from './HomePage';
-import { accessNode, createChronaApiMock, statisticsOverview } from '../../test/chronaApiMock';
+import { accessNode, backupSource, createChronaApiMock, statisticsOverview } from '../../test/chronaApiMock';
 
 afterEach(() => cleanup());
 
@@ -119,4 +119,42 @@ test('repeats from the most recent source and falls back when its path is missin
   );
   await user.click(await screen.findByRole('button', { name: 'New Backup' }));
   expect(onNewBackup).toHaveBeenLastCalledWith({ entryPoint: 'repeat' });
+});
+
+test('groups known backup sources and repeats backup from that source', async () => {
+  const { api } = createChronaApiMock();
+  const user = userEvent.setup();
+  const onNewBackup = vi.fn();
+  const onSelectSource = vi.fn();
+  vi.mocked(api.listSources).mockResolvedValue({
+    schemaVersion: 1,
+    sources: [
+      backupSource({
+        id: 'source-project',
+        displayName: 'School project',
+        path: '/Users/mingyu/Documents/School project',
+        snapshotCount: 3,
+        latestSnapshotAt: '2026-07-07T12:00:00Z',
+      }),
+    ],
+  });
+
+  render(
+    <HomePage
+      api={api}
+      repositoryPath="/tmp/chrona-repo"
+      onNewBackup={onNewBackup}
+      onOpenStatistics={vi.fn()}
+      onSelectSource={onSelectSource}
+    />,
+  );
+
+  await user.click(await screen.findByRole('button', { name: /open school project snapshots/i }));
+  expect(onSelectSource).toHaveBeenCalledWith('source-project', 'snapshots');
+
+  await user.click(screen.getByRole('button', { name: /back up school project/i }));
+  expect(onNewBackup).toHaveBeenCalledWith({
+    entryPoint: 'repeat',
+    initialSourcePath: '/Users/mingyu/Documents/School project',
+  });
 });

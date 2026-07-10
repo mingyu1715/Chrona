@@ -294,6 +294,7 @@ fn persist_snapshot(
         schema_version: 1,
         id: id.to_string(),
         name: name.to_string(),
+        source_id: None,
         created_at: created_at.to_string(),
         source_root: "/tmp/source".to_string(),
         summary: SnapshotSummary {

@@ -100,6 +100,20 @@ test('keeps storage and health controls for an active repository', async () => {
   expect(screen.getByRole('button', { name: 'Verify repository' })).toBeEnabled();
 });
 
+test('shows a bottom-right status after saving compression mode', async () => {
+  const user = userEvent.setup();
+  const { api } = renderSettings({ withRepository: true });
+
+  await user.click(screen.getByRole('button', { name: 'Storage' }));
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Compression mode' }), 'fast');
+  await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+  await waitFor(() => {
+    expect(api.setRepositoryCompressionMode).toHaveBeenCalledWith('/tmp/chrona-repo', 'fast');
+  });
+  expect(screen.getByRole('status', { name: 'Compression mode saved' })).toBeInTheDocument();
+});
+
 test('opens full repository management from settings', async () => {
   const user = userEvent.setup();
   renderSettings({ withRepository: true });

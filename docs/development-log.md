@@ -594,3 +594,64 @@
 - macOS native dev launch에서 `target/debug/chrona` 실행과 `chrona` 프로세스를 확인했다.
 - macOS 실행 중 `TSM AdjustCapsLockLED...`, `IMKCFRunLoopWakeUpReliable` 입력기 로그가 관찰됐으나 Chrona panic이나 테스트 실패로 이어지지는 않았다.
 - Windows native 실행과 100%/125% 배율 검증은 현재 macOS 환경에서 수행하지 못했으며, 릴리스 패키징 전 별도 Windows 환경에서 확인해야 한다.
+
+### Phase 11 백그라운드 작업 / 비차단 UX 시작
+
+- 저장소 불러오기처럼 현재 상태를 확인해야 하는 작업은 기존 loading을 허용하되, 사용자가 시작한 저장/백업 생성/복원 같은 긴 작업은 앱 전체를 막지 않는 방향으로 분리했다.
+- `docs/specs/0014-background-operations.md`와 `docs/plans/phase-11-background-operations.md`를 추가했다.
+- 백업 생성 dialog는 작업 시작 후 즉시 닫히고, `createSnapshot`은 백그라운드에서 계속 실행되도록 수정했다.
+- block ingest progress listener를 dialog가 아니라 `AppShell`에 두어 dialog가 닫혀도 하단 진행 바가 유지되도록 수정했다.
+- 스냅샷 복원은 확인 후 즉시 dialog를 닫고 하단 진행 상태로 전환하도록 수정했다.
+- 백업/복원 중에도 화면 이동과 설정 확인은 가능하게 유지하고, 같은 저장소 쓰기 작업을 새로 시작하는 동작만 제한했다.
+- 라이트/다크 테마의 primary button 글자색을 `--app-on-primary`로 분리해 다크 모드 밝은 primary 배경에서 글자 대비가 떨어지지 않도록 수정했다.
+- 관련 frontend 테스트는 RED를 확인했고, 구현 후 `npm test -- --run src/features/backup/NewBackupDialog.test.tsx src/app/AppShell.test.tsx src/features/snapshots/RestoreSnapshotDialog.test.tsx` 결과 3개 파일, 14개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `git diff --check` 결과 공백 오류가 없었다.
+- 완료된 Phase 11 설계 문서와 구현 계획을 `docs/archive/`로 보관하고 `docs/implemented/background-operations.md`를 추가했다.
+
+### Phase 11 추가 안정화
+
+- 통계 분석 결과와 진행 상태를 `StatisticsPage` 내부가 아니라 `AppShell`에서 유지하도록 변경했다.
+- Statistics 화면을 벗어났다가 돌아와도 사용자가 새 분석을 실행하기 전까지 마지막 분석 결과가 남도록 수정했다.
+- 통계 progress listener도 `AppShell`로 이동해 다른 화면에 있어도 하단 진행 바가 갱신되도록 수정했다.
+- 하단 `OperationBar`가 byte 기반 진행률뿐 아니라 통계처럼 count 기반 진행률도 표시할 수 있도록 확장했다.
+- `create_snapshot`, `ingest_blocks`, `restore_snapshot`, `verify_repository` Tauri command를 blocking thread로 이동해 대용량 파일 처리 중 UI runtime을 오래 붙잡지 않도록 수정했다.
+- `npm test -- --run src/app/AppShell.test.tsx src/features/statistics/StatisticsPage.test.tsx src/features/statistics/StatisticsDashboard.test.tsx` 결과 3개 파일, 13개 테스트가 통과했다.
+
+### Phase 11 다크모드 색상 안정화
+
+- 앱 셸의 `--app-*` 라이트/다크 토큰을 공용 workspace 토큰(`--surface`, `--text`, `--border`, 상태 색상 등)에 연결했다.
+- 홈, 파일, 스냅샷, 통계, 설정 화면이 서로 다른 색상 토큰을 써서 다크모드에서 흰 배경이나 어두운 글자가 남는 문제를 줄였다.
+- 컴포넌트 CSS에서 직접적인 `background: white/#fff`, `color: black/#000` 하드코딩이 남아 있지 않음을 확인했다.
+- `npm test -- --run src/app/AppShell.test.tsx` 결과 1개 파일, 10개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+
+### Phase 12 백업 대상 관리 / 소스별 묶음 구현
+
+- 저장소는 백업 데이터를 저장하는 위치, 백업 대상은 실제 원본 폴더/파일이라는 개념으로 UI와 내부 모델을 정리했다.
+- 저장소 내부 `indexes/source-index.json`을 추가하고, canonical path 기준으로 같은 백업 대상을 자동 재사용하도록 `SourceStore`를 구현했다.
+- 새 스냅샷과 snapshot index 항목에 `sourceId`를 기록해 같은 폴더를 반복 백업할 때 하나의 백업 대상으로 묶이도록 했다.
+- inventory 집계를 `(sourceId, relativePath)` 기준으로 바꿔 서로 다른 백업 대상에 같은 상대경로 파일이 있어도 섞이지 않게 했다.
+- file inspector에 optional `sourceId` 필터를 추가해 Files 화면에서 선택한 대상의 파일 이력만 조회할 수 있게 했다.
+- Home에는 백업 대상 목록과 대상별 다시 백업 버튼을 추가했다.
+- Files에는 백업 대상 필터를 추가하고, Snapshots에는 백업 대상별 그룹과 필터를 추가했다.
+- 한국어/영어 UI 문구를 추가하고, “Source”보다 “백업 대상” 표현을 우선 사용하도록 정리했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트 104개가 통과했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 69개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+
+### Phase 13 원본 위치 시점 복원 구현
+
+- `restore_snapshot_to_source(repository_path, source_id, snapshot_id)` 경로를 추가했다.
+- 원본 위치 복원은 대상 스냅샷의 `sourceId`가 요청 source와 다르면 중단한다.
+- 복원 전 현재 원본 위치를 안전 스냅샷으로 자동 저장한다.
+- 선택한 스냅샷에 있는 파일은 `.tmp` 파일로 먼저 복원한 뒤 최종 파일로 교체한다.
+- 선택한 스냅샷에는 없지만 현재 원본에 있는 파일은 삭제하지 않고 `.chrona-quarantine/{operationId}/` 아래로 이동한다.
+- Snapshots 상세 화면에 `원본 위치로 복원` 버튼과 확인 대화상자를 추가했다.
+- 원본 위치 복원도 기존 하단 작업 표시줄을 사용해 앱 전체를 막지 않도록 연결했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml --test phase13_original_location_restore --test phase4_restore` 결과 2개 테스트 파일, 6개 테스트가 통과했다.
+- `npm test -- --run src/features/snapshots/SnapshotsPage.test.tsx` 결과 1개 파일, 3개 테스트가 통과했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트 106개가 통과했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 70개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`와 `git diff --check`가 통과했다.

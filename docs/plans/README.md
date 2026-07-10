@@ -10,7 +10,8 @@
 
 ## 현재 구현 계획
 
-- 없음
+- Phase 12 백업 대상 관리 MVP: `docs/plans/phase-12-source-management-mvp.md`
+- Phase 13 원본 위치 시점 복원: `docs/plans/phase-13-original-location-restore.md`
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
@@ -34,6 +35,7 @@
 - Phase 8 저장소 통계 대시보드: `docs/archive/plans/phase-8-repository-statistics-dashboard.md`
 - Phase 9 UI 사용성 개선: `docs/archive/plans/phase-9-ui-usability-improvement.md`
 - Phase 10 사용자 경험·다국어·로컬 연동: `docs/archive/plans/phase-10-user-experience-localization.md`
+- Phase 11 백그라운드 작업 / 비차단 UX: `docs/archive/plans/phase-11-background-operations.md`
 
 ## 보관된 완료 설계
 
@@ -50,10 +52,12 @@
 - 파일 검사기 / 파일 블록 지도: `docs/archive/specs/0011-file-inspector-block-map.md`
 - Phase 9 UI 사용성 개선: `docs/archive/specs/0012-ui-usability-improvement.md`
 - Phase 10 사용자 경험·다국어·로컬 연동: `docs/archive/specs/0013-user-experience-localization.md`
+- Phase 11 백그라운드 작업 / 비차단 UX: `docs/archive/specs/0014-background-operations.md`
 
 ## 설계와 상세 계획이 모두 없는 후보
 
 - 패키징된 `.app` 릴리스 / 서명
+- 복원 preview와 충돌 해결 UX
 - 스냅샷 삭제와 블록 정리
 - 파일 감시 / 자동 스냅샷
 - SQLite 메타데이터 백엔드

@@ -49,7 +49,7 @@
 .workspace-primary-action {
   border: 1px solid var(--app-primary);
   background: var(--app-primary);
-  color: #ffffff;
+  color: var(--app-on-primary);
 }
 
 .workspace-primary-action:hover {
@@ -59,9 +59,9 @@
 
 .workspace-error {
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, #b33a3a 35%, var(--app-border));
+  border: 1px solid var(--app-danger-border);
   border-radius: 6px;
-  color: #b33a3a;
+  color: var(--app-danger);
   font-size: 12px;
 }
 
@@ -131,6 +131,7 @@
   font-size: 15px;
 }
 
+.home-sources,
 .home-recent {
   margin-top: 30px;
 }
@@ -149,6 +150,95 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.home-source {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  min-height: 62px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.home-source__main {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(150px, auto) auto;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--app-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-source__main:hover {
+  background: var(--app-sidebar-active);
+}
+
+.home-source__label,
+.home-source__meta {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.home-source__label strong,
+.home-source__label small,
+.home-source__meta small,
+.home-source__count {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-source__label strong {
+  font-size: 13px;
+}
+
+.home-source__label small,
+.home-source__meta small,
+.home-source__count {
+  color: var(--app-muted);
+  font-size: 11px;
+}
+
+.home-source__meta > span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.home-source__meta > span[data-status='available'] {
+  color: var(--app-success);
+}
+
+.home-source__meta > span[data-status='missing'] {
+  color: var(--app-danger);
+}
+
+.home-source__backup {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 6px;
+  height: 32px;
+  margin-left: 10px;
+  padding: 0 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.home-source__backup:hover {
+  background: var(--app-page);
 }
 
 .home-recent li {

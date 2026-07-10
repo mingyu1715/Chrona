@@ -30,7 +30,7 @@ impl InventoryService {
         let snapshot_store = SnapshotStore::new(repository_path.to_path_buf());
         let snapshot_items = snapshot_store.list_snapshots()?;
         let latest_snapshot_id = snapshot_items.first().map(|item| item.id.as_str());
-        let mut files_by_path: BTreeMap<String, AccumulatedFile> = BTreeMap::new();
+        let mut files_by_key: BTreeMap<(Option<String>, String), AccumulatedFile> = BTreeMap::new();
         let mut latest_block_hashes = BTreeSet::new();
         let mut total_original_bytes_latest = 0_u64;
         let mut total_block_references_latest = 0_u64;
@@ -40,10 +40,12 @@ impl InventoryService {
             let is_latest = latest_snapshot_id == Some(snapshot.id.as_str());
 
             for file in snapshot.files {
-                let entry = files_by_path
-                    .entry(file.relative_path.clone())
+                let source_id = snapshot.source_id.clone();
+                let entry = files_by_key
+                    .entry((source_id.clone(), file.relative_path.clone()))
                     .or_insert_with(|| {
                         AccumulatedFile::new(
+                            source_id.clone(),
                             &snapshot.id,
                             &snapshot.created_at,
                             &snapshot.source_root,
@@ -69,9 +71,9 @@ impl InventoryService {
         let mut source_missing_count = 0_u64;
         let mut source_root_missing_count = 0_u64;
         let mut kind_counts: BTreeMap<FileKind, (u64, u64)> = BTreeMap::new();
-        let mut files = Vec::with_capacity(files_by_path.len());
+        let mut files = Vec::with_capacity(files_by_key.len());
 
-        for (relative_path, accumulated) in files_by_path {
+        for ((_source_id, relative_path), accumulated) in files_by_key {
             let kind = classify_file_kind(&relative_path);
             let snapshot_state = if accumulated.present_in_latest {
                 SnapshotPresenceState::PresentInLatest
@@ -138,6 +140,7 @@ impl Default for InventoryService {
 
 struct AccumulatedFile {
     source_root: String,
+    source_id: Option<String>,
     first_seen_snapshot_id: String,
     first_seen_at: String,
     last_seen_snapshot_id: String,
@@ -150,9 +153,15 @@ struct AccumulatedFile {
 }
 
 impl AccumulatedFile {
-    fn new(snapshot_id: &str, snapshot_created_at: &str, source_root: &str) -> Self {
+    fn new(
+        source_id: Option<String>,
+        snapshot_id: &str,
+        snapshot_created_at: &str,
+        source_root: &str,
+    ) -> Self {
         Self {
             source_root: source_root.to_string(),
+            source_id,
             first_seen_snapshot_id: snapshot_id.to_string(),
             first_seen_at: snapshot_created_at.to_string(),
             last_seen_snapshot_id: snapshot_id.to_string(),
@@ -194,6 +203,7 @@ impl AccumulatedFile {
         source_state: SourceExistenceState,
     ) -> InventoryFileEntry {
         InventoryFileEntry {
+            source_id: self.source_id,
             file_name: file_name(&relative_path),
             extension: extension(&relative_path),
             relative_path,
