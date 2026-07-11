@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed the Phase 8 repository statistics dashboard.
+Chrona has completed the core local backup MVP through source grouping, repeated backups, snapshot restore, original-location rollback, repository inspection, statistics, localization, and desktop file integration. Phase 14 packaging work is in progress.
 
 Implemented:
 
@@ -52,11 +52,19 @@ Implemented:
 - Separate all, referenced, unreferenced, and missing block storage values
 - Separate dedup and compression savings calculations
 - Raw/Zstd/LZ4 distribution, snapshot trend, and scan progress
+- Korean and English UI with system-language fallback
+- Offline local Pretendard font bundle
+- Stable Home, Files, Snapshots, Statistics, and Settings navigation without an active repository
+- Full repository management with search, sort, rename, relink, switch, reveal, copy, and registration removal
+- Finder/File Explorer reveal/open actions for repositories, sources, original files, and restore targets
+- Separate global, first-backup, and repeat-backup entry points
+- Confirmation dialogs for registration removal and snapshot restore
 
 Not implemented yet:
 
 - Auto-repair and block garbage collection
-- Packaged `.app` release
+- Signed/notarized release packages
+- Windows native installer verification
 
 ## Tech Stack
 
@@ -359,12 +367,50 @@ Build frontend:
 npm run build
 ```
 
+Build macOS Apple Silicon `.app`:
+
+```bash
+npm run tauri:build:macos
+```
+
+Build macOS Apple Silicon DMG installer:
+
+```bash
+npm run tauri:build:macos:installer
+```
+
+Build Windows x86-64 NSIS installer on a real Windows machine:
+
+```powershell
+npm run tauri:build:windows
+```
+
+Fresh Windows build from GitHub source:
+
+```powershell
+winget install --id Git.Git --exact
+git clone -b release/phase-14-cross-platform-packaging https://github.com/mingyu1715/Chrona.git
+cd Chrona
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\prepare.ps1 -InstallMissing
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\build-installer.ps1
+```
+
+## Packaging Targets
+
+Phase 14 targets:
+
+- macOS Apple Silicon `.app` and `.dmg`: `aarch64-apple-darwin`, unsigned, not notarized.
+- Windows x86-64 NSIS `setup.exe`: `x86_64-pc-windows-msvc`, unsigned, WebView2 `downloadBootstrapper`.
+
+Not included in Phase 14: macOS Intel/universal builds, Windows `.msi`, code signing, notarization, auto updates, Linux, and mobile builds.
+
 ## Documentation
 
 - `docs/project-plan.md`: overall project plan
 - `docs/specs/`: design decisions and formats
 - `docs/plans/`: active or next-up implementation plans
 - `docs/implemented/`: completed feature records
+- `docs/packaging/`: local packaging and validation notes
 - `docs/archive/`: completed or retired working plans
 - `docs/development-log.md`: chronological development log
 

@@ -13,6 +13,7 @@
   --primary: #0f7662;
   --primary-hover: #0a5f51;
   --primary-soft: #e0f2ed;
+  --on-primary: #ffffff;
   --blue: #315f9f;
   --blue-soft: #e6edf7;
   --amber: #b87918;
@@ -41,6 +42,7 @@
   --primary: #34d399;
   --primary-hover: #5ee0ad;
   --primary-soft: rgba(52, 211, 153, 0.13);
+  --on-primary: #06251d;
   --blue: #8ab4ff;
   --blue-soft: rgba(90, 142, 230, 0.16);
   --amber: #f0b75a;
@@ -239,7 +241,7 @@ button {
   border-radius: 7px;
   padding: 0 13px;
   background: var(--primary);
-  color: #ffffff;
+  color: var(--on-primary);
   font: inherit;
   font-size: 0.88rem;
   font-weight: 780;

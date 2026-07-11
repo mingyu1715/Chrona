@@ -16,6 +16,7 @@ export interface RepositoryLibraryController {
   createAt(displayName: string, parentPath: string): Promise<void>;
   registerExisting(path: string): Promise<void>;
   activate(repositoryId: string): Promise<void>;
+  rename(repositoryId: string, displayName: string): Promise<void>;
   remove(repositoryId: string): Promise<void>;
   relink(repositoryId: string, path: string): Promise<void>;
   refresh(): Promise<void>;
@@ -123,6 +124,22 @@ export function useRepositoryLibrary(api?: ChronaApi): RepositoryLibraryControll
     });
   }, [api, run]);
 
+  const rename = useCallback(async (repositoryId: string, displayName: string) => {
+    if (!api) return;
+    await run(async () => {
+      const nextLibrary = await api.renameRepositoryRegistration(repositoryId, displayName);
+      const renamed = nextLibrary.repositories.find(
+        (repository) => repository.repositoryId === repositoryId,
+      );
+      setLibrary(nextLibrary);
+      if (renamed) {
+        setActiveRepository((current) => current?.registration.repositoryId === repositoryId
+          ? { ...current, registration: renamed }
+          : current);
+      }
+    });
+  }, [api, run]);
+
   const relink = useCallback(async (repositoryId: string, path: string) => {
     if (!api) return;
     await run(async () => applyOpened(
@@ -139,6 +156,7 @@ export function useRepositoryLibrary(api?: ChronaApi): RepositoryLibraryControll
     createAt,
     registerExisting,
     activate,
+    rename,
     remove,
     relink,
     refresh,

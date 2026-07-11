@@ -10,4 +10,5 @@ pub mod repository;
 pub mod repository_registry;
 pub mod restore;
 pub mod snapshot;
+pub mod source;
 pub mod statistics;

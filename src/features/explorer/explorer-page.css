@@ -59,7 +59,7 @@
 
 .explorer-filters {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(120px, 0.35fr));
+  grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(120px, 0.35fr));
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -169,6 +169,53 @@
 .explorer-detail {
   padding: 18px;
   background: var(--app-page);
+}
+
+.file-source-location {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 10px 11px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+}
+
+.file-source-location strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+}
+
+.file-source-location p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--app-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-source-location button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-page);
+  color: var(--app-text);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.file-source-location[data-available='false'] {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 @media (max-width: 1080px) {

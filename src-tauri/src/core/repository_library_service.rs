@@ -119,6 +119,15 @@ impl RepositoryLibraryService {
         self.list()
     }
 
+    pub fn rename_registration(
+        &self,
+        repository_id: &str,
+        display_name: &str,
+    ) -> ChronaResult<RepositoryLibrary> {
+        self.registry_store.rename(repository_id, display_name)?;
+        self.list()
+    }
+
     pub fn relink(&self, repository_id: &str, path: &Path) -> ChronaResult<OpenedRepository> {
         let manifest = RepositoryManager::open(path)?;
         let registry = self

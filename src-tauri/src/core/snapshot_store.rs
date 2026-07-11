@@ -52,6 +52,26 @@ impl SnapshotStore {
         Ok(self.read_index()?.snapshots)
     }
 
+    pub fn delete_snapshot(&self, snapshot_id: &str) -> ChronaResult<Vec<SnapshotIndexItem>> {
+        validate_snapshot_id(snapshot_id)?;
+        self.ensure_layout()?;
+        let final_path = self.snapshot_path(snapshot_id)?;
+        if !final_path.is_file() {
+            return Err(ChronaError::SnapshotNotFound(snapshot_id.to_string()));
+        }
+
+        let mut index = self.read_index()?;
+        let original_len = index.snapshots.len();
+        index.snapshots.retain(|item| item.id != snapshot_id);
+        if index.snapshots.len() == original_len {
+            return Err(ChronaError::SnapshotNotFound(snapshot_id.to_string()));
+        }
+
+        self.write_index(&index)?;
+        fs::remove_file(final_path)?;
+        Ok(index.snapshots)
+    }
+
     pub fn add_to_index(&self, snapshot: &Snapshot) -> ChronaResult<()> {
         validate_snapshot_id(&snapshot.id)?;
         self.ensure_layout()?;
@@ -60,6 +80,7 @@ impl SnapshotStore {
         index.snapshots.push(SnapshotIndexItem {
             id: snapshot.id.clone(),
             name: snapshot.name.clone(),
+            source_id: snapshot.source_id.clone(),
             created_at: snapshot.created_at.clone(),
             source_root: snapshot.source_root.clone(),
             file_count: snapshot.summary.file_count,

@@ -51,11 +51,16 @@ Chrona는 파일과 폴더를 고정 크기 데이터 블록으로 분할하고,
 - 블록 압축(`off` raw, `standard` Zstd level 3, `fast` LZ4 frame)
 - File Inspector / Block Map
 - Repository Statistics Dashboard
+- 사용자 경험·한국어/영어·오프라인 로컬 연동
+- 백업 생성과 스냅샷 복원을 하단 진행 표시 기반 백그라운드 작업으로 전환
+- 저장소 내부 백업 대상 관리와 소스별 파일/스냅샷 묶음
+- 원본 위치 시점 복원, 안전 스냅샷 생성, 초과 파일 격리
 - README, 개발 로그, 구현 기록 문서
 
 ### 다음 구현 후보
 
-- Phase 9 전체 UI 사용성 개선 구현 완료
+- 릴리스 패키징, 서명, 설치 파일과 기본 실행 테스트
+- 복원 preview와 충돌 해결 UX
 
 ### 아직 세부 계획 없음
 
@@ -95,6 +100,7 @@ Tauri Commands
   ├─ restore_snapshot
   ├─ verify_repository
   ├─ get_repository_inventory
+  ├─ list_sources / register_source
   └─ get_statistics
 
 Rust Core
@@ -104,6 +110,7 @@ Rust Core
   ├─ BlockHasher
   ├─ BlockStore
   ├─ SnapshotStore
+  ├─ SourceStore
   ├─ SnapshotService
   ├─ DiffService
   ├─ RestoreService
@@ -137,6 +144,7 @@ chrona-repository/
   indexes/
     snapshot-index.json
     access-index.json
+    source-index.json
   logs/
 ```
 
@@ -147,6 +155,7 @@ chrona-repository/
 - `snapshots/`: snapshot JSON 저장
 - `indexes/snapshot-index.json`: snapshot 목록 index
 - `indexes/access-index.json`: Home/adaptive navigation 접근 기록
+- `indexes/source-index.json`: 저장소 안에서 관리하는 백업 대상 목록
 - `logs/`: 예약된 디렉터리. structured app log는 아직 구현하지 않음
 
 아직 구현되지 않은 저장 구조:
@@ -317,16 +326,23 @@ src-tauri/src/
 
 ```text
 src/
+  app/
+    AppShell.tsx
+    AppSidebar.tsx
+    AppTopBar.tsx
   features/
+    backup/
+      NewBackupDialog.tsx
     explorer/
       FileInspectorPanel.tsx
       FileInspectorPanel.test.tsx
-    repository/
-      RepositoryPage.tsx
-      RepositoryPage.css
-      RepositoryPage.test.tsx
+    home/
+      HomePage.tsx
+    repository-library/
+      RepositoryLibraryMenu.tsx
+      RepositoryManagementPage.tsx
     snapshots/
-      SnapshotPanel.tsx
+      RestoreSnapshotDialog.tsx
       SnapshotComparePanel.tsx
       *.test.tsx
     statistics/
@@ -335,7 +351,11 @@ src/
       *.test.tsx
   shared/
     api/chronaApi.ts
+    i18n/
+    preferences/
+    desktop/
     types/chrona.ts
+    ui/
 ```
 
 아직 없는 modules:
@@ -364,7 +384,6 @@ src/
 
 ### 아직 없음
 
-- `StatisticsService`
 - `GarbageCollectionService`
 - `WatcherService`
 
@@ -384,6 +403,10 @@ src/
 - Explorer master-detail File Inspector와 ordered block map
 - Home repository overview와 on-demand Repository Statistics Dashboard
 - Light/dark theme과 Docker Desktop 참고 sidebar layout
+- 한국어/영어 설정과 시스템 언어 fallback
+- 저장소가 없는 상태에서도 유지되는 5개 작업 공간
+- 저장소 전체 관리, 경로 열기/복사, 원본 파일 위치 표시
+- 등록 해제와 복원 확인 대화상자
 
 ### 아직 없음
 
@@ -410,8 +433,14 @@ src-tauri/tests/
   phase4_restore.rs
   phase5_integrity.rs
   phase5_inventory.rs
+  phase6_compression.rs
+  phase7_file_inspector.rs
+  phase8_statistics.rs
+  phase9_repository_library.rs
+  phase9_repository_registry.rs
   home_access.rs
 src/features/**/*.test.tsx
+src/shared/**/*.test.tsx
 ```
 
 ### 검증 기준
@@ -447,15 +476,13 @@ Repository Inventory Explorer는 다음을 검증한다.
 - Phase 7: File Inspector / Block Map
 - Phase 8: Repository Statistics Dashboard
 - Phase 9: UI 사용성 개선과 저장소 라이브러리 구현 완료
+- Phase 10: 사용자 경험·다국어·로컬 데스크톱 연동 구현 완료
 
 완료된 설계 문서는 `docs/archive/specs/`에 보관한다.
 
 ### 현재 구현 계획
 
-- `docs/plans/phase-9-ui-usability-improvement.md`
-- Task 1 저장소 registry/store 완료
-- Task 2 저장소 library service와 Tauri command 완료
-- 현재 작업: Task 3 TypeScript 저장소 library 계약 구현
+현재 활성 구현 계획은 없다.
 
 ### 설계와 상세 계획이 모두 없는 후보
 
@@ -554,10 +581,27 @@ Repository Inventory Explorer는 다음을 검증한다.
 - 범위: Explorer master-detail, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata
 - 제외: payload preview, 수정/삭제, 고급 graph library, 전체 UI 재설계
 
+### Phase 9. UI Usability Improvement
+
+- 상태: 구현 완료
+- Spec: `docs/archive/specs/0012-ui-usability-improvement.md`
+- Plan: `docs/archive/plans/phase-9-ui-usability-improvement.md`
+- Implemented: `docs/implemented/ui-usability-improvement.md`
+- 완료 범위: 저장소 라이브러리, 기본 저장소 위치, 기존 저장소 등록, 5개 작업 공간, 새 백업 대화상자, 조건부 진행 표시
+
+### Phase 10. User Experience, Localization, Local Desktop Integration
+
+- 상태: 구현 완료
+- Spec: `docs/archive/specs/0013-user-experience-localization.md`
+- Plan: `docs/archive/plans/phase-10-user-experience-localization.md`
+- Implemented: `docs/implemented/user-experience-localization.md`
+- 완료 범위: 한국어/영어, 시스템 언어 fallback, Tauri Store preferences, 로컬 Pretendard WOFF2, 저장소 상태별 stable navigation, 전체 저장소 관리, Finder/File Explorer reveal/open/copy, 백업 진입점 분리, 확인 대화상자, active UI literal scan
+- 남은 검증: Windows native 실행과 100%/125% 배율 검증
+
 ### Release Phase. Packaging and Release Hardening
 
 - 상태: 후보, 세부 plan 없음
-- 목표: README 기준 설치/실행/테스트 정리, macOS `.app` packaging, release note, smoke test
+- 목표: README 기준 설치/실행/테스트 정리, macOS `.app` packaging, release note, smoke test, Windows native verification
 - 다음 문서 후보: `docs/plans/phase-release-packaging.md`
 
 ### Future. Storage Extensions

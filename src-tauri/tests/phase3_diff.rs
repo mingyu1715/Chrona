@@ -46,6 +46,7 @@ fn snapshot(id: &str, files: Vec<SnapshotFile>) -> Snapshot {
         schema_version: 1,
         id: id.to_string(),
         name: id.to_string(),
+        source_id: None,
         created_at: "2026-06-23T00:00:00Z".to_string(),
         source_root: "/tmp/source".to_string(),
         summary: SnapshotSummary {

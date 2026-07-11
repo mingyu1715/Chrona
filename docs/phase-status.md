@@ -13,7 +13,7 @@
 - `docs/implemented/`: 완료된 기능의 구현 기록
 - `docs/project-plan.md`: 장기 프로젝트 방향
 
-Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 implemented 영역에 보관한다.
+Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implemented 영역에 보관한다.
 
 ## 현재 구현 상태
 
@@ -32,10 +32,15 @@ Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 impleme
 | 파일 검사기 / 블록 지도 | 구현 완료 | `docs/archive/specs/0011-file-inspector-block-map.md` | `docs/archive/plans/phase-7-file-inspector-block-map.md` | `docs/implemented/file-inspector-block-map.md` | Explorer 파일 선택, content-based history, ordered block map, raw/Zstd/LZ4 physical metadata와 부분 오류 상태 구현 완료. |
 | 저장소 통계 대시보드 | 구현 완료 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | `docs/archive/plans/phase-8-repository-statistics-dashboard.md` | `docs/implemented/repository-statistics-dashboard.md` | Home 최신 요약, 상세 live scan, 참조/미참조 physical block, dedup/compression 분리, progress와 부분 issue 구현 완료. |
 | 전체 UI 사용성 개선 | 구현 완료 | `docs/archive/specs/0012-ui-usability-improvement.md` | `docs/archive/plans/phase-9-ui-usability-improvement.md` | `docs/implemented/ui-usability-improvement.md` | 저장소 라이브러리와 5개 작업 공간, 새 백업, 조건부 진행 표시 구현 완료. native 시각 검증은 남아 있음. |
+| 사용자 경험·다국어·로컬 연동 | 구현 완료 | `docs/archive/specs/0013-user-experience-localization.md` | `docs/archive/plans/phase-10-user-experience-localization.md` | `docs/implemented/user-experience-localization.md` | 한국어/영어, 오프라인 폰트, stable navigation, 다중 저장소 관리, Finder/File Explorer 연동, 백업 진입점 분리. Windows native 검증은 릴리스 전 별도 수행 필요. |
+| 백그라운드 작업 / 비차단 UX | 구현 완료 | `docs/archive/specs/0014-background-operations.md` | `docs/archive/plans/phase-11-background-operations.md` | `docs/implemented/background-operations.md` | 백업 생성과 복원을 하단 진행 표시 기반 백그라운드 작업으로 전환 완료. |
+| 백업 대상 관리 / 소스별 묶음 | 현재 브랜치 구현 완료 | 없음 | `docs/plans/phase-12-source-management-mvp.md` | 예정 | 저장소 내부 `source-index.json`, snapshot `sourceId`, Home 대상 목록, Files/Snapshots 대상 필터와 그룹 구현 완료. 병합 후 archive/implemented 정리 예정. |
+| 원본 위치 시점 복원 | 현재 브랜치 구현 완료 | 없음 | `docs/plans/phase-13-original-location-restore.md` | 예정 | 안전 스냅샷 생성, sourceId 검증, 원본 파일 교체, 초과 파일 격리, Snapshots UI 진입점 구현 완료. 병합 후 archive/implemented 정리 예정. |
+| 크로스 플랫폼 패키징 | 진행 중 | `docs/specs/0015-cross-platform-packaging.md` | `docs/plans/phase-14-cross-platform-packaging-readiness.md` | 예정 | Apple Silicon `.app`과 DMG 설치 이미지를 생성했고, Windows x86-64 NSIS `setup.exe`는 실제 Windows 환경에서 검증한다. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
-- `docs/specs/0012-ui-usability-improvement.md`: 설계 확정, 사용자 문서 검토 후 구현 계획 작성
+- `docs/specs/0015-cross-platform-packaging.md`
 
 ## 보관된 완료 설계 문서
 
@@ -52,10 +57,15 @@ Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 impleme
 | `docs/archive/specs/0009-repository-inventory-explorer.md` | 구현 완료 | 메타데이터 기반 저장소 탐색과 UI 완료 | Phase 5 인벤토리 계획 보관 완료 |
 | `docs/archive/specs/0010-repository-statistics-dashboard.md` | 구현 완료 | Home 요약과 상세 저장소 분석 완료 | Phase 8 계획 보관 완료 |
 | `docs/archive/specs/0011-file-inspector-block-map.md` | 구현 완료 | 파일 이력, ordered block map, physical metadata 조회 완료 | Phase 7 계획 보관 완료 |
+| `docs/archive/specs/0012-ui-usability-improvement.md` | 구현 완료 | 저장소 라이브러리와 작업 공간 UI 완료 | Phase 9 계획 보관 완료 |
+| `docs/archive/specs/0013-user-experience-localization.md` | 구현 완료 | 다국어, 오프라인 폰트, 로컬 데스크톱 연동 완료 | Phase 10 계획 보관 완료 |
+| `docs/archive/specs/0014-background-operations.md` | 구현 완료 | 백업 생성과 복원을 백그라운드 작업으로 전환 완료 | Phase 11 계획 보관 완료 |
 
 ## 현재 진행 계획
 
-- Phase 9 계획은 `docs/archive/plans/phase-9-ui-usability-improvement.md`로 보관 완료
+- Phase 12 백업 대상 관리 MVP: `docs/plans/phase-12-source-management-mvp.md`
+- Phase 13 원본 위치 시점 복원: `docs/plans/phase-13-original-location-restore.md`
+- Phase 14 크로스 플랫폼 패키징: `docs/plans/phase-14-cross-platform-packaging-readiness.md`
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
@@ -67,7 +77,6 @@ Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 impleme
 
 | 영역 | 현재 상세 수준 | 다음 문서 후보 |
 | --- | --- | --- |
-| 패키징된 `.app` 릴리스 / 서명 | 릴리스 준비 후보로만 언급됨 | `docs/plans/phase-release-packaging.md` |
 | 스냅샷 삭제 / 블록 정리 | 향후 작업 | `docs/specs/00xx-snapshot-delete-gc.md` |
 | 파일 감시 / 자동 스냅샷 | 향후 작업 | `docs/specs/00xx-watched-sources.md` |
 | SQLite 메타데이터 백엔드 | 향후 작업 | `docs/specs/00xx-sqlite-metadata.md` |
@@ -90,23 +99,22 @@ Phase 9까지 완료된 설계와 계획은 archive에, 구현 기록은 impleme
 - Phase 6: 블록 압축
 - Phase 7: 파일 검사기 / 블록 지도
 - Phase 8: 저장소 통계 대시보드
+- Phase 9: 전체 UI 사용성 개선
+- Phase 10: 사용자 경험·다국어·로컬 데스크톱 연동
+- Phase 11: 백그라운드 작업 / 비차단 UX
+- Phase 12: 백업 대상 관리 / 소스별 묶음
+- Phase 13: 원본 위치 시점 복원
 
 ### 현재 활성 작업
 
-Phase 9 Task 1~2 저장소 registry/store와 library/Tauri command 구현 및 리뷰를 완료하고 Task 3을 진행한다.
+- Phase 12 백업 대상 관리 MVP와 Phase 13 원본 위치 시점 복원은 현재 브랜치에서 구현 완료 상태이며, 병합 후 구현 기록 작성과 계획 보관을 진행한다.
 
-### 현재 작업: Phase 9 UI 사용성 개선
+### 다음 계획 후보
 
-- 현재 기능을 유지한 채 저장소 라이브러리, 앱 셸, 화면 연결과 데스크톱 창 크기 대응을 개선
-- `docs/plans/phase-9-ui-usability-improvement.md`의 Task 3부터 TDD로 구현
-
-### Phase 9 이후 계획 후보
-
-Phase 9 완료 후 아래 중 하나를 선택해 현재 Phase만 상세화한다.
-
-1. 릴리스 패키징 및 기본 실행 테스트 강화
+1. Phase 14 크로스 플랫폼 패키징
 2. 스냅샷 삭제 / 블록 정리
 3. 파일 감시 / 자동 스냅샷
+4. 복원 preview와 충돌 해결 UX
 
 ### 향후 작업
 
@@ -119,6 +127,6 @@ Phase 9 완료 후 아래 중 하나를 선택해 현재 Phase만 상세화한�
 
 ## 즉시 다음 작업
 
-1. Phase 9 계획의 Task 3 TypeScript 저장소 library 계약을 구현한다.
-2. Task 3 완료 후 기존 UI를 바꾸기 전에 backend와 TypeScript 계약을 고정한다.
-3. Snapshot 삭제/GC와 release packaging은 이후 독립 Phase로 유지한다.
+1. Phase 12/13 브랜치를 전체 검증하고 병합한 뒤 구현 기록을 작성하고 계획 문서를 archive로 이동한다.
+2. Windows native 실행, 100%/125% 배율, File Explorer reveal/open 동작과 원본 위치 복원 격리 폴더를 검증한다.
+3. Phase 14 문서를 기준으로 Windows x86-64 NSIS 빌드를 실제 Windows 환경에서 이어서 검증한다.

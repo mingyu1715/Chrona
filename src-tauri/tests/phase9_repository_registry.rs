@@ -236,6 +236,54 @@ fn relink_updates_registered_repository_path() {
 }
 
 #[test]
+fn rename_trims_and_persists_repository_display_name() {
+    let temp = tempfile::tempdir().unwrap();
+    let repository = temp.path().join("repo-a");
+    fs::create_dir_all(&repository).unwrap();
+    let store = RepositoryRegistryStore::new(temp.path().join("app-data"));
+    store
+        .register(registered_repository("repo-a", &repository))
+        .unwrap();
+
+    let updated = store.rename("repo-a", "  School Archive  ").unwrap();
+
+    assert_eq!(updated.repositories[0].display_name, "School Archive");
+    assert_eq!(store.load().unwrap(), updated);
+}
+
+#[test]
+fn rename_rejects_blank_display_name() {
+    let temp = tempfile::tempdir().unwrap();
+    let repository = temp.path().join("repo-a");
+    fs::create_dir_all(&repository).unwrap();
+    let store = RepositoryRegistryStore::new(temp.path().join("app-data"));
+    store
+        .register(registered_repository("repo-a", &repository))
+        .unwrap();
+
+    let error = store.rename("repo-a", "   ").unwrap_err();
+
+    assert!(matches!(
+        error,
+        ChronaError::InvalidRepositoryRegistry(message)
+            if message.contains("display name")
+    ));
+}
+
+#[test]
+fn rename_rejects_unknown_repository_id() {
+    let temp = tempfile::tempdir().unwrap();
+    let store = RepositoryRegistryStore::new(temp.path().to_path_buf());
+
+    let error = store.rename("missing-repo", "Archive").unwrap_err();
+
+    assert!(matches!(
+        error,
+        ChronaError::RepositoryRegistrationNotFound(value) if value == "missing-repo"
+    ));
+}
+
+#[test]
 fn set_active_rejects_unknown_repository_id() {
     let temp = tempfile::tempdir().unwrap();
     let store = RepositoryRegistryStore::new(temp.path().to_path_buf());

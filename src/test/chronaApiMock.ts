@@ -24,6 +24,8 @@ import type {
   Snapshot,
   SnapshotComparison,
   SnapshotIndexItem,
+  BackupSource,
+  SourceIndex,
 } from '../shared/types/chrona';
 
 export function accessNode(overrides: Partial<AccessNode> = {}): AccessNode {
@@ -59,6 +61,29 @@ export function statisticsOverview(
     latestLogicalBytes: 0,
     latestUniqueBlockCount: 0,
     fileKindStats: [],
+    ...overrides,
+  };
+}
+
+export function backupSource(overrides: Partial<BackupSource> = {}): BackupSource {
+  return {
+    id: 'source-1',
+    displayName: 'Documents',
+    path: '/tmp/source',
+    createdAt: '2026-07-10T00:00:00Z',
+    updatedAt: '2026-07-10T00:00:00Z',
+    latestSnapshotId: 'latest',
+    latestSnapshotAt: '2026-07-10T00:00:00Z',
+    snapshotCount: 1,
+    status: 'available',
+    ...overrides,
+  };
+}
+
+export function sourceIndex(overrides: Partial<SourceIndex> = {}): SourceIndex {
+  return {
+    schemaVersion: 1,
+    sources: [backupSource()],
     ...overrides,
   };
 }
@@ -158,6 +183,15 @@ export function createChronaApiMock() {
     registerExistingRepository: vi.fn(async () => openedRepository),
     activateRegisteredRepository: vi.fn(async () => openedRepository),
     removeRepositoryRegistration: vi.fn(async () => library),
+    renameRepositoryRegistration: vi.fn(async (_repositoryId, displayName) => ({
+      ...library,
+      repositories: library.repositories.map((repository) => ({
+        ...repository,
+        displayName: repository.repositoryId === _repositoryId
+          ? displayName.trim()
+          : repository.displayName,
+      })),
+    })),
     relinkRegisteredRepository: vi.fn(async () => openedRepository),
     setRepositoryCompressionMode: vi.fn(async (_repositoryPath, compressionMode) => ({
       ...manifest,
@@ -182,6 +216,7 @@ export function createChronaApiMock() {
     })),
     createSnapshot: vi.fn(),
     listSnapshots: vi.fn(async () => []),
+    deleteSnapshot: vi.fn(async () => []),
     getSnapshot: vi.fn(),
     compareSnapshots: vi.fn(async () => ({
       schemaVersion: 1,
@@ -204,7 +239,14 @@ export function createChronaApiMock() {
       },
       files: [],
     })),
+    listSources: vi.fn(async () => sourceIndex()),
+    registerSource: vi.fn(async (_repositoryPath, sourcePath) =>
+      backupSource({ path: sourcePath }),
+    ),
+    renameSource: vi.fn(async () => sourceIndex()),
+    removeSource: vi.fn(async () => sourceIndex({ sources: [] })),
     restoreSnapshot: vi.fn(),
+    restoreSnapshotToSource: vi.fn(),
     verifyRepository: vi.fn(async () => ({
       schemaVersion: 1,
       repositoryPath: '/tmp/chrona-repo',
@@ -238,6 +280,7 @@ export function createChronaApiMock() {
       ],
       files: [
         {
+          sourceId: 'source-1',
           relativePath: 'notes.md',
           fileName: 'notes.md',
           extension: 'md',
@@ -254,6 +297,7 @@ export function createChronaApiMock() {
           blockReferenceCountLatest: 1,
         },
         {
+          sourceId: 'source-1',
           relativePath: 'old.txt',
           fileName: 'old.txt',
           extension: 'txt',
@@ -280,6 +324,7 @@ export function createChronaApiMock() {
       firstSeenAt: '2026-06-27T00:00:00Z',
       lastSeenAt: '2026-06-27T00:00:00Z',
       latestState: 'added' as const,
+      currentSourcePath: '/tmp/source/notes.md',
       versions: [
         {
           snapshotId: 'latest',

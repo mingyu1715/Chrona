@@ -12,6 +12,7 @@ const CURRENT_SCHEMA_VERSION: u32 = 2;
 const LEGACY_SCHEMA_VERSION: u32 = 1;
 const BLOCK_SIZE_BYTES: u64 = 1_048_576;
 const SNAPSHOT_INDEX_FILE: &str = "snapshot-index.json";
+const SOURCE_INDEX_FILE: &str = "source-index.json";
 
 pub struct RepositoryManager;
 
@@ -132,6 +133,10 @@ fn ensure_snapshot_layout(repository_path: &Path) -> ChronaResult<()> {
     let index_path = repository_path.join("indexes").join(SNAPSHOT_INDEX_FILE);
     if !index_path.is_file() {
         fs::write(index_path, r#"{"schemaVersion":1,"snapshots":[]}"#)?;
+    }
+    let source_index_path = repository_path.join("indexes").join(SOURCE_INDEX_FILE);
+    if !source_index_path.is_file() {
+        fs::write(source_index_path, r#"{"schemaVersion":1,"sources":[]}"#)?;
     }
     Ok(())
 }

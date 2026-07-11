@@ -15,5 +15,7 @@
 - `0009-repository-inventory-explorer.md`: 저장소 인벤토리 탐색
 - `0010-repository-statistics-dashboard.md`: 저장소 통계 대시보드
 - `0011-file-inspector-block-map.md`: 파일 검사기 / 블록 지도
+- `0012-ui-usability-improvement.md`: UI 사용성 개선
+- `0013-user-experience-localization.md`: 사용자 경험·다국어·로컬 연동
 
 `docs/specs/`에는 아직 구현하지 않았거나 다음에 구현할 설계만 남긴다.

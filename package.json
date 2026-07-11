@@ -8,11 +8,17 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "test": "vitest run",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:build:macos": "tauri build --target aarch64-apple-darwin --config src-tauri/tauri.macos.conf.json",
+    "tauri:build:macos:installer": "tauri build --target aarch64-apple-darwin --config src-tauri/tauri.macos.installer.conf.json",
+    "tauri:build:windows": "tauri build --target x86_64-pc-windows-msvc --config src-tauri/tauri.windows.conf.json"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
     "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-opener": "^2.5.4",
+    "@tauri-apps/plugin-store": "^2.4.3",
     "@vitejs/plugin-react": "^5.1.0",
     "lucide-react": "^1.21.0",
     "react": "^19.2.0",

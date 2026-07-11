@@ -1,0 +1,7 @@
+{
+  "bundle": {
+    "active": true,
+    "targets": ["dmg"],
+    "category": "Utility"
+  }
+}

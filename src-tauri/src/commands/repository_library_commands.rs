@@ -64,6 +64,16 @@ pub fn remove_repository_registration(
         .map_err(|error| error.to_string())
 }
 
+pub fn rename_repository_registration(
+    app: tauri::AppHandle,
+    repository_id: String,
+    display_name: String,
+) -> Result<RepositoryLibrary, String> {
+    service(&app)?
+        .rename_registration(&repository_id, &display_name)
+        .map_err(|error| error.to_string())
+}
+
 pub fn relink_registered_repository(
     app: tauri::AppHandle,
     repository_id: String,

@@ -13,6 +13,7 @@ import type {
   HomeSummary,
   IntegrityReport,
   OpenedRepository,
+  OriginalLocationRestoreReport,
   RepositoryInventoryReport,
   RepositoryManifest,
   RepositoryLibrary,
@@ -23,6 +24,8 @@ import type {
   Snapshot,
   SnapshotComparison,
   SnapshotIndexItem,
+  BackupSource,
+  SourceIndex,
 } from '../types/chrona';
 
 export interface ChronaApi {
@@ -34,6 +37,10 @@ export interface ChronaApi {
   registerExistingRepository(repositoryPath: string): Promise<OpenedRepository>;
   activateRegisteredRepository(repositoryId: string): Promise<OpenedRepository>;
   removeRepositoryRegistration(repositoryId: string): Promise<RepositoryLibrary>;
+  renameRepositoryRegistration(
+    repositoryId: string,
+    displayName: string,
+  ): Promise<RepositoryLibrary>;
   relinkRegisteredRepository(
     repositoryId: string,
     repositoryPath: string,
@@ -45,14 +52,29 @@ export interface ChronaApi {
   ingestBlocks(repositoryPath: string, sourcePath: string): Promise<BlockIngestSummary>;
   createSnapshot(repositoryPath: string, sourcePath: string, name: string): Promise<Snapshot>;
   listSnapshots(repositoryPath: string): Promise<SnapshotIndexItem[]>;
+  deleteSnapshot(repositoryPath: string, snapshotId: string): Promise<SnapshotIndexItem[]>;
   getSnapshot(repositoryPath: string, snapshotId: string): Promise<Snapshot>;
   compareSnapshots(repositoryPath: string, baseSnapshotId: string, targetSnapshotId: string): Promise<SnapshotComparison>;
+  listSources(repositoryPath: string): Promise<SourceIndex>;
+  registerSource(repositoryPath: string, sourcePath: string): Promise<BackupSource>;
+  renameSource(
+    repositoryPath: string,
+    sourceId: string,
+    displayName: string,
+  ): Promise<SourceIndex>;
+  removeSource(repositoryPath: string, sourceId: string): Promise<SourceIndex>;
   restoreSnapshot(repositoryPath: string, snapshotId: string, targetPath: string): Promise<RestoreReport>;
+  restoreSnapshotToSource(
+    repositoryPath: string,
+    sourceId: string,
+    snapshotId: string,
+  ): Promise<OriginalLocationRestoreReport>;
   verifyRepository(repositoryPath: string): Promise<IntegrityReport>;
   getRepositoryInventory(repositoryPath: string): Promise<RepositoryInventoryReport>;
   inspectRepositoryFile(
     repositoryPath: string,
     relativePath: string,
+    sourceId?: string | null,
   ): Promise<FileInspectionReport>;
   getRepositoryStatisticsOverview(
     repositoryPath: string,
@@ -106,6 +128,12 @@ export const chronaApi: ChronaApi = {
   removeRepositoryRegistration(repositoryId) {
     return invoke<RepositoryLibrary>('remove_repository_registration', { repositoryId });
   },
+  renameRepositoryRegistration(repositoryId, displayName) {
+    return invoke<RepositoryLibrary>('rename_repository_registration', {
+      repositoryId,
+      displayName,
+    });
+  },
   relinkRegisteredRepository(repositoryId, repositoryPath) {
     return invoke<OpenedRepository>('relink_registered_repository', {
       repositoryId,
@@ -127,6 +155,9 @@ export const chronaApi: ChronaApi = {
   listSnapshots(repositoryPath) {
     return invoke<SnapshotIndexItem[]>('list_snapshots', { repositoryPath });
   },
+  deleteSnapshot(repositoryPath, snapshotId) {
+    return invoke<SnapshotIndexItem[]>('delete_snapshot', { repositoryPath, snapshotId });
+  },
   getSnapshot(repositoryPath, snapshotId) {
     return invoke<Snapshot>('get_snapshot', { repositoryPath, snapshotId });
   },
@@ -137,11 +168,34 @@ export const chronaApi: ChronaApi = {
       targetSnapshotId,
     });
   },
+  listSources(repositoryPath) {
+    return invoke<SourceIndex>('list_sources', { repositoryPath });
+  },
+  registerSource(repositoryPath, sourcePath) {
+    return invoke<BackupSource>('register_source', { repositoryPath, sourcePath });
+  },
+  renameSource(repositoryPath, sourceId, displayName) {
+    return invoke<SourceIndex>('rename_source', {
+      repositoryPath,
+      sourceId,
+      displayName,
+    });
+  },
+  removeSource(repositoryPath, sourceId) {
+    return invoke<SourceIndex>('remove_source', { repositoryPath, sourceId });
+  },
   restoreSnapshot(repositoryPath, snapshotId, targetPath) {
     return invoke<RestoreReport>('restore_snapshot', {
       repositoryPath,
       snapshotId,
       targetPath,
+    });
+  },
+  restoreSnapshotToSource(repositoryPath, sourceId, snapshotId) {
+    return invoke<OriginalLocationRestoreReport>('restore_snapshot_to_source', {
+      repositoryPath,
+      sourceId,
+      snapshotId,
     });
   },
   verifyRepository(repositoryPath) {
@@ -150,10 +204,11 @@ export const chronaApi: ChronaApi = {
   getRepositoryInventory(repositoryPath) {
     return invoke<RepositoryInventoryReport>('get_repository_inventory', { repositoryPath });
   },
-  inspectRepositoryFile(repositoryPath, relativePath) {
+  inspectRepositoryFile(repositoryPath, relativePath, sourceId = null) {
     return invoke<FileInspectionReport>('inspect_repository_file', {
       repositoryPath,
       relativePath,
+      sourceId,
     });
   },
   getRepositoryStatisticsOverview(repositoryPath) {

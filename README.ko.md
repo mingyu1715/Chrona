@@ -6,7 +6,7 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 
 ## 현재 상태
 
-현재는 Phase 8 저장소 통계 대시보드까지 완료된 상태입니다.
+현재는 백업 대상 묶음, 반복 백업, 스냅샷 복원, 원본 위치 시점 복원, 저장소 탐색, 통계, 다국어, 데스크톱 파일 연동을 포함한 로컬 백업 MVP 핵심 기능이 구현된 상태입니다. Phase 14 패키징 작업을 진행 중입니다.
 
 구현됨:
 
@@ -52,11 +52,19 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 - 전체·참조·미참조·누락 block 저장량 구분
 - 중복 제거 절감량과 압축 절감량의 분리 계산
 - raw/Zstd/LZ4 분포, Snapshot 변화 추이, 분석 progress
+- 한국어·영어 UI와 시스템 언어 fallback
+- 오프라인 실행을 위한 Pretendard 로컬 폰트 번들
+- 활성 저장소가 없어도 유지되는 Home, Files, Snapshots, Statistics, Settings 탐색
+- 검색, 정렬, 이름 변경, relink, 전환, 폴더 표시, 경로 복사, 등록 해제를 포함한 저장소 관리
+- 저장소, source, 원본 파일, 복원 대상에 대한 Finder/File Explorer 열기 동작
+- 상단 새 백업, 첫 백업, 다시 백업 진입점 분리
+- 저장소 등록 해제와 Snapshot 복원 확인 대화상자
 
 아직 구현되지 않음:
 
 - 자동 복구와 block garbage collection
-- 패키징된 `.app` 릴리스
+- 서명/notarization이 적용된 릴리스 패키지
+- Windows native installer 검증
 
 ## 기술 스택
 
@@ -359,12 +367,50 @@ cd src-tauri && cargo test
 npm run build
 ```
 
+macOS Apple Silicon `.app` 빌드:
+
+```bash
+npm run tauri:build:macos
+```
+
+macOS Apple Silicon DMG 설치 프로그램 빌드:
+
+```bash
+npm run tauri:build:macos:installer
+```
+
+실제 Windows 환경에서 Windows x86-64 NSIS 설치 파일 빌드:
+
+```powershell
+npm run tauri:build:windows
+```
+
+GitHub source를 받아 새 Windows 환경에서 빌드:
+
+```powershell
+winget install --id Git.Git --exact
+git clone -b release/phase-14-cross-platform-packaging https://github.com/mingyu1715/Chrona.git
+cd Chrona
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\prepare.ps1 -InstallMissing
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\build-installer.ps1
+```
+
+## 패키징 대상
+
+Phase 14 대상:
+
+- macOS Apple Silicon `.app`과 `.dmg`: `aarch64-apple-darwin`, unsigned, notarization 없음.
+- Windows x86-64 NSIS `setup.exe`: `x86_64-pc-windows-msvc`, unsigned, WebView2 `downloadBootstrapper`.
+
+Phase 14에 포함하지 않는 것: macOS Intel/universal 빌드, Windows `.msi`, code signing, notarization, 자동 업데이트, Linux, 모바일 빌드.
+
 ## 문서
 
 - `docs/project-plan.md`: 전체 프로젝트 계획
 - `docs/specs/`: 설계 결정과 포맷
 - `docs/plans/`: 현재 진행 또는 다음 구현 계획
 - `docs/implemented/`: 완료된 기능 구현 기록
+- `docs/packaging/`: 로컬 패키징과 검증 기록
 - `docs/archive/`: 완료되었거나 폐기된 작업 문서
 - `docs/development-log.md`: 날짜별 개발 로그
 

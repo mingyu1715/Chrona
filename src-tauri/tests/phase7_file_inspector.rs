@@ -100,7 +100,7 @@ fn file_inspector_classifies_content_history_newest_first() {
     let fixture = create_history_fixture();
 
     let report = FileInspectorService::new()
-        .inspect_repository_file(&fixture.repository_path, "notes.txt")
+        .inspect_repository_file(&fixture.repository_path, "notes.txt", None)
         .unwrap();
 
     assert_eq!(report.version_count, 4);
@@ -142,7 +142,7 @@ fn file_inspector_preserves_order_and_counts_hash_once_per_version() {
     let fixture = create_history_fixture();
 
     let report = FileInspectorService::new()
-        .inspect_repository_file(&fixture.repository_path, "notes.txt")
+        .inspect_repository_file(&fixture.repository_path, "notes.txt", None)
         .unwrap();
     let modified = report
         .versions
@@ -180,11 +180,11 @@ fn file_inspector_rejects_unsafe_and_unknown_paths() {
     let service = FileInspectorService::new();
 
     assert!(matches!(
-        service.inspect_repository_file(&repository_path, "../outside.txt"),
+        service.inspect_repository_file(&repository_path, "../outside.txt", None),
         Err(ChronaError::UnsafeRelativePath(_))
     ));
     assert!(matches!(
-        service.inspect_repository_file(&repository_path, "unknown.txt"),
+        service.inspect_repository_file(&repository_path, "unknown.txt", None),
         Err(ChronaError::RepositoryFileNotFound(path)) if path == "unknown.txt"
     ));
 }
@@ -208,7 +208,7 @@ fn file_inspector_keeps_report_when_a_block_is_missing() {
     );
 
     let report = FileInspectorService::new()
-        .inspect_repository_file(&repository_path, "notes.txt")
+        .inspect_repository_file(&repository_path, "notes.txt", None)
         .unwrap();
 
     assert_eq!(
@@ -219,6 +219,128 @@ fn file_inspector_keeps_report_when_a_block_is_missing() {
         report.versions[0].blocks[0].encoding,
         BlockStorageEncoding::Unknown
     );
+}
+
+#[test]
+fn file_inspector_reports_current_source_path_when_source_file_exists() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("repo");
+    let source_root = temp.path().join("source");
+    let source_file = source_root.join("child").join("note.txt");
+    RepositoryManager::create(&repository_path).unwrap();
+    fs::create_dir_all(source_file.parent().unwrap()).unwrap();
+    fs::write(&source_file, b"hello").unwrap();
+    let hash = sha256_hex(b"hello");
+    persist_snapshot_with_source_root(
+        &repository_path,
+        &source_root,
+        "snapshot-1",
+        "Existing source",
+        "2026-06-30T00:00:00Z",
+        vec![snapshot_file(
+            "child/note.txt",
+            "2026-06-30T00:00:00Z",
+            &[(&hash, 5)],
+        )],
+    );
+
+    let report = FileInspectorService::new()
+        .inspect_repository_file(&repository_path, "child/note.txt", None)
+        .unwrap();
+
+    assert_eq!(
+        report.current_source_path,
+        Some(source_file.canonicalize().unwrap().display().to_string())
+    );
+}
+
+#[test]
+fn file_inspector_omits_current_source_path_when_source_file_is_deleted() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("repo");
+    let source_root = temp.path().join("source");
+    RepositoryManager::create(&repository_path).unwrap();
+    fs::create_dir_all(&source_root).unwrap();
+    let hash = sha256_hex(b"deleted");
+    persist_snapshot_with_source_root(
+        &repository_path,
+        &source_root,
+        "snapshot-1",
+        "Deleted source",
+        "2026-06-30T00:00:00Z",
+        vec![snapshot_file(
+            "notes.txt",
+            "2026-06-30T00:00:00Z",
+            &[(&hash, 7)],
+        )],
+    );
+
+    let report = FileInspectorService::new()
+        .inspect_repository_file(&repository_path, "notes.txt", None)
+        .unwrap();
+
+    assert_eq!(report.current_source_path, None);
+}
+
+#[test]
+fn file_inspector_omits_current_source_path_when_source_root_is_missing() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("repo");
+    let missing_source_root = temp.path().join("missing-source");
+    RepositoryManager::create(&repository_path).unwrap();
+    let hash = sha256_hex(b"orphaned");
+    persist_snapshot_with_source_root(
+        &repository_path,
+        &missing_source_root,
+        "snapshot-1",
+        "Missing root",
+        "2026-06-30T00:00:00Z",
+        vec![snapshot_file(
+            "notes.txt",
+            "2026-06-30T00:00:00Z",
+            &[(&hash, 8)],
+        )],
+    );
+
+    let report = FileInspectorService::new()
+        .inspect_repository_file(&repository_path, "notes.txt", None)
+        .unwrap();
+
+    assert_eq!(report.current_source_path, None);
+}
+
+#[test]
+fn file_inspector_keeps_current_source_path_out_of_snapshot_metadata() {
+    let temp = TempDir::new().unwrap();
+    let repository_path = temp.path().join("repo");
+    let source_root = temp.path().join("source");
+    let source_file = source_root.join("notes.txt");
+    RepositoryManager::create(&repository_path).unwrap();
+    fs::create_dir_all(&source_root).unwrap();
+    fs::write(&source_file, b"hello").unwrap();
+    let hash = sha256_hex(b"hello");
+    persist_snapshot_with_source_root(
+        &repository_path,
+        &source_root,
+        "snapshot-1",
+        "Metadata boundary",
+        "2026-06-30T00:00:00Z",
+        vec![snapshot_file(
+            "notes.txt",
+            "2026-06-30T00:00:00Z",
+            &[(&hash, 5)],
+        )],
+    );
+
+    let snapshot_json =
+        fs::read_to_string(repository_path.join("snapshots/snapshot-1.json")).unwrap();
+    let report = FileInspectorService::new()
+        .inspect_repository_file(&repository_path, "notes.txt", None)
+        .unwrap();
+
+    assert!(report.current_source_path.is_some());
+    assert!(!snapshot_json.contains("currentSourcePath"));
+    assert!(!snapshot_json.contains("current_source_path"));
 }
 
 #[test]
@@ -242,11 +364,13 @@ fn file_inspector_command_returns_camel_case_report() {
     let report = inspect_repository_file(
         repository_path.display().to_string(),
         "notes.txt".to_string(),
+        None,
     )
     .unwrap();
     let json = serde_json::to_value(report).unwrap();
 
     assert_eq!(json["relativePath"], "notes.txt");
+    assert!(json.get("currentSourcePath").is_some());
     assert!(json["versions"][0].get("snapshotCreatedAt").is_some());
     assert!(json["versions"][0]["blocks"][0]
         .get("storageState")
@@ -335,12 +459,31 @@ fn persist_snapshot(
     created_at: &str,
     files: Vec<SnapshotFile>,
 ) {
+    persist_snapshot_with_source_root(
+        repository_path,
+        Path::new("/tmp/source"),
+        id,
+        name,
+        created_at,
+        files,
+    );
+}
+
+fn persist_snapshot_with_source_root(
+    repository_path: &Path,
+    source_root: &Path,
+    id: &str,
+    name: &str,
+    created_at: &str,
+    files: Vec<SnapshotFile>,
+) {
     let snapshot = Snapshot {
         schema_version: 1,
         id: id.to_string(),
         name: name.to_string(),
+        source_id: None,
         created_at: created_at.to_string(),
-        source_root: "/tmp/source".to_string(),
+        source_root: source_root.display().to_string(),
         summary: SnapshotSummary {
             file_count: files.len() as u64,
             total_original_bytes: files.iter().map(|file| file.size_bytes).sum(),

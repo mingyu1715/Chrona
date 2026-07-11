@@ -232,3 +232,26 @@ fn removing_a_registration_leaves_the_repository_files_in_place() {
     assert!(library.repositories.is_empty());
     assert!(existing.join("manifest.json").is_file());
 }
+
+#[test]
+fn renaming_a_registration_does_not_change_repository_manifest() {
+    let temp = TempDir::new().unwrap();
+    let existing = temp.path().join("external");
+    create_repository(&existing);
+    let service = RepositoryLibraryService::new(temp.path().join("app-data"));
+    let opened = service
+        .register_existing(&existing, Some("Before"))
+        .unwrap();
+    let manifest_before = fs::read(existing.join("manifest.json")).unwrap();
+
+    let library = service
+        .rename_registration(&opened.registration.repository_id, "  After  ")
+        .unwrap();
+
+    assert_eq!(library.repositories[0].display_name, "After");
+    assert_eq!(
+        fs::read(existing.join("manifest.json")).unwrap(),
+        manifest_before
+    );
+    assert_eq!(service.list().unwrap(), library);
+}

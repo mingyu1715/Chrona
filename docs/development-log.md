@@ -482,3 +482,224 @@
 - `npm test -- --run`: UI 테스트 34개 통과.
 - `npm run build`, `git diff --check`: 통과.
 - native macOS/Windows smoke test와 시각·키보드·zoom 검증은 이번 정적 검증에서 수행하지 않았다.
+
+## 2026-07-08
+
+### Phase 10 사용자 경험·다국어 기획
+
+- 배포 준비 전에 사용자 경험과 세부 기능을 보완하는 Phase 10을 분리했다.
+- 저장소 유무와 관계없이 Home, Files, Snapshots, Statistics, Settings를 유지하고 화면 내부에서 필요한 저장소 동작을 안내하기로 했다.
+- 한국어/영어, 시스템 언어, Tauri Store 설정 저장과 Pretendard 로컬 WOFF2 번들을 범위에 포함했다.
+- 상단 저장소 메뉴는 빠른 전환, Settings의 Repositories는 검색·정렬·이름 변경·재연결·등록 해제를 담당하도록 구분했다.
+- Tauri Opener를 사용한 Finder/File Explorer 표시, 경로 복사, 복원 폴더 열기를 계획했다.
+- 상단 `새 백업`은 빈 source로 시작하고 Home은 `첫 백업 만들기` 또는 최근 source 기반 `다시 백업`으로 구분한다.
+- Rust 오류 전체 번역, 실제 저장소 삭제, 자동 백업, 배포·서명은 이번 Phase에서 제외했다.
+- 설계는 `docs/specs/0013-user-experience-localization.md`, 구현 계획은 `docs/plans/phase-10-user-experience-localization.md`에 기록했다.
+
+### Phase 10 Task 1 설정 저장·오프라인 폰트 완료
+
+- Tauri Store의 앱 데이터 `settings.json`에 language와 theme preferences를 저장하는 provider를 추가했다.
+- 없는 설정과 유효하지 않은 설정 값은 `system` 기본값으로 복구한다.
+- Pretendard Variable WOFF2와 OFL 1.1 라이선스를 저장소에 포함하고 CSS에서 로컬 asset만 참조한다.
+- production build에서 약 2.06MB WOFF2가 별도 asset으로 출력되는 것을 확인했다.
+- preferences/offline asset 테스트 4개, UI 전체 테스트 38개, TypeScript/Vite build, Rust check와 format 검증이 통과했다.
+
+### Phase 10 Task 2 한국어·영어 기반 완료
+
+- `system`, `ko`, `en` 설정을 `ko-KR`, `en-US` runtime locale로 해석하는 provider를 추가했다.
+- 영어 message key를 기준 타입으로 사용해 한국어 번역 누락이 TypeScript 오류가 되도록 구성했다.
+- interpolation과 날짜·숫자·byte 공통 formatter를 추가했다.
+- i18n 테스트 3개, UI 전체 테스트 41개와 production build가 통과했다.
+
+### Phase 10 Task 3 저장소 상태별 탐색 완료
+
+- 저장소가 없거나 연결이 끊겨도 Home, Files, Snapshots, Statistics, Settings 탐색 항목을 항상 유지한다.
+- 저장소가 필요한 화면에는 생성, 기존 저장소 추가, 연결 위치 찾기 동작을 제공하는 공통 안내 화면을 추가했다.
+- 상단 기본 동작을 상태에 따라 `Set up repository`, `Locate repository`, `New Backup`으로 구분했다.
+- 저장소 API 없이 앱 셸만 사용하는 기존 화면에서는 `New Backup` 동작을 그대로 유지한다.
+- AppShell·RepositoryLibrary 집중 테스트 12개, UI 전체 테스트 43개와 production build가 통과했다.
+
+### Phase 10 Task 4 저장소 독립 설정 완료
+
+- 활성 저장소가 없어도 General, Repositories, Storage, Repository health 설정 탐색을 유지한다.
+- General에서 시스템·한국어·영어와 시스템·라이트·다크 테마를 선택하고 Tauri Store preferences에 저장한다.
+- 앱 셸의 실제 테마를 저장된 preference와 운영체제 다크 모드 설정에 연결했다.
+- Storage와 Repository health는 활성 저장소가 없으면 저장소 생성·추가·선택 동작을 표시한다.
+- 활성 저장소가 있으면 기존 압축 모드 변경과 무결성 검사 기능을 그대로 제공한다.
+- Settings·AppShell 집중 테스트 10개, UI 전체 테스트 46개와 production build가 통과했다.
+
+### Phase 10 Task 5 전체 저장소 관리 완료
+
+- registry display name을 trim해 저장하고 빈 이름과 없는 repository ID를 거부하는 Rust 경로를 추가했다.
+- 이름 변경은 registry만 수정하며 실제 저장소 폴더명과 `manifest.json`은 변경하지 않는다.
+- Settings의 Repositories에 이름·경로 검색과 최근 사용·이름·연결 상태 정렬을 추가했다.
+- 저장소 활성화, 이름 변경, 연결 위치 찾기, 등록 해제를 한 화면에서 처리한다.
+- 상단 저장소 메뉴에서는 등록 해제를 제거하고 빠른 전환·추가·관리 화면 진입만 유지한다.
+- Rust 전체 테스트 97개, UI 전체 테스트 50개, TypeScript/Vite production build와 rustfmt 검증이 통과했다.
+
+### Phase 10 Task 6 데스크톱 경로 동작 완료
+
+- macOS Finder와 Windows File Explorer를 공통으로 호출하는 `DesktopActions` adapter를 추가했다.
+- 저장소와 선택한 source 경로에 파일 탐색기 표시·경로 복사 동작을 추가했다.
+- 복원이 완료된 뒤에만 결과 폴더 열기와 경로 복사 동작을 표시한다.
+- Tauri Opener는 path open과 reveal, Clipboard Manager는 text write 권한만 허용했다.
+- adapter 테스트에서는 plugin 함수 경계만 mock하고 UI에서는 경로가 있는 상태에만 동작을 노출한다.
+- UI 전체 테스트 54개, Rust 전체 테스트 97개, cargo check, rustfmt와 production build가 통과했다.
+
+### Phase 10 Task 7 백업 진입점 구분 완료
+
+- 상단 `New Backup`은 이전 source를 가져오지 않고 항상 빈 source로 시작한다.
+- snapshot이 없는 Home은 `Create first backup`, 최근 source가 있는 Home은 `Back up again`으로 표시한다.
+- 반복 백업은 최근 source path를 미리 채우고 대화상자를 열 때마다 새 기본 백업 이름을 만든다.
+- 최근 source path가 없으면 반복 진입이어도 빈 source 선택 상태로 시작한다.
+- 모든 진입점은 기존 단일 `createSnapshot` 호출 경로를 공유한다.
+- UI 전체 테스트 58개와 TypeScript/Vite production build가 통과했다.
+
+### Phase 10 Task 8 원본 파일 위치 연결 완료
+
+- file inspector 응답에만 `currentSourcePath`를 추가하고 snapshot metadata에는 저장하지 않도록 경계를 유지했다.
+- 현재 source root와 metadata relative path를 조합해 원본 파일이 실제 존재할 때만 절대 경로를 반환한다.
+- source 파일이 삭제되었거나 source root가 사라진 경우에는 inspector에서 비동작 상태로 표시한다.
+- Files 상세 패널에 `Reveal original` 동작을 추가해 macOS Finder와 Windows File Explorer로 원본 위치를 열 수 있게 했다.
+- 복원 완료 후 `Open restore folder` 동작은 기존 Task 6 구현을 유지하고 Snapshot 테스트로 회귀 검증했다.
+- Rust 전체 테스트 101개, UI 전체 테스트 61개, 관련 Explorer/Snapshot 테스트 11개, rustfmt와 TypeScript/Vite production build가 통과했다.
+
+## 2026-07-09
+
+### Phase 10 Task 9 활성 UI 다국어화와 상호작용 상태 정리 완료
+
+- 활성 화면의 직접 렌더링 영어 문구를 typed i18n message key로 옮기고 한국어·영어 번역 사전을 확장했다.
+- 경로, snapshot 이름, repository 이름처럼 사용자가 만든 값이나 metadata 값은 번역하지 않고 그대로 표시한다.
+- active TSX 파일에서 관리되지 않는 JSX text, `aria-label`, `title`, `placeholder` 문자열을 감지하는 스캔 테스트를 추가했다.
+- 저장소 등록 해제와 snapshot 복원에 확인 대화상자를 추가해 실수로 실행되는 파괴적·고비용 동작을 줄였다.
+- 확인 대화상자는 Escape 닫기, opener focus 복귀, async confirm 중 중복 제출 방지를 테스트로 검증했다.
+- 저장소가 아예 없는 empty state와 검색 결과가 0개인 상태를 서로 다른 메시지와 동작으로 구분했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 64개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+
+## 2026-07-10
+
+### Phase 10 Task 10 완료 검증과 문서 정리
+
+- 완료된 Phase 10 설계 문서와 구현 계획을 `docs/archive/`로 보관했다.
+- `docs/implemented/user-experience-localization.md`를 추가해 사용자 경험·다국어·로컬 연동 구현 범위와 검증 결과를 기록했다.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check`가 통과했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트 101개가 통과했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 64개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `git diff --check`가 통과했다.
+- 런타임 소스와 production output에서 원격 font, 원격 CSS, 원격 fetch/link/import 패턴이 없음을 확인했다.
+- production output의 `https://react.dev/errors/...` 문자열은 React minified error 안내 문자열로 확인했다.
+- Browser smoke로 960×640, 1100×800, 1440×900에서 한국어·영어 설정 화면의 horizontal overflow와 control clipping 후보가 없음을 확인했다.
+- macOS native dev launch에서 `target/debug/chrona` 실행과 `chrona` 프로세스를 확인했다.
+- macOS 실행 중 `TSM AdjustCapsLockLED...`, `IMKCFRunLoopWakeUpReliable` 입력기 로그가 관찰됐으나 Chrona panic이나 테스트 실패로 이어지지는 않았다.
+- Windows native 실행과 100%/125% 배율 검증은 현재 macOS 환경에서 수행하지 못했으며, 릴리스 패키징 전 별도 Windows 환경에서 확인해야 한다.
+
+### Phase 11 백그라운드 작업 / 비차단 UX 시작
+
+- 저장소 불러오기처럼 현재 상태를 확인해야 하는 작업은 기존 loading을 허용하되, 사용자가 시작한 저장/백업 생성/복원 같은 긴 작업은 앱 전체를 막지 않는 방향으로 분리했다.
+- `docs/specs/0014-background-operations.md`와 `docs/plans/phase-11-background-operations.md`를 추가했다.
+- 백업 생성 dialog는 작업 시작 후 즉시 닫히고, `createSnapshot`은 백그라운드에서 계속 실행되도록 수정했다.
+- block ingest progress listener를 dialog가 아니라 `AppShell`에 두어 dialog가 닫혀도 하단 진행 바가 유지되도록 수정했다.
+- 스냅샷 복원은 확인 후 즉시 dialog를 닫고 하단 진행 상태로 전환하도록 수정했다.
+- 백업/복원 중에도 화면 이동과 설정 확인은 가능하게 유지하고, 같은 저장소 쓰기 작업을 새로 시작하는 동작만 제한했다.
+- 라이트/다크 테마의 primary button 글자색을 `--app-on-primary`로 분리해 다크 모드 밝은 primary 배경에서 글자 대비가 떨어지지 않도록 수정했다.
+- 관련 frontend 테스트는 RED를 확인했고, 구현 후 `npm test -- --run src/features/backup/NewBackupDialog.test.tsx src/app/AppShell.test.tsx src/features/snapshots/RestoreSnapshotDialog.test.tsx` 결과 3개 파일, 14개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `git diff --check` 결과 공백 오류가 없었다.
+- 완료된 Phase 11 설계 문서와 구현 계획을 `docs/archive/`로 보관하고 `docs/implemented/background-operations.md`를 추가했다.
+
+### Phase 11 추가 안정화
+
+- 통계 분석 결과와 진행 상태를 `StatisticsPage` 내부가 아니라 `AppShell`에서 유지하도록 변경했다.
+- Statistics 화면을 벗어났다가 돌아와도 사용자가 새 분석을 실행하기 전까지 마지막 분석 결과가 남도록 수정했다.
+- 통계 progress listener도 `AppShell`로 이동해 다른 화면에 있어도 하단 진행 바가 갱신되도록 수정했다.
+- 하단 `OperationBar`가 byte 기반 진행률뿐 아니라 통계처럼 count 기반 진행률도 표시할 수 있도록 확장했다.
+- `create_snapshot`, `ingest_blocks`, `restore_snapshot`, `verify_repository` Tauri command를 blocking thread로 이동해 대용량 파일 처리 중 UI runtime을 오래 붙잡지 않도록 수정했다.
+- `npm test -- --run src/app/AppShell.test.tsx src/features/statistics/StatisticsPage.test.tsx src/features/statistics/StatisticsDashboard.test.tsx` 결과 3개 파일, 13개 테스트가 통과했다.
+
+### Phase 11 다크모드 색상 안정화
+
+- 앱 셸의 `--app-*` 라이트/다크 토큰을 공용 workspace 토큰(`--surface`, `--text`, `--border`, 상태 색상 등)에 연결했다.
+- 홈, 파일, 스냅샷, 통계, 설정 화면이 서로 다른 색상 토큰을 써서 다크모드에서 흰 배경이나 어두운 글자가 남는 문제를 줄였다.
+- 컴포넌트 CSS에서 직접적인 `background: white/#fff`, `color: black/#000` 하드코딩이 남아 있지 않음을 확인했다.
+- `npm test -- --run src/app/AppShell.test.tsx` 결과 1개 파일, 10개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+
+### Phase 12 백업 대상 관리 / 소스별 묶음 구현
+
+- 저장소는 백업 데이터를 저장하는 위치, 백업 대상은 실제 원본 폴더/파일이라는 개념으로 UI와 내부 모델을 정리했다.
+- 저장소 내부 `indexes/source-index.json`을 추가하고, canonical path 기준으로 같은 백업 대상을 자동 재사용하도록 `SourceStore`를 구현했다.
+- 새 스냅샷과 snapshot index 항목에 `sourceId`를 기록해 같은 폴더를 반복 백업할 때 하나의 백업 대상으로 묶이도록 했다.
+- inventory 집계를 `(sourceId, relativePath)` 기준으로 바꿔 서로 다른 백업 대상에 같은 상대경로 파일이 있어도 섞이지 않게 했다.
+- file inspector에 optional `sourceId` 필터를 추가해 Files 화면에서 선택한 대상의 파일 이력만 조회할 수 있게 했다.
+- Home에는 백업 대상 목록과 대상별 다시 백업 버튼을 추가했다.
+- Files에는 백업 대상 필터를 추가하고, Snapshots에는 백업 대상별 그룹과 필터를 추가했다.
+- 한국어/영어 UI 문구를 추가하고, “Source”보다 “백업 대상” 표현을 우선 사용하도록 정리했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트 104개가 통과했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 69개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+
+### Phase 13 원본 위치 시점 복원 구현
+
+- `restore_snapshot_to_source(repository_path, source_id, snapshot_id)` 경로를 추가했다.
+- 원본 위치 복원은 대상 스냅샷의 `sourceId`가 요청 source와 다르면 중단한다.
+- 복원 전 현재 원본 위치를 안전 스냅샷으로 자동 저장한다.
+- 선택한 스냅샷에 있는 파일은 `.tmp` 파일로 먼저 복원한 뒤 최종 파일로 교체한다.
+- 선택한 스냅샷에는 없지만 현재 원본에 있는 파일은 삭제하지 않고 `.chrona-quarantine/{operationId}/` 아래로 이동한다.
+- Snapshots 상세 화면에 `원본 위치로 복원` 버튼과 확인 대화상자를 추가했다.
+- 원본 위치 복원도 기존 하단 작업 표시줄을 사용해 앱 전체를 막지 않도록 연결했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml --test phase13_original_location_restore --test phase4_restore` 결과 2개 테스트 파일, 6개 테스트가 통과했다.
+- `npm test -- --run src/features/snapshots/SnapshotsPage.test.tsx` 결과 1개 파일, 3개 테스트가 통과했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트 106개가 통과했다.
+- `npm test -- --run` 결과 UI 테스트 21개 파일, 70개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`와 `git diff --check`가 통과했다.
+
+### Phase 14 크로스 플랫폼 패키징 준비 계획
+
+- 앱 패키징 빌드를 바로 실행하지 않고, macOS/Windows 빌드 전제 조건과 경로 정책을 먼저 정리하기로 했다.
+- 현재 Chrona의 기본 저장소 위치가 Tauri `app_local_data_dir()/Repositories`이고, 저장소 등록 목록은 같은 앱 로컬 데이터 폴더의 `repository-registry.json`이라는 점을 확인했다.
+- macOS와 Windows의 빌드 전제 조건, 예상 산출물 위치, Finder/File Explorer 연동 검증 항목, 한글/공백/Windows drive letter 경로 검증 항목을 `docs/plans/phase-14-cross-platform-packaging-readiness.md`에 기록했다.
+- `tauri.conf.json`에 바로 변경을 넣기 전에 보강할 bundle metadata 후보를 문서로 먼저 정리했다.
+
+## 2026-07-12
+
+### Phase 14 크로스 플랫폼 패키징 실행 시작
+
+- 패키징 작업을 `release/phase-14-cross-platform-packaging` 브랜치로 분리했다.
+- Phase 14 범위를 macOS Apple Silicon `.app`과 Windows x86-64 NSIS `setup.exe`로 고정했다.
+- `src-tauri/tauri.conf.json`에 publisher, copyright, license file, category, short/long description 번들 메타데이터를 추가했다.
+- `src-tauri/tauri.macos.conf.json`을 추가해 macOS bundle target을 `.app`으로 제한했다.
+- `src-tauri/tauri.windows.conf.json`을 추가해 Windows bundle target을 `nsis`로 제한하고 WebView2 설치 방식을 `downloadBootstrapper`로 고정했다.
+- `npm run tauri:build:macos`와 `npm run tauri:build:windows` 스크립트를 추가했다.
+- icon 파일이 PNG RGBA, ICNS, ICO 형식으로 존재함을 확인했다.
+- `docs/specs/0015-cross-platform-packaging.md`, `docs/packaging/`, README, Phase 14 계획 문서를 현재 패키징 범위에 맞게 갱신했다.
+- 첫 macOS 빌드는 release binary까지만 생성되고 `.app`이 나오지 않아 확인한 결과, Tauri `bundle.active` 기본값이 `false`인 것이 원인이었다.
+- `src-tauri/tauri.macos.conf.json`과 `src-tauri/tauri.windows.conf.json`에 `bundle.active: true`를 추가했다.
+- `npm test` 결과 UI 테스트 21개 파일, 73개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트가 통과했다.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`가 통과했다.
+- `npm run tauri:build:macos` 결과 `src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Chrona.app`가 생성됐다.
+- 생성된 `.app`는 약 14M이고, 내부 실행 파일은 arm64 Mach-O로 확인했다.
+- `open`으로 `.app` 실행 후 `Contents/MacOS/chrona` 프로세스가 떠 있는 것을 확인하고 정상 종료했다.
+- Tauri가 `com.chrona.app` identifier가 `.app`으로 끝난다는 경고를 출력했지만, 현재 Phase 14 지정값을 유지했다.
+
+### Phase 14 macOS 설치 프로그램 생성
+
+- 사용 요청에 맞춰 macOS 설치 프로그램 산출물 생성을 Phase 14 범위에 포함했다.
+- `src-tauri/tauri.macos.installer.conf.json`을 추가하고 bundle target을 `dmg`로 설정했다.
+- `npm run tauri:build:macos:installer` 스크립트를 추가했다.
+- `npm run tauri:build:macos:installer` 결과 `src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Chrona_0.1.0_aarch64.dmg`가 생성됐다.
+- 생성된 DMG는 약 7.4M이다.
+- `hdiutil verify` 결과 DMG checksum이 valid로 확인됐다.
+- `hdiutil imageinfo` 결과 UDZO 압축 이미지이며 Software License Agreement가 포함된 것으로 확인됐다.
+
+### Phase 14 Windows 빌드 준비 스크립트 추가
+
+- 새 Windows x86-64 환경에서 GitHub source를 받은 뒤 명령만 실행해 NSIS installer를 만들 수 있도록 `scripts/windows/`를 추가했다.
+- `scripts/windows/prepare.ps1`은 Git, Node.js LTS, Rustup, Microsoft C++ Build Tools, Rust MSVC target, npm dependencies를 확인하고 `-InstallMissing` 옵션으로 winget 설치를 보조한다.
+- `scripts/windows/build-installer.ps1`은 npm test, production build, cargo test, rustfmt check를 실행한 뒤 `npm run tauri:build:windows`로 NSIS installer를 빌드하고 SHA-256을 출력한다.
+- `docs/packaging/windows.md`, README, README.ko에 fresh Windows quick start 명령을 추가했다.
+- Windows installer 실제 생성과 실행 검증은 여전히 실제 Windows x86-64 환경에서 수행해야 한다.

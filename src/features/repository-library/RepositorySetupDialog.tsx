@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import type { ChronaApi } from '../../shared/api/chronaApi';
 import type { RepositoryLibraryController } from '../../app/useRepositoryLibrary';
+import { useI18n } from '../../shared/i18n/I18nProvider';
 
 interface RepositorySetupDialogProps {
   api: ChronaApi;
@@ -17,13 +18,14 @@ export function RepositorySetupDialog({
   canDismiss = false,
   onDismiss,
 }: RepositorySetupDialogProps) {
+  const { t } = useI18n();
   const [displayName, setDisplayName] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
   function validName() {
     const name = displayName.trim();
     if (!name) {
-      setValidationError('Enter a repository name.');
+      setValidationError(t('repository.nameRequired'));
       return null;
     }
     setValidationError(null);
@@ -66,14 +68,14 @@ export function RepositorySetupDialog({
             <span className="repository-setup-dialog__icon" aria-hidden="true">
               <HardDrive size={20} />
             </span>
-            <h1 id="repository-setup-title">Set up Chrona</h1>
+            <h1 id="repository-setup-title">{t('repository.setupChrona')}</h1>
           </div>
           {canDismiss && (
             <button
               className="repository-setup-dialog__close"
               type="button"
-              aria-label="Close repository setup"
-              title="Close"
+              aria-label={t('repository.closeSetup')}
+              title={t('common.close')}
               onClick={onDismiss}
             >
               <X size={18} aria-hidden="true" />
@@ -82,12 +84,12 @@ export function RepositorySetupDialog({
         </header>
 
         <label className="repository-setup-dialog__field">
-          <span>Repository name</span>
+          <span>{t('repository.name')}</span>
           <input
             value={displayName}
             required
             autoFocus
-            placeholder="My backups"
+            placeholder={t('repository.namePlaceholder')}
             onChange={(event) => setDisplayName(event.target.value)}
           />
         </label>
@@ -106,7 +108,7 @@ export function RepositorySetupDialog({
             onClick={() => void createManaged()}
           >
             <Plus size={17} aria-hidden="true" />
-            Create in default location
+            {t('repository.createDefault')}
           </button>
           <button
             type="button"
@@ -114,7 +116,7 @@ export function RepositorySetupDialog({
             onClick={() => void createAt()}
           >
             <FolderOpen size={17} aria-hidden="true" />
-            Choose location
+            {t('repository.chooseLocation')}
           </button>
           <button
             type="button"
@@ -122,7 +124,7 @@ export function RepositorySetupDialog({
             onClick={() => void addExisting()}
           >
             <HardDrive size={17} aria-hidden="true" />
-            Add existing repository
+            {t('repository.addExisting')}
           </button>
         </div>
       </section>

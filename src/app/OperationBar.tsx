@@ -7,6 +7,8 @@ export interface ActiveOperation {
   processedBytes: number;
   totalBytes: number;
   phase: string;
+  progressPercent?: number;
+  amountText?: string;
 }
 
 interface OperationBarProps {
@@ -23,9 +25,12 @@ function formatBytes(bytes: number) {
 export function OperationBar({ operation }: OperationBarProps) {
   if (!operation) return null;
 
-  const progress = operation.totalBytes > 0
+  const progress = operation.progressPercent ?? (operation.totalBytes > 0
     ? Math.min(100, Math.round((operation.processedBytes / operation.totalBytes) * 100))
-    : null;
+    : null);
+  const amountText = operation.amountText ?? (operation.totalBytes > 0
+    ? `${formatBytes(operation.processedBytes)} / ${formatBytes(operation.totalBytes)}`
+    : operation.phase);
 
   return (
     <div className="operation-bar" role="status" aria-live="polite">
@@ -46,9 +51,7 @@ export function OperationBar({ operation }: OperationBarProps) {
           <span style={{ width: progress === null ? '24%' : `${progress}%` }} />
         </div>
         <span className="operation-bar__amount">
-          {operation.totalBytes > 0
-            ? `${formatBytes(operation.processedBytes)} / ${formatBytes(operation.totalBytes)}`
-            : operation.phase}
+          {amountText}
         </span>
       </div>
     </div>

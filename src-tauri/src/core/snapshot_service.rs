@@ -6,8 +6,10 @@ use uuid::Uuid;
 use crate::core::block_ingest_service::BlockIngestService;
 use crate::core::diff_service::DiffService;
 use crate::core::errors::{ChronaError, ChronaResult};
+use crate::core::path_safety::assert_source_repository_separate;
 use crate::core::repository::RepositoryManager;
 use crate::core::snapshot_store::SnapshotStore;
+use crate::core::source_store::SourceStore;
 use crate::models::diff::SnapshotComparison;
 use crate::models::progress::BlockIngestProgress;
 use crate::models::snapshot::{Snapshot, SnapshotFile, SnapshotIndexItem, SnapshotSummary};
@@ -30,8 +32,11 @@ impl SnapshotService {
         F: FnMut(BlockIngestProgress),
     {
         RepositoryManager::open(repository_path)?;
+        assert_source_repository_separate(source_path, repository_path)?;
         let store = SnapshotStore::new(repository_path.to_path_buf());
         store.ensure_layout()?;
+        let source_store = SourceStore::new(repository_path.to_path_buf());
+        let source = source_store.find_or_create_for_path(source_path)?;
 
         let source_root = source_path
             .canonicalize()?
@@ -51,6 +56,7 @@ impl SnapshotService {
             schema_version: 1,
             id: generate_snapshot_id(created_at),
             name: normalize_snapshot_name(name),
+            source_id: Some(source.id.clone()),
             created_at: created_at.to_rfc3339(),
             source_root,
             summary: SnapshotSummary {
@@ -80,12 +86,25 @@ impl SnapshotService {
 
         store.write_snapshot(&snapshot)?;
         store.add_to_index(&snapshot)?;
+        source_store.record_snapshot(&source.id, &snapshot.id, &snapshot.created_at)?;
         Ok(snapshot)
     }
 
     pub fn list_snapshots(&self, repository_path: &Path) -> ChronaResult<Vec<SnapshotIndexItem>> {
         RepositoryManager::open(repository_path)?;
         SnapshotStore::new(repository_path.to_path_buf()).list_snapshots()
+    }
+
+    pub fn delete_snapshot(
+        &self,
+        repository_path: &Path,
+        snapshot_id: &str,
+    ) -> ChronaResult<Vec<SnapshotIndexItem>> {
+        RepositoryManager::open(repository_path)?;
+        let store = SnapshotStore::new(repository_path.to_path_buf());
+        let remaining = store.delete_snapshot(snapshot_id)?;
+        SourceStore::new(repository_path.to_path_buf()).rebuild_snapshot_links(&remaining)?;
+        Ok(remaining)
     }
 
     pub fn get_snapshot(

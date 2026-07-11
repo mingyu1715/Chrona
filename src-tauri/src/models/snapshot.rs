@@ -8,6 +8,8 @@ pub struct Snapshot {
     pub schema_version: u32,
     pub id: String,
     pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_id: Option<String>,
     pub created_at: String,
     pub source_root: String,
     pub summary: SnapshotSummary,
@@ -56,6 +58,8 @@ pub struct SnapshotIndex {
 pub struct SnapshotIndexItem {
     pub id: String,
     pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_id: Option<String>,
     pub created_at: String,
     pub source_root: String,
     pub file_count: u64,
