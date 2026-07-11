@@ -385,6 +385,16 @@ npm run tauri:build:macos:installer
 npm run tauri:build:windows
 ```
 
+GitHub source를 받아 새 Windows 환경에서 빌드:
+
+```powershell
+winget install --id Git.Git --exact
+git clone -b release/phase-14-cross-platform-packaging https://github.com/mingyu1715/Chrona.git
+cd Chrona
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\prepare.ps1 -InstallMissing
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\build-installer.ps1
+```
+
 ## 패키징 대상
 
 Phase 14 대상:

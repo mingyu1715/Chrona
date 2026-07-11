@@ -695,3 +695,11 @@
 - 생성된 DMG는 약 7.4M이다.
 - `hdiutil verify` 결과 DMG checksum이 valid로 확인됐다.
 - `hdiutil imageinfo` 결과 UDZO 압축 이미지이며 Software License Agreement가 포함된 것으로 확인됐다.
+
+### Phase 14 Windows 빌드 준비 스크립트 추가
+
+- 새 Windows x86-64 환경에서 GitHub source를 받은 뒤 명령만 실행해 NSIS installer를 만들 수 있도록 `scripts/windows/`를 추가했다.
+- `scripts/windows/prepare.ps1`은 Git, Node.js LTS, Rustup, Microsoft C++ Build Tools, Rust MSVC target, npm dependencies를 확인하고 `-InstallMissing` 옵션으로 winget 설치를 보조한다.
+- `scripts/windows/build-installer.ps1`은 npm test, production build, cargo test, rustfmt check를 실행한 뒤 `npm run tauri:build:windows`로 NSIS installer를 빌드하고 SHA-256을 출력한다.
+- `docs/packaging/windows.md`, README, README.ko에 fresh Windows quick start 명령을 추가했다.
+- Windows installer 실제 생성과 실행 검증은 여전히 실제 Windows x86-64 환경에서 수행해야 한다.

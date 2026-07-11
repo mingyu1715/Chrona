@@ -385,6 +385,16 @@ Build Windows x86-64 NSIS installer on a real Windows machine:
 npm run tauri:build:windows
 ```
 
+Fresh Windows build from GitHub source:
+
+```powershell
+winget install --id Git.Git --exact
+git clone -b release/phase-14-cross-platform-packaging https://github.com/mingyu1715/Chrona.git
+cd Chrona
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\prepare.ps1 -InstallMissing
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\build-installer.ps1
+```
+
 ## Packaging Targets
 
 Phase 14 targets:
