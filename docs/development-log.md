@@ -655,3 +655,43 @@
 - `npm test -- --run` 결과 UI 테스트 21개 파일, 70개 테스트가 통과했다.
 - `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
 - `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`와 `git diff --check`가 통과했다.
+
+### Phase 14 크로스 플랫폼 패키징 준비 계획
+
+- 앱 패키징 빌드를 바로 실행하지 않고, macOS/Windows 빌드 전제 조건과 경로 정책을 먼저 정리하기로 했다.
+- 현재 Chrona의 기본 저장소 위치가 Tauri `app_local_data_dir()/Repositories`이고, 저장소 등록 목록은 같은 앱 로컬 데이터 폴더의 `repository-registry.json`이라는 점을 확인했다.
+- macOS와 Windows의 빌드 전제 조건, 예상 산출물 위치, Finder/File Explorer 연동 검증 항목, 한글/공백/Windows drive letter 경로 검증 항목을 `docs/plans/phase-14-cross-platform-packaging-readiness.md`에 기록했다.
+- `tauri.conf.json`에 바로 변경을 넣기 전에 보강할 bundle metadata 후보를 문서로 먼저 정리했다.
+
+## 2026-07-12
+
+### Phase 14 크로스 플랫폼 패키징 실행 시작
+
+- 패키징 작업을 `release/phase-14-cross-platform-packaging` 브랜치로 분리했다.
+- Phase 14 범위를 macOS Apple Silicon `.app`과 Windows x86-64 NSIS `setup.exe`로 고정했다.
+- `src-tauri/tauri.conf.json`에 publisher, copyright, license file, category, short/long description 번들 메타데이터를 추가했다.
+- `src-tauri/tauri.macos.conf.json`을 추가해 macOS bundle target을 `.app`으로 제한했다.
+- `src-tauri/tauri.windows.conf.json`을 추가해 Windows bundle target을 `nsis`로 제한하고 WebView2 설치 방식을 `downloadBootstrapper`로 고정했다.
+- `npm run tauri:build:macos`와 `npm run tauri:build:windows` 스크립트를 추가했다.
+- icon 파일이 PNG RGBA, ICNS, ICO 형식으로 존재함을 확인했다.
+- `docs/specs/0015-cross-platform-packaging.md`, `docs/packaging/`, README, Phase 14 계획 문서를 현재 패키징 범위에 맞게 갱신했다.
+- 첫 macOS 빌드는 release binary까지만 생성되고 `.app`이 나오지 않아 확인한 결과, Tauri `bundle.active` 기본값이 `false`인 것이 원인이었다.
+- `src-tauri/tauri.macos.conf.json`과 `src-tauri/tauri.windows.conf.json`에 `bundle.active: true`를 추가했다.
+- `npm test` 결과 UI 테스트 21개 파일, 73개 테스트가 통과했다.
+- `npm run build` 결과 TypeScript 검사와 Vite production build가 통과했다.
+- `cargo test --manifest-path src-tauri/Cargo.toml` 결과 Rust 테스트가 통과했다.
+- `cargo fmt --manifest-path src-tauri/Cargo.toml -- --check`가 통과했다.
+- `npm run tauri:build:macos` 결과 `src-tauri/target/aarch64-apple-darwin/release/bundle/macos/Chrona.app`가 생성됐다.
+- 생성된 `.app`는 약 14M이고, 내부 실행 파일은 arm64 Mach-O로 확인했다.
+- `open`으로 `.app` 실행 후 `Contents/MacOS/chrona` 프로세스가 떠 있는 것을 확인하고 정상 종료했다.
+- Tauri가 `com.chrona.app` identifier가 `.app`으로 끝난다는 경고를 출력했지만, 현재 Phase 14 지정값을 유지했다.
+
+### Phase 14 macOS 설치 프로그램 생성
+
+- 사용 요청에 맞춰 macOS 설치 프로그램 산출물 생성을 Phase 14 범위에 포함했다.
+- `src-tauri/tauri.macos.installer.conf.json`을 추가하고 bundle target을 `dmg`로 설정했다.
+- `npm run tauri:build:macos:installer` 스크립트를 추가했다.
+- `npm run tauri:build:macos:installer` 결과 `src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Chrona_0.1.0_aarch64.dmg`가 생성됐다.
+- 생성된 DMG는 약 7.4M이다.
+- `hdiutil verify` 결과 DMG checksum이 valid로 확인됐다.
+- `hdiutil imageinfo` 결과 UDZO 압축 이미지이며 Software License Agreement가 포함된 것으로 확인됐다.

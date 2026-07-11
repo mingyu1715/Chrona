@@ -12,10 +12,11 @@
 
 - Phase 12 백업 대상 관리 MVP: `docs/plans/phase-12-source-management-mvp.md`
 - Phase 13 원본 위치 시점 복원: `docs/plans/phase-13-original-location-restore.md`
+- Phase 14 크로스 플랫폼 패키징 실행: `docs/plans/phase-14-cross-platform-packaging-readiness.md`
 
 ## 현재 `docs/specs/`에 남아 있는 설계
 
-- 없음
+- Phase 14 크로스 플랫폼 패키징: `docs/specs/0015-cross-platform-packaging.md`
 
 ## 설계는 있고 구현 계획은 아직 없는 작업
 
@@ -56,7 +57,6 @@
 
 ## 설계와 상세 계획이 모두 없는 후보
 
-- 패키징된 `.app` 릴리스 / 서명
 - 복원 preview와 충돌 해결 UX
 - 스냅샷 삭제와 블록 정리
 - 파일 감시 / 자동 스냅샷

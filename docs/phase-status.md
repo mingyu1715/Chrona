@@ -36,10 +36,11 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 | 백그라운드 작업 / 비차단 UX | 구현 완료 | `docs/archive/specs/0014-background-operations.md` | `docs/archive/plans/phase-11-background-operations.md` | `docs/implemented/background-operations.md` | 백업 생성과 복원을 하단 진행 표시 기반 백그라운드 작업으로 전환 완료. |
 | 백업 대상 관리 / 소스별 묶음 | 현재 브랜치 구현 완료 | 없음 | `docs/plans/phase-12-source-management-mvp.md` | 예정 | 저장소 내부 `source-index.json`, snapshot `sourceId`, Home 대상 목록, Files/Snapshots 대상 필터와 그룹 구현 완료. 병합 후 archive/implemented 정리 예정. |
 | 원본 위치 시점 복원 | 현재 브랜치 구현 완료 | 없음 | `docs/plans/phase-13-original-location-restore.md` | 예정 | 안전 스냅샷 생성, sourceId 검증, 원본 파일 교체, 초과 파일 격리, Snapshots UI 진입점 구현 완료. 병합 후 archive/implemented 정리 예정. |
+| 크로스 플랫폼 패키징 | 진행 중 | `docs/specs/0015-cross-platform-packaging.md` | `docs/plans/phase-14-cross-platform-packaging-readiness.md` | 예정 | Apple Silicon `.app`과 DMG 설치 이미지를 생성했고, Windows x86-64 NSIS `setup.exe`는 실제 Windows 환경에서 검증한다. |
 
 ## 현재 `docs/specs/`에 남은 설계 문서
 
-현재 없음.
+- `docs/specs/0015-cross-platform-packaging.md`
 
 ## 보관된 완료 설계 문서
 
@@ -64,6 +65,7 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 
 - Phase 12 백업 대상 관리 MVP: `docs/plans/phase-12-source-management-mvp.md`
 - Phase 13 원본 위치 시점 복원: `docs/plans/phase-13-original-location-restore.md`
+- Phase 14 크로스 플랫폼 패키징: `docs/plans/phase-14-cross-platform-packaging-readiness.md`
 
 ## 설계 문서는 있지만 구현 계획은 없는 작업
 
@@ -75,7 +77,6 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 
 | 영역 | 현재 상세 수준 | 다음 문서 후보 |
 | --- | --- | --- |
-| 패키징된 `.app` 릴리스 / 서명 | 릴리스 준비 후보로만 언급됨 | `docs/plans/phase-release-packaging.md` |
 | 스냅샷 삭제 / 블록 정리 | 향후 작업 | `docs/specs/00xx-snapshot-delete-gc.md` |
 | 파일 감시 / 자동 스냅샷 | 향후 작업 | `docs/specs/00xx-watched-sources.md` |
 | SQLite 메타데이터 백엔드 | 향후 작업 | `docs/specs/00xx-sqlite-metadata.md` |
@@ -110,7 +111,7 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 
 ### 다음 계획 후보
 
-1. 릴리스 패키징, 서명, 설치 파일과 기본 실행 테스트
+1. Phase 14 크로스 플랫폼 패키징
 2. 스냅샷 삭제 / 블록 정리
 3. 파일 감시 / 자동 스냅샷
 4. 복원 preview와 충돌 해결 UX
@@ -128,4 +129,4 @@ Phase 10까지 완료된 설계와 계획은 archive에, 구현 기록은 implem
 
 1. Phase 12/13 브랜치를 전체 검증하고 병합한 뒤 구현 기록을 작성하고 계획 문서를 archive로 이동한다.
 2. Windows native 실행, 100%/125% 배율, File Explorer reveal/open 동작과 원본 위치 복원 격리 폴더를 검증한다.
-3. 릴리스 패키징과 서명 준비 계획을 별도 문서로 수립한다.
+3. Phase 14 문서를 기준으로 Windows x86-64 NSIS 빌드를 실제 Windows 환경에서 이어서 검증한다.

@@ -6,7 +6,7 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 
 ## 현재 상태
 
-현재는 Phase 10 사용자 경험·다국어·로컬 데스크톱 연동까지 완료된 상태입니다.
+현재는 백업 대상 묶음, 반복 백업, 스냅샷 복원, 원본 위치 시점 복원, 저장소 탐색, 통계, 다국어, 데스크톱 파일 연동을 포함한 로컬 백업 MVP 핵심 기능이 구현된 상태입니다. Phase 14 패키징 작업을 진행 중입니다.
 
 구현됨:
 
@@ -63,7 +63,8 @@ Chrona는 블록 기반 시점별 데이터 관리 데스크톱 애플리케이�
 아직 구현되지 않음:
 
 - 자동 복구와 block garbage collection
-- 패키징된 `.app` 릴리스, 서명, Windows native 검증
+- 서명/notarization이 적용된 릴리스 패키지
+- Windows native installer 검증
 
 ## 기술 스택
 
@@ -366,12 +367,40 @@ cd src-tauri && cargo test
 npm run build
 ```
 
+macOS Apple Silicon `.app` 빌드:
+
+```bash
+npm run tauri:build:macos
+```
+
+macOS Apple Silicon DMG 설치 프로그램 빌드:
+
+```bash
+npm run tauri:build:macos:installer
+```
+
+실제 Windows 환경에서 Windows x86-64 NSIS 설치 파일 빌드:
+
+```powershell
+npm run tauri:build:windows
+```
+
+## 패키징 대상
+
+Phase 14 대상:
+
+- macOS Apple Silicon `.app`과 `.dmg`: `aarch64-apple-darwin`, unsigned, notarization 없음.
+- Windows x86-64 NSIS `setup.exe`: `x86_64-pc-windows-msvc`, unsigned, WebView2 `downloadBootstrapper`.
+
+Phase 14에 포함하지 않는 것: macOS Intel/universal 빌드, Windows `.msi`, code signing, notarization, 자동 업데이트, Linux, 모바일 빌드.
+
 ## 문서
 
 - `docs/project-plan.md`: 전체 프로젝트 계획
 - `docs/specs/`: 설계 결정과 포맷
 - `docs/plans/`: 현재 진행 또는 다음 구현 계획
 - `docs/implemented/`: 완료된 기능 구현 기록
+- `docs/packaging/`: 로컬 패키징과 검증 기록
 - `docs/archive/`: 완료되었거나 폐기된 작업 문서
 - `docs/development-log.md`: 날짜별 개발 로그
 

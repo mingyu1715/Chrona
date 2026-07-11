@@ -6,7 +6,7 @@ The project stores files as reusable data blocks and records file state over tim
 
 ## Current Status
 
-Chrona has completed Phase 10 user experience, localization, and local desktop integration work.
+Chrona has completed the core local backup MVP through source grouping, repeated backups, snapshot restore, original-location rollback, repository inspection, statistics, localization, and desktop file integration. Phase 14 packaging work is in progress.
 
 Implemented:
 
@@ -63,7 +63,8 @@ Implemented:
 Not implemented yet:
 
 - Auto-repair and block garbage collection
-- Packaged `.app` release, signing, and Windows native verification
+- Signed/notarized release packages
+- Windows native installer verification
 
 ## Tech Stack
 
@@ -366,12 +367,40 @@ Build frontend:
 npm run build
 ```
 
+Build macOS Apple Silicon `.app`:
+
+```bash
+npm run tauri:build:macos
+```
+
+Build macOS Apple Silicon DMG installer:
+
+```bash
+npm run tauri:build:macos:installer
+```
+
+Build Windows x86-64 NSIS installer on a real Windows machine:
+
+```powershell
+npm run tauri:build:windows
+```
+
+## Packaging Targets
+
+Phase 14 targets:
+
+- macOS Apple Silicon `.app` and `.dmg`: `aarch64-apple-darwin`, unsigned, not notarized.
+- Windows x86-64 NSIS `setup.exe`: `x86_64-pc-windows-msvc`, unsigned, WebView2 `downloadBootstrapper`.
+
+Not included in Phase 14: macOS Intel/universal builds, Windows `.msi`, code signing, notarization, auto updates, Linux, and mobile builds.
+
 ## Documentation
 
 - `docs/project-plan.md`: overall project plan
 - `docs/specs/`: design decisions and formats
 - `docs/plans/`: active or next-up implementation plans
 - `docs/implemented/`: completed feature records
+- `docs/packaging/`: local packaging and validation notes
 - `docs/archive/`: completed or retired working plans
 - `docs/development-log.md`: chronological development log
 
