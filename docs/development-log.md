@@ -703,3 +703,10 @@
 - `scripts/windows/build-installer.ps1`은 npm test, production build, cargo test, rustfmt check를 실행한 뒤 `npm run tauri:build:windows`로 NSIS installer를 빌드하고 SHA-256을 출력한다.
 - `docs/packaging/windows.md`, README, README.ko에 fresh Windows quick start 명령을 추가했다.
 - Windows installer 실제 생성과 실행 검증은 여전히 실제 Windows x86-64 환경에서 수행해야 한다.
+
+### Phase 14 GitHub Actions Windows installer 빌드 추가
+
+- 로컬 Windows 환경에 Visual Studio Build Tools를 설치하지 않아도 `.exe`를 뽑을 수 있도록 `.github/workflows/build-windows-installer.yml`을 추가했다.
+- Workflow는 `windows-latest`에서 Node.js, Rust stable MSVC target을 설정하고 npm/Rust 검증 후 `npm run tauri:build:windows`를 실행한다.
+- 생성된 NSIS `.exe`는 GitHub Actions artifact로 업로드하고 SHA-256을 job summary에 기록한다.
+- 수동 실행 시 `release_tag`를 입력하면 기존 GitHub Release에 `.exe` asset도 업로드한다.

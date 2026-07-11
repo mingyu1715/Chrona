@@ -395,6 +395,14 @@ powershell -ExecutionPolicy Bypass -File .\scripts\windows\prepare.ps1 -InstallM
 powershell -ExecutionPolicy Bypass -File .\scripts\windows\build-installer.ps1
 ```
 
+Online Windows installer build:
+
+```text
+GitHub Actions -> Build Windows Installer -> Run workflow
+```
+
+Leave `release_tag` empty to download the `.exe` from workflow artifacts. Provide an existing tag to upload the `.exe` to a GitHub Release.
+
 ## Packaging Targets
 
 Phase 14 targets:
