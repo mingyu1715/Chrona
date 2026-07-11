@@ -95,6 +95,45 @@ scripts/windows/README.md
 
 `build-installer.ps1` prints the final `.exe` path and SHA-256 hash.
 
+## GitHub Actions Build
+
+Windows installer builds can run online in GitHub Actions, so a local Windows machine does not need Visual Studio Build Tools installed.
+
+Workflow:
+
+```text
+.github/workflows/build-windows-installer.yml
+```
+
+Manual run:
+
+1. Open the GitHub repository.
+2. Go to `Actions`.
+3. Select `Build Windows Installer`.
+4. Click `Run workflow`.
+5. Leave `release_tag` empty to produce only a workflow artifact.
+6. Set `release_tag` to an existing tag, for example `v0.1.0-windows`, to upload the installer to that release.
+
+The workflow runs:
+
+```text
+npm install
+npm test
+npm run build
+cargo test --manifest-path src-tauri/Cargo.toml
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+npm run tauri:build:windows
+```
+
+Output:
+
+```text
+GitHub Actions artifact: *.exe
+Optional GitHub Release asset: *.exe
+```
+
+The workflow prints the installer SHA-256 in the job summary.
+
 ## Manual Checks
 
 - Launch installer.

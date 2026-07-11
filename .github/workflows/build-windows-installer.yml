@@ -1,0 +1,109 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional existing GitHub release tag to upload the installer to"
+        required: false
+        type: string
+      skip_tests:
+        description: "Skip test steps and only build the installer"
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches:
+      - release/phase-14-cross-platform-packaging
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-installer:
+    name: Windows NSIS installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Run frontend tests
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_tests }}
+        run: npm test
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Run Rust tests
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_tests }}
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Check Rust formatting
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_tests }}
+        run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+
+      - name: Build Windows NSIS installer
+        run: npm run tauri:build:windows
+
+      - name: Collect installer metadata
+        id: installer
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem `
+            -Path "src-tauri\target" `
+            -Recurse `
+            -Filter "*.exe" |
+            Where-Object { $_.FullName -match "\\bundle\\nsis\\" } |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+
+          if (-not $installer) {
+            throw "Windows NSIS installer was not found."
+          }
+
+          $hash = Get-FileHash -Algorithm SHA256 $installer.FullName
+          "installer_path=$($installer.FullName)" >> $env:GITHUB_OUTPUT
+          "installer_name=$($installer.Name)" >> $env:GITHUB_OUTPUT
+          "sha256=$($hash.Hash.ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+          Write-Host "Installer: $($installer.FullName)"
+          Write-Host "SHA256: $($hash.Hash.ToLowerInvariant())"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.installer.outputs.installer_name }}
+          path: ${{ steps.installer.outputs.installer_path }}
+          if-no-files-found: error
+
+      - name: Upload installer to GitHub Release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          files: ${{ steps.installer.outputs.installer_path }}
+          fail_on_unmatched_files: true
+
+      - name: Summary
+        shell: pwsh
+        run: |
+          "## Windows installer" >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          "- File: ${{ steps.installer.outputs.installer_name }}" >> $env:GITHUB_STEP_SUMMARY
+          "- SHA-256: ${{ steps.installer.outputs.sha256 }}" >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          "If release_tag was provided, the installer was also uploaded to that GitHub Release." >> $env:GITHUB_STEP_SUMMARY
