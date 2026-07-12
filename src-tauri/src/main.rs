@@ -1,3 +1,8 @@
+#![cfg_attr(
+    all(not(debug_assertions), target_os = "windows"),
+    windows_subsystem = "windows"
+)]
+
 use chrona::models::access::{AccessEvent, AccessHistorySummary, AccessNode, HomeSummary};
 use chrona::models::diff::SnapshotComparison;
 use chrona::models::file_inspector::FileInspectionReport;

@@ -710,3 +710,8 @@
 - Workflow는 `windows-latest`에서 Node.js, Rust stable MSVC target을 설정하고 npm/Rust 검증 후 `npm run tauri:build:windows`를 실행한다.
 - 생성된 NSIS `.exe`는 GitHub Actions artifact로 업로드하고 SHA-256을 job summary에 기록한다.
 - 수동 실행 시 `release_tag`를 입력하면 기존 GitHub Release에 `.exe` asset도 업로드한다.
+
+### Phase 14 Windows 콘솔 창 숨김 처리
+
+- Windows 설치본 실행 시 뒤에 터미널 창이 뜨는 원인은 release binary가 Windows GUI subsystem이 아니라 console subsystem으로 빌드되기 때문으로 확인했다.
+- `src-tauri/src/main.rs`에 release Windows 빌드에서만 `windows_subsystem = "windows"`를 적용해 설치본 실행 시 콘솔 창이 뜨지 않도록 했다.
